@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pyrothief Projects — Project Nova</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a0a;
+            background: radial-gradient(ellipse at center top, #1a0f08 0%, #0a0a0a 60%);
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* ── Hero ── */
+        .hero {
+            text-align: center;
+            padding: 6rem 2rem 4rem;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .logo {
+            display: block;
+            max-width: 280px;
+            width: 100%;
+            height: auto;
+            margin: 0 auto 3rem auto;
+            filter: drop-shadow(0 0 40px rgba(255, 107, 53, 0.3));
+        }
+
+        .project-title {
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffa500 0%, #ff6b35 50%, #cc4400 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta {
+            display: inline-block;
+            padding: 1rem 3rem;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #0a0a0a;
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
+            border: none;
+            border-radius: 4px;
+            cursor: default;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 30px rgba(255, 107, 53, 0.4);
+            margin-bottom: 1.5rem;
+        }
+
+        .cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 40px rgba(255, 107, 53, 0.6);
+        }
+
+        .github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #a89080;
+            text-decoration: none;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            transition: color 0.3s ease;
+        }
+
+        .github-link:hover {
+            color: #ff6b35;
+        }
+
+        .github-link svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* ── Ambient glow ── */
+        .glow {
+            position: fixed;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(255, 107, 53, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* ── Shared section styles ── */
+        .section {
+            width: 100%;
+            max-width: 1000px;
+            padding: 4rem 2rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffa500 0%, #ff6b35 50%, #cc4400 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .divider {
+            width: 100%;
+            max-width: 1000px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.3), transparent);
+        }
+
+        /* ── Card grid ── */
+        .card-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #ff6b35;
+            margin-bottom: 1rem;
+        }
+
+        /* ── Screenshots ── */
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .screenshot-placeholder {
+            aspect-ratio: 16 / 10;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 107, 53, 0.2);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #5a4a40;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* ── Trailers ── */
+        .trailer-placeholder {
+            aspect-ratio: 16 / 9;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 107, 53, 0.2);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            color: #5a4a40;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .play-icon {
+            width: 48px;
+            height: 48px;
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .play-icon::after {
+            content: "";
+            display: block;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 8px 0 8px 14px;
+            border-color: transparent transparent transparent rgba(255, 107, 53, 0.3);
+            margin-left: 3px;
+        }
+
+        /* ── Demos ── */
+        .demo-placeholder {
+            text-align: center;
+            padding: 3rem 1.5rem;
+        }
+
+        .demo-placeholder p {
+            color: #5a4a40;
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-disabled {
+            display: inline-block;
+            padding: 0.75rem 2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #5a4a40;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            border-radius: 4px;
+            cursor: default;
+        }
+
+        /* ── About ── */
+        .about-text {
+            color: #c0b0a0;
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+
+        .about-text p {
+            margin-bottom: 1rem;
+        }
+
+        .about-text ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 1rem;
+        }
+
+        .about-text ul li {
+            padding-left: 1.2rem;
+            position: relative;
+            margin-bottom: 0.4rem;
+        }
+
+        .about-text ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.6rem;
+            width: 6px;
+            height: 6px;
+            background: #ff6b35;
+            transform: rotate(45deg);
+        }
+
+        /* ── Story ── */
+        .story-text {
+            color: #c0b0a0;
+            line-height: 2;
+            font-size: 1.05rem;
+            text-align: center;
+            font-style: italic;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* ── License ── */
+        .license-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 107, 53, 0.1);
+            border-radius: 8px;
+            padding: 2rem;
+            color: #8a7a6a;
+            font-size: 0.8rem;
+            line-height: 1.8;
+            white-space: pre-line;
+        }
+
+        .license-note {
+            color: #5a4a40;
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Footer ── */
+        footer {
+            width: 100%;
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 107, 53, 0.1);
+            margin-top: 2rem;
+        }
+
+        footer .github-link {
+            margin-bottom: 1rem;
+            display: inline-flex;
+        }
+
+        .footer-brand {
+            color: #5a4a40;
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .footer-copyright {
+            color: #3a2a20;
+            font-size: 0.7rem;
+            margin-top: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 4rem 1.5rem 3rem;
+            }
+
+            .logo {
+                max-width: 200px;
+                margin-bottom: 2rem;
+            }
+
+            .cta {
+                padding: 0.875rem 2rem;
+                font-size: 0.9rem;
+            }
+
+            .section {
+                padding: 3rem 1.5rem;
+            }
+
+            .card-row {
+                grid-template-columns: 1fr;
+            }
+
+            .screenshot-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="glow"></div>
+
+    <!-- Hero -->
+    <header class="hero">
+        <img src="pyrothieflogo.png" alt="Pyrothief Projects" class="logo">
+        <h1 class="project-title">Nova</h1>
+        <span class="cta">Coming Soon</span>
+        <br>
+        <a href="https://github.com/pyrothiefprojects" target="_blank" rel="noopener" class="github-link">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            GitHub
+        </a>
+    </header>
+
+    <!-- Story -->
+    <section class="section">
+        <h2 class="section-title">The Nova Universe</h2>
+        <p class="story-text">A rogue asteroid drifts between stars — and when it reaches one, the star dies. No one knows what it is, how it moves, or why it feeds. Four stories. Four perspectives. One universe.</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Screenshots -->
+    <section class="section">
+        <h2 class="section-title">Screenshots</h2>
+        <div class="card-row">
+            <div class="card">
+                <div class="card-label">Redshift Engine</div>
+                <div class="screenshot-grid">
+                    <div class="screenshot-placeholder">Coming Soon</div>
+                    <div class="screenshot-placeholder">Coming Soon</div>
+                    <div class="screenshot-placeholder">Coming Soon</div>
+                    <div class="screenshot-placeholder">Coming Soon</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-label">Parallax Engine</div>
+                <div class="screenshot-grid">
+                    <div class="screenshot-placeholder">Coming Soon</div>
+                    <div class="screenshot-placeholder">Coming Soon</div>
+                    <div class="screenshot-placeholder">Coming Soon</div>
+                    <div class="screenshot-placeholder">Coming Soon</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Trailers -->
+    <section class="section">
+        <h2 class="section-title">Trailers</h2>
+        <div class="card-row">
+            <div class="card">
+                <div class="card-label">Ship Systems Roguelike</div>
+                <div class="trailer-placeholder">
+                    <div class="play-icon"></div>
+                    Trailer Coming Soon
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-label">Point-and-Click Adventure</div>
+                <div class="trailer-placeholder">
+                    <div class="play-icon"></div>
+                    Trailer Coming Soon
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Demos -->
+    <section class="section">
+        <h2 class="section-title">Demos</h2>
+        <div class="card-row">
+            <div class="card">
+                <div class="card-label">Redshift</div>
+                <div class="demo-placeholder">
+                    <p>Demo Coming Soon</p>
+                    <span class="btn-disabled">Play Demo</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-label">Parallax</div>
+                <div class="demo-placeholder">
+                    <p>Demo Coming Soon</p>
+                    <span class="btn-disabled">Play in Browser</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- About -->
+    <section class="section">
+        <h2 class="section-title">About</h2>
+        <div class="about-text">
+            <p>Project Nova is a multi-genre game framework built from custom engines, each powering a Nova Universe title and serving as a reusable dev kit. It comprises four interconnected games and a shared hub world, all set in the Nova Universe.</p>
+            <p>The four games:</p>
+            <ul>
+                <li>A system-heavy ship combat roguelike</li>
+                <li>A browser-based point-and-click adventure</li>
+                <li>A squadron-based dogfighting game</li>
+                <li>A survival-focused exploration game</li>
+            </ul>
+            <p>All titles connect through Club Nova — an evolving social hub where players access games, turn in rewards, and interact with characters from across the universe.</p>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- License -->
+    <section class="section">
+        <h2 class="section-title">License</h2>
+        <div class="license-box">This project is proprietary. All rights reserved by Pyrothiefprojects.
+
+All software, engines, source code, assets, documentation, and tools contained within this project are the exclusive property of Pyrothiefprojects unless otherwise stated.
+
+Unless a separate license is provided for a specific component, engine, or branch, all contents are fully proprietary. You may not use, copy, modify, distribute, or create derivative works without prior written permission.
+
+Specific engines, tools, or components may carry their own license terms. Where an individual license is present, it takes precedence for that component only.
+
+All commercial rights are exclusively reserved by Pyrothiefprojects. For commercial licensing inquiries, contact Pyrothiefprojects directly.
+
+This software is provided "as is" without warranty of any kind.</div>
+        <p class="license-note">Individual component licenses may apply. See the full LICENSE file for complete terms.</p>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <a href="https://github.com/pyrothiefprojects" target="_blank" rel="noopener" class="github-link">
+            <svg viewBox="0 0 16 16" aria-hidden="true" style="width:18px;height:18px;fill:currentColor;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            GitHub
+        </a>
+        <div class="footer-brand">Pyrothiefprojects</div>
+        <div class="footer-copyright">&copy; 2026 Pyrothiefprojects. All rights reserved.</div>
+    </footer>
+</body>
+</html>
