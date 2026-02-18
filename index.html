@@ -646,6 +646,7 @@ This software is provided "as is" without warranty of any kind.</div>
         const leftCol = document.querySelectorAll('.showcase-column')[0];
         const rightCol = document.querySelectorAll('.showcase-column')[1];
         const playBtn = document.querySelector('.play-now-btn');
+        const bgRuin = document.querySelector('.bg-ruin');
         const maxShift = 250;
 
         function updateParallax() {
@@ -659,6 +660,11 @@ This software is provided "as is" without warranty of any kind.</div>
             const shift = maxShift * (1 - progress);
             leftCol.style.transform = `translateX(${shift}px)`;
             rightCol.style.transform = `translateX(${-shift}px)`;
+
+            // Rotate ruin based on total scroll
+            const scrollPct = window.scrollY / (document.body.scrollHeight - viewH);
+            const rotation = scrollPct * 180;
+            bgRuin.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
 
             if (progress > 0.3) {
                 playBtn.classList.add('visible');
