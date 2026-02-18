@@ -162,6 +162,21 @@
         .screenshot-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .screenshot-column-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #5a4a40;
+            margin-bottom: 0.5rem;
+        }
+
+        .screenshot-column {
+            display: flex;
+            flex-direction: column;
             gap: 0.75rem;
         }
 
@@ -177,6 +192,45 @@
             font-size: 0.75rem;
             letter-spacing: 0.1em;
             text-transform: uppercase;
+        }
+
+        .screenshot-img {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        .screenshot-img:hover {
+            border-color: rgba(255, 107, 53, 0.5);
+        }
+
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 6px;
+            box-shadow: 0 0 60px rgba(255, 107, 53, 0.2);
         }
 
         /* ── Trailers ── */
@@ -376,90 +430,57 @@
         <img src="pyrothieflogo.png" alt="Pyrothief Projects" class="logo">
         <h1 class="project-title">Nova</h1>
         <span class="cta">Coming Soon</span>
-        <br>
-        <a href="https://github.com/pyrothiefprojects" target="_blank" rel="noopener" class="github-link">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-            GitHub
-        </a>
     </header>
 
-    <!-- Story -->
+    <!-- Games -->
     <section class="section">
-        <h2 class="section-title">The Nova Universe</h2>
-        <p class="story-text">A rogue asteroid drifts between stars — and when it reaches one, the star dies. No one knows what it is, how it moves, or why it feeds. Four stories. Four perspectives. One universe.</p>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- Screenshots -->
-    <section class="section">
-        <h2 class="section-title">Screenshots</h2>
         <div class="card-row">
             <div class="card">
-                <div class="card-label">Redshift Engine</div>
+                <div class="card-label">Redshift — Spaceship Combat Roguelike</div>
                 <div class="screenshot-grid">
-                    <div class="screenshot-placeholder">Coming Soon</div>
-                    <div class="screenshot-placeholder">Coming Soon</div>
-                    <div class="screenshot-placeholder">Coming Soon</div>
-                    <div class="screenshot-placeholder">Coming Soon</div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-label">Parallax Engine</div>
-                <div class="screenshot-grid">
-                    <div class="screenshot-placeholder">Coming Soon</div>
-                    <div class="screenshot-placeholder">Coming Soon</div>
-                    <div class="screenshot-placeholder">Coming Soon</div>
-                    <div class="screenshot-placeholder">Coming Soon</div>
-                </div>
-            </div>
-        </div>
-    </section>
+                    <div class="screenshot-column">
 
-    <div class="divider"></div>
+                        <img src="content/PN_play_redshift2.png" alt="Redshift gameplay screenshot" class="screenshot-img">
+                        <img src="content/PN_play_redshift4.png" alt="Redshift gameplay screenshot" class="screenshot-img">
+                    </div>
+                    <div class="screenshot-column">
 
-    <!-- Trailers -->
-    <section class="section">
-        <h2 class="section-title">Trailers</h2>
-        <div class="card-row">
-            <div class="card">
-                <div class="card-label">Ship Systems Roguelike</div>
-                <div class="trailer-placeholder">
+                        <img src="content/PN_edit_redshift1.png" alt="Redshift editor screenshot" class="screenshot-img">
+                        <img src="content/PN_edit_redshift3.png" alt="Redshift editor screenshot" class="screenshot-img">
+                    </div>
+                </div>
+                <div class="trailer-placeholder" style="margin-top: 1rem;">
                     <div class="play-icon"></div>
                     Trailer Coming Soon
                 </div>
-            </div>
-            <div class="card">
-                <div class="card-label">Point-and-Click Adventure</div>
-                <div class="trailer-placeholder">
-                    <div class="play-icon"></div>
-                    Trailer Coming Soon
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- Demos -->
-    <section class="section">
-        <h2 class="section-title">Demos</h2>
-        <div class="card-row">
-            <div class="card">
-                <div class="card-label">Redshift</div>
                 <div class="demo-placeholder">
-                    <p>Demo Coming Soon</p>
                     <span class="btn-disabled">Play Demo</span>
                 </div>
             </div>
             <div class="card">
-                <div class="card-label">Parallax</div>
+                <div class="card-label">Parallax — Point-and-Click Adventure</div>
+                <div class="screenshot-grid">
+                    <div class="screenshot-column">
+
+                        <img src="content/PN_play_parallax_cryo.png" alt="Parallax gameplay screenshot — Cryo" class="screenshot-img">
+                        <img src="content/PN_play_parallax_facility3.png" alt="Parallax gameplay screenshot — Facility" class="screenshot-img">
+                    </div>
+                    <div class="screenshot-column">
+
+                        <img src="content/PN_edit_parallax_editors.png" alt="Parallax editor screenshot" class="screenshot-img">
+                        <img src="content/PN_edit_parallax_puzzle.png" alt="Parallax editor screenshot — Puzzle" class="screenshot-img">
+                    </div>
+                </div>
+                <div class="trailer-placeholder" style="margin-top: 1rem;">
+                    <div class="play-icon"></div>
+                    Trailer Coming Soon
+                </div>
                 <div class="demo-placeholder">
-                    <p>Demo Coming Soon</p>
                     <span class="btn-disabled">Play in Browser</span>
                 </div>
             </div>
         </div>
+        <p class="license-note">All game and engine names are developmental titles and subject to change.</p>
     </section>
 
     <div class="divider"></div>
@@ -468,15 +489,16 @@
     <section class="section">
         <h2 class="section-title">About</h2>
         <div class="about-text">
-            <p>Project Nova is a multi-genre game framework built from custom engines, each powering a Nova Universe title and serving as a reusable dev kit. It comprises four interconnected games and a shared hub world, all set in the Nova Universe.</p>
-            <p>The four games:</p>
+            <p>Project Nova is a multi-genre game framework built from custom engines, each powering a Nova title and serving as a reusable dev kit. It comprises four interconnected stories and a shared hub world, all set in the Nova Universe.</p>
+            <p>The four titles:</p>
             <ul>
-                <li>A system-heavy ship combat roguelike</li>
+                <li>A spaceship combat roguelike</li>
                 <li>A browser-based point-and-click adventure</li>
-                <li>A squadron-based dogfighting game</li>
-                <li>A survival-focused exploration game</li>
+                <li>A squadron-based space dogfighter</li>
+                <li>A survival exploration title</li>
             </ul>
-            <p>All titles connect through Club Nova — an evolving social hub where players access games, turn in rewards, and interact with characters from across the universe.</p>
+            <p>All titles connect through Club Nova — a shared hub where players track their progress, turn in rewards, and cross paths with characters from across the realm.</p>
+            <p>The goal is to ship all four games as finished products while also releasing the engines behind them — giving players and creators the tools to build their own content in the genres each engine specializes in.</p>
         </div>
     </section>
 
@@ -508,5 +530,25 @@ This software is provided "as is" without warranty of any kind.</div>
         <div class="footer-brand">Pyrothiefprojects</div>
         <div class="footer-copyright">&copy; 2026 Pyrothiefprojects. All rights reserved.</div>
     </footer>
+    <div class="lightbox" id="lightbox">
+        <img src="" alt="">
+    </div>
+
+    <script>
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = lightbox.querySelector('img');
+
+        document.querySelectorAll('.screenshot-img').forEach(img => {
+            img.addEventListener('click', () => {
+                lightboxImg.src = img.src;
+                lightboxImg.alt = img.alt;
+                lightbox.classList.add('active');
+            });
+        });
+
+        lightbox.addEventListener('click', () => {
+            lightbox.classList.remove('active');
+        });
+    </script>
 </body>
 </html>
