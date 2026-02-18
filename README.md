@@ -88,6 +88,7 @@ To preserve continuity, all games share a unified presentation approach:
 - **HUD:** Consistent design language across titles
 - **Geometry:** Hexagons used throughout UI, maps, and layouts
 - **Symbols:** Shared iconography where narratively appropriate
+- **Font:** Orbitron (Google Fonts) — used across all Nova UI and the website, with `letter-spacing: 0.15em` for readability
 
 ## Shared Systems
 

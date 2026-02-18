@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pyrothief Projects — Project Nova</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -15,7 +16,8 @@
             min-height: 100vh;
             background: #0a0a0a;
             background: radial-gradient(ellipse at center top, #1a0f08 0%, #0a0a0a 60%);
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Orbitron', system-ui, sans-serif;
+            letter-spacing: 0.15em;
             color: #f5f5f5;
             display: flex;
             flex-direction: column;
@@ -108,6 +110,18 @@
             z-index: -1;
         }
 
+        /* ── Background ruin ── */
+        .bg-ruin {
+            position: fixed;
+            bottom: -5%;
+            right: -5%;
+            width: 40vw;
+            max-width: 500px;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: -1;
+        }
+
         /* ── Shared section styles ── */
         .section {
             width: 100%;
@@ -135,27 +149,52 @@
             background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.3), transparent);
         }
 
-        /* ── Card grid ── */
-        .card-row {
+        /* ── Showcase layout ── */
+        .showcase-layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .showcase-column {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 2;
+            will-change: transform;
         }
 
-        .card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 107, 53, 0.15);
-            border-radius: 8px;
-            padding: 1.5rem;
+        .showcase-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            position: relative;
+            z-index: 1;
         }
 
-        .card-label {
-            font-size: 0.85rem;
+        .play-now-btn {
+            display: inline-block;
+            padding: 0.6rem 1.8rem;
+            font-size: 0.8rem;
             font-weight: 600;
             letter-spacing: 0.15em;
             text-transform: uppercase;
-            color: #ff6b35;
-            margin-bottom: 1rem;
+            color: #5a4a40;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            cursor: pointer;
+            text-decoration: none;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .play-now-btn.visible {
+            opacity: 1;
         }
 
         /* ── Screenshots ── */
@@ -233,12 +272,32 @@
             box-shadow: 0 0 60px rgba(255, 107, 53, 0.2);
         }
 
+        .lightbox-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 107, 53, 0.6);
+            font-size: 3rem;
+            cursor: pointer;
+            padding: 1rem;
+            transition: color 0.2s ease;
+            user-select: none;
+        }
+
+        .lightbox-arrow:hover {
+            color: #ff6b35;
+        }
+
+        .lightbox-prev { left: 1rem; }
+        .lightbox-next { right: 1rem; }
+
         /* ── Trailers ── */
         .trailer-placeholder {
             aspect-ratio: 16 / 9;
             background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed rgba(255, 107, 53, 0.2);
-            border-radius: 4px;
+            border: 1px solid rgba(255, 107, 53, 0.15);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -248,6 +307,7 @@
             font-size: 0.8rem;
             letter-spacing: 0.1em;
             text-transform: uppercase;
+            border-radius: 4px;
         }
 
         .play-icon {
@@ -345,6 +405,30 @@
         }
 
         /* ── License ── */
+        .license-details summary {
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #5a4a40;
+            text-align: center;
+            list-style: none;
+            transition: color 0.3s ease;
+        }
+
+        .license-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .license-details summary:hover {
+            color: #ff6b35;
+        }
+
+        .license-details[open] .license-box {
+            margin-top: 1rem;
+        }
+
         .license-box {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 107, 53, 0.1);
@@ -373,9 +457,12 @@
             margin-top: 2rem;
         }
 
-        footer .github-link {
-            margin-bottom: 1rem;
-            display: inline-flex;
+        .footer-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
         }
 
         .footer-brand {
@@ -412,72 +499,47 @@
                 padding: 3rem 1.5rem;
             }
 
-            .card-row {
+            .showcase-layout {
                 grid-template-columns: 1fr;
             }
 
-            .screenshot-grid {
-                grid-template-columns: 1fr;
+            .showcase-center {
+                order: -1;
             }
         }
     </style>
 </head>
 <body>
     <div class="glow"></div>
+    <img src="content/ruin_engine.png" alt="" class="bg-ruin">
 
     <!-- Hero -->
     <header class="hero">
         <img src="pyrothieflogo.png" alt="Pyrothief Projects" class="logo">
         <h1 class="project-title">Nova</h1>
-        <span class="cta">Coming Soon</span>
     </header>
 
     <!-- Games -->
     <section class="section">
-        <div class="card-row">
-            <div class="card">
-                <div class="card-label">Redshift — Spaceship Combat Roguelike</div>
-                <div class="screenshot-grid">
-                    <div class="screenshot-column">
-
-                        <img src="content/PN_play_redshift2.png" alt="Redshift gameplay screenshot" class="screenshot-img">
-                        <img src="content/PN_play_redshift4.png" alt="Redshift gameplay screenshot" class="screenshot-img">
-                    </div>
-                    <div class="screenshot-column">
-
-                        <img src="content/PN_edit_redshift1.png" alt="Redshift editor screenshot" class="screenshot-img">
-                        <img src="content/PN_edit_redshift3.png" alt="Redshift editor screenshot" class="screenshot-img">
-                    </div>
-                </div>
-                <div class="trailer-placeholder" style="margin-top: 1rem;">
+        <div class="showcase-layout">
+            <div class="showcase-column">
+                <img src="content/PN_play_parallax_cryo.png" alt="Parallax gameplay screenshot — Cryo" class="screenshot-img">
+                <img src="content/PN_play_parallax_facility3.png" alt="Parallax gameplay screenshot — Facility" class="screenshot-img">
+                <img src="content/PN_edit_parallax_editors.png" alt="Parallax editor screenshot" class="screenshot-img">
+                <img src="content/PN_edit_parallax_puzzle.png" alt="Parallax editor screenshot — Puzzle" class="screenshot-img">
+            </div>
+            <div class="showcase-center">
+                <a href="https://www.pyrothief.ca/parallax/" target="_blank" rel="noopener" class="play-now-btn">Dev Build</a>
+                <div class="trailer-placeholder">
                     <div class="play-icon"></div>
-                    Trailer Coming Soon
-                </div>
-                <div class="demo-placeholder">
-                    <span class="btn-disabled">Play Demo</span>
+                    Playreel Coming Soon
                 </div>
             </div>
-            <div class="card">
-                <div class="card-label">Parallax — Point-and-Click Adventure</div>
-                <div class="screenshot-grid">
-                    <div class="screenshot-column">
-
-                        <img src="content/PN_play_parallax_cryo.png" alt="Parallax gameplay screenshot — Cryo" class="screenshot-img">
-                        <img src="content/PN_play_parallax_facility3.png" alt="Parallax gameplay screenshot — Facility" class="screenshot-img">
-                    </div>
-                    <div class="screenshot-column">
-
-                        <img src="content/PN_edit_parallax_editors.png" alt="Parallax editor screenshot" class="screenshot-img">
-                        <img src="content/PN_edit_parallax_puzzle.png" alt="Parallax editor screenshot — Puzzle" class="screenshot-img">
-                    </div>
-                </div>
-                <div class="trailer-placeholder" style="margin-top: 1rem;">
-                    <div class="play-icon"></div>
-                    Trailer Coming Soon
-                </div>
-                <div class="demo-placeholder">
-                    <span class="btn-disabled">Play in Browser</span>
-                </div>
+            <div class="showcase-column">
+                <img src="content/PN_play_redshift2.png" alt="Redshift gameplay screenshot" class="screenshot-img">
+                <img src="content/PN_play_redshift4.png" alt="Redshift gameplay screenshot" class="screenshot-img">
+                <img src="content/PN_edit_redshift1.png" alt="Redshift editor screenshot" class="screenshot-img">
+                <img src="content/PN_edit_redshift3.png" alt="Redshift editor screenshot" class="screenshot-img">
             </div>
         </div>
         <p class="license-note">All game and engine names are developmental titles and subject to change.</p>
@@ -487,17 +549,15 @@
 
     <!-- About -->
     <section class="section">
-        <h2 class="section-title">About</h2>
         <div class="about-text">
-            <p>Project Nova is a multi-genre game framework built from custom engines, each powering a Nova title and serving as a reusable dev kit. It comprises four interconnected stories and a shared hub world, all set in the Nova Universe.</p>
+            <p>Project Nova is a multi-genre game framework built from custom engines, each powering a Nova title and serving as a reusable dev kit. It comprises four interconnected stories, all set in the Nova Universe.</p>
             <p>The four titles:</p>
             <ul>
-                <li>A spaceship combat roguelike</li>
-                <li>A browser-based point-and-click adventure</li>
-                <li>A squadron-based space dogfighter</li>
-                <li>A survival exploration title</li>
+                <li>Spaceship combat roguelike</li>
+                <li>Browser-based point-and-click adventure</li>
+                <li>Squadron-based space dogfighter</li>
+                <li>Survival exploration</li>
             </ul>
-            <p>All titles connect through Club Nova — a shared hub where players track their progress, turn in rewards, and cross paths with characters from across the realm.</p>
             <p>The goal is to ship all four games as finished products while also releasing the engines behind them — giving players and creators the tools to build their own content in the genres each engine specializes in.</p>
         </div>
     </section>
@@ -506,8 +566,9 @@
 
     <!-- License -->
     <section class="section">
-        <h2 class="section-title">License</h2>
-        <div class="license-box">This project is proprietary. All rights reserved by Pyrothiefprojects.
+        <details class="license-details">
+            <summary>License</summary>
+            <div class="license-box">This project is proprietary. All rights reserved by Pyrothiefprojects.
 
 All software, engines, source code, assets, documentation, and tools contained within this project are the exclusive property of Pyrothiefprojects unless otherwise stated.
 
@@ -518,37 +579,95 @@ Specific engines, tools, or components may carry their own license terms. Where 
 All commercial rights are exclusively reserved by Pyrothiefprojects. For commercial licensing inquiries, contact Pyrothiefprojects directly.
 
 This software is provided "as is" without warranty of any kind.</div>
-        <p class="license-note">Individual component licenses may apply. See the full LICENSE file for complete terms.</p>
+            <p class="license-note">Individual component licenses may apply. See the full LICENSE file for complete terms.</p>
+        </details>
     </section>
 
     <!-- Footer -->
     <footer>
-        <a href="https://github.com/pyrothiefprojects" target="_blank" rel="noopener" class="github-link">
-            <svg viewBox="0 0 16 16" aria-hidden="true" style="width:18px;height:18px;fill:currentColor;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-            GitHub
-        </a>
         <div class="footer-brand">Pyrothiefprojects</div>
-        <div class="footer-copyright">&copy; 2026 Pyrothiefprojects. All rights reserved.</div>
+        <div class="footer-bottom">
+            <span class="footer-copyright">&copy; 2026 Pyrothiefprojects. All rights reserved.</span>
+            <a href="https://github.com/pyrothiefprojects" target="_blank" rel="noopener" class="github-link">
+                <svg viewBox="0 0 16 16" aria-hidden="true" style="width:18px;height:18px;fill:currentColor;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            </a>
+        </div>
     </footer>
     <div class="lightbox" id="lightbox">
+        <button class="lightbox-arrow lightbox-prev" id="lb-prev">&#8249;</button>
         <img src="" alt="">
+        <button class="lightbox-arrow lightbox-next" id="lb-next">&#8250;</button>
     </div>
 
     <script>
+        // Lightbox with cycling
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = lightbox.querySelector('img');
+        const allScreenshots = Array.from(document.querySelectorAll('.screenshot-img'));
+        let currentIndex = 0;
 
-        document.querySelectorAll('.screenshot-img').forEach(img => {
+        allScreenshots.forEach((img, i) => {
             img.addEventListener('click', () => {
+                currentIndex = i;
                 lightboxImg.src = img.src;
                 lightboxImg.alt = img.alt;
                 lightbox.classList.add('active');
             });
         });
 
-        lightbox.addEventListener('click', () => {
-            lightbox.classList.remove('active');
+        document.getElementById('lb-prev').addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentIndex = (currentIndex - 1 + allScreenshots.length) % allScreenshots.length;
+            lightboxImg.src = allScreenshots[currentIndex].src;
+            lightboxImg.alt = allScreenshots[currentIndex].alt;
         });
+
+        document.getElementById('lb-next').addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentIndex = (currentIndex + 1) % allScreenshots.length;
+            lightboxImg.src = allScreenshots[currentIndex].src;
+            lightboxImg.alt = allScreenshots[currentIndex].alt;
+        });
+
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) lightbox.classList.remove('active');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (!lightbox.classList.contains('active')) return;
+            if (e.key === 'ArrowLeft') document.getElementById('lb-prev').click();
+            if (e.key === 'ArrowRight') document.getElementById('lb-next').click();
+            if (e.key === 'Escape') lightbox.classList.remove('active');
+        });
+
+        // Parallax scroll-reveal
+        const showcase = document.querySelector('.showcase-layout');
+        const leftCol = document.querySelectorAll('.showcase-column')[0];
+        const rightCol = document.querySelectorAll('.showcase-column')[1];
+        const playBtn = document.querySelector('.play-now-btn');
+        const maxShift = 250;
+
+        function updateParallax() {
+            if (!showcase) return;
+            const rect = showcase.getBoundingClientRect();
+            const viewH = window.innerHeight;
+            const start = viewH;
+            const end = -rect.height;
+            const progress = Math.min(1, Math.max(0, (start - rect.top) / (start - end) * 2));
+
+            const shift = maxShift * (1 - progress);
+            leftCol.style.transform = `translateX(${shift}px)`;
+            rightCol.style.transform = `translateX(${-shift}px)`;
+
+            if (progress > 0.3) {
+                playBtn.classList.add('visible');
+            } else {
+                playBtn.classList.remove('visible');
+            }
+        }
+
+        window.addEventListener('scroll', updateParallax, { passive: true });
+        updateParallax();
     </script>
 </body>
 </html>
