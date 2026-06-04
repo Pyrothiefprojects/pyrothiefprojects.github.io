@@ -9,53 +9,53 @@ Date: June 3, 2026
 ROADMAP — ORDER OF OPERATIONS
 ==========================================================================
 
-Phase 1 — Foundation (mostly done)
+Phase 1 — Template + Store Test
 -----------------------------------
   1. Rename dancingmoose.html → index.html, update all nav links ✓ DONE
-  2. Finalize the color scheme / design ✓ DONE (sidebar layout, transparent, dark text)
-  3. Adjust the splash image opacity ✓ DONE (removed white overlay entirely)
-  3b. Extract shared styles.css ✓ DONE
-  3c. Mobile responsive layout — TODO (hamburger menu for narrow screens)
-  4. Domain & hosting already set up (dancingmoose.ca via BlackSun)
-  5. Upload files to cPanel
+  2. Desktop layout (sidebar, background image, content cards) ✓ DONE
+  3. Extract shared styles.css ✓ DONE
+  4. Get access to owner's Square dashboard
+  5. Activate Square Online from the dashboard
+  6. Upload product photos to catalog items
+  7. Toggle which items are visible online (start with screenprints)
+  8. Set up online categories/layout within Square's tools
+  9. Grab the Square Online store URL
+  10. Point Shop nav link to the Square Online store URL
+  11. Test the checkout flow locally (click Shop link → opens real store)
+  12. Confirm store works before moving on
 
-Phase 2 — Content
+Phase 2 — Finalize Site Design
 -----------------------------------
-  6. Get the full artist list from the owner
-  7. Collect artist photos, bios, and photos of their work
-  8. Build out individual artist profile pages
-  9. Write/refine copy for all pages
+  13. Lock in desktop layout (currently experimental)
+  14. Build mobile responsive layout (hamburger menu, etc.)
+  15. Get the full artist list from the owner
+  16. Collect artist photos, bios, and photos of their work
+  17. Build out individual artist profile pages
+  18. Write/refine copy for all pages
 
-Phase 3 — Shop
+Phase 3 — Polish & Launch
 -----------------------------------
-  10. Owner sets up products in her Square dashboard (photos, prices, descriptions)
-  11. Generate Square Buy Now buttons (free plan to start)
-  12. Build out the shop page layout — categories, product grid
-  13. Embed the Square buttons on each product
-  14. Test the checkout flow
-
-Phase 4 — Polish & Launch
------------------------------------
-  15. Test on mobile, different browsers
-  16. Set up SSL (free with BlackSun)
-  17. SEO basics (page titles, meta descriptions)
-  18. Add a favicon (small icon in browser tab — moose icon or logo)
-  19. Create a returns/refund policy page (need owner's rules — Square
+  19. Upload files to cPanel (dancingmoose.ca via BlackSun)
+  20. Test on mobile, different browsers
+  21. Set up SSL (free with BlackSun)
+  22. SEO basics (page titles, meta descriptions)
+  23. Add a favicon (small icon in browser tab — moose icon or logo)
+  24. Create a returns/refund policy page (need owner's rules — Square
       handles the actual refund processing, this is just the written policy)
-  20. Create a privacy policy page (legally required for e-commerce in
+  25. Create a privacy policy page (legally required for e-commerce in
       Canada — free generators available online)
-  21. Optimize images (compress photos so site loads fast — important
+  26. Optimize images (compress photos so site loads fast — important
       for tourists on spotty Yukon cell service)
-  22. Link dancingmoose.ca on her Google Business listing (the box that
+  27. Link dancingmoose.ca on her Google Business listing (the box that
       shows up when you Google the store — free, drives traffic)
-  23. Go live
+  28. Go live
 
-Phase 5 — Future
+Phase 4 — Future
 -----------------------------------
-  24. CMS/admin panel so she can manage the site herself
-  25. Site-wide search
-  26. Shipping logistics figured out
-  27. Upgrade Square plan if needed
+  29. CMS/admin panel so she can manage the site herself
+  30. Site-wide search
+  31. Shipping logistics figured out
+  32. Upgrade Square plan if needed
 
 
 ==========================================================================
@@ -143,6 +143,20 @@ Practical Approach:
     repeatable stock)
   - Add consignment pieces once the flow is working
   - This gives time to photograph and catalog everything
+
+Selective Inventory (confirmed June 4):
+  - All Square integration options allow showing only SOME items online.
+    She does NOT have to publish her entire catalog to the website.
+  - Square Online: each item has a "visible online" toggle. She can keep
+    the full catalog in Square for the POS terminal but only publish
+    specific items to the website. Online categories can be separate
+    from in-store categories.
+  - Buy Now buttons: generated per product — only what you embed shows up.
+  - Square API/SDK: full control, query/filter by category, tag, etc.
+  - This means she can start with just her screenprint line online and
+    keep consignment pieces offline-only until she's ready to deal with
+    the sync issue (sold in-store but still showing online). One-of-a-kind
+    items can stay in-store-only until the workflow is proven.
 
 
 ==========================================================================
@@ -260,6 +274,19 @@ Artists Found Online (need to confirm with owner):
     (Dawson City, studio inside the shop)
   - Priska Wettstein — photography, photo painting, jewellery (Dawson City)
   - Atsushi Sugimoto / Arctic Media Creation — photography products (Whitehorse)
+
+Artist Card Options (what to show when you click an artist):
+  1. Synopsis/bio + medium used (e.g. "printmaker working in linocut")
+  2. Gallery of their work (photos of pieces consigned in the shop)
+  3. Push to store — link to their items in the shop section
+  4. Featured piece — single hero image of their best/most representative work
+  5. "Available in store" indicator — lets people know this artist
+     currently has pieces in the shop, reason to visit
+  6. Video/process embed — if artist has process videos, embed one
+  - Do NOT link to artist social media or contact info — customers
+    could bypass the store and go directly to the artist
+  - Decision needed: which of these to include? Could start simple
+    (synopsis + featured piece) and add more later
 
 Consignment Tracking:
   - When a consignment piece sells, owner needs to pay artist their cut
@@ -449,13 +476,15 @@ HOURS TRACKED
 Date        | Hours | Description
 ------------|-------|---------------------------------------------
 2026-06-03  | 3.0   | Planning, research, initial site build,
-            |       | dev log, Square research, store visit
-2026-06-04  | 1.0   | Redesign: sidebar layout, shared CSS,
+            |       | Square research, store visit
+2026-06-04  | 2.0   | Redesign: sidebar layout, shared CSS,
             |       | background image, artist right sidebar,
-            |       | color scheme, desktop layout experimentation
+            |       | color scheme, desktop layout experimentation,
+            |       | roadmap restructure, Square Online research
+            |       | + planning
 
 
-Total hours: 4.0
+Total hours: 5.0
 
 
 ==========================================================================
