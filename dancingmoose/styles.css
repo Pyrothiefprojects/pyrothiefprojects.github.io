@@ -96,11 +96,14 @@ body {
     color: #3d2a1c;
 }
 
+.sidebar-bottom {
+    margin-top: auto;
+}
+
 .sidebar-contact {
     font-size: 0.85rem;
     line-height: 1.7;
     color: #5a4a3a;
-    margin-top: auto;
 }
 
 .sidebar-contact p {
