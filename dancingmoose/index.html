@@ -22,7 +22,7 @@
             <li><a href="#" onclick="togglePanel('about'); return false;">About</a></li>
         </ul>
 
-        <div id="sidebar-about" class="sidebar-about hidden">
+        <div id="sidebar-about" class="sidebar-about" style="display:none;">
             <div class="sidebar-about-card">
                 Nestled on historic Front Street in the heart of Dawson City, The Dancing Moose has celebrated the creativity and spirit of the North since 2001. Offering a curated collection of handcrafted goods, ladies fashion, jewellery, and unique gifts you won't find anywhere else.
             </div>
@@ -46,12 +46,12 @@
     </aside>
 
     <div id="main" class="main">
-        <div id="shop-card" class="content-card hidden">
+        <div id="shop-card" class="content-card" style="display:none;">
             <p>Coming soon.</p>
         </div>
     </div>
 
-    <aside id="artists-panel" class="right-sidebar hidden">
+    <aside id="artists-panel" class="right-sidebar" style="display:none;">
         <div class="artist-list">
             <a class="artist-card" href="#">
                 <div class="artist-portrait">
@@ -94,9 +94,9 @@
 
     <script>
         function hideAll() {
-            document.getElementById('sidebar-about').classList.add('hidden');
-            document.getElementById('shop-card').classList.add('hidden');
-            document.getElementById('artists-panel').classList.add('hidden');
+            document.getElementById('sidebar-about').style.display = 'none';
+            document.getElementById('shop-card').style.display = 'none';
+            document.getElementById('artists-panel').style.display = 'none';
             document.getElementById('main').classList.remove('has-right-sidebar');
         }
 
@@ -107,18 +107,18 @@
             var mainEl = document.getElementById('main');
 
             if (panel === 'about') {
-                var showing = aboutEl.classList.contains('hidden');
+                var isHidden = aboutEl.style.display === 'none';
                 hideAll();
-                if (showing) aboutEl.classList.remove('hidden');
+                if (isHidden) aboutEl.style.display = 'flex';
             } else if (panel === 'shop') {
-                var showing = shopEl.classList.contains('hidden');
+                var isHidden = shopEl.style.display === 'none';
                 hideAll();
-                if (showing) shopEl.classList.remove('hidden');
+                if (isHidden) shopEl.style.display = 'block';
             } else if (panel === 'artists') {
-                var showing = artistsEl.classList.contains('hidden');
+                var isHidden = artistsEl.style.display === 'none';
                 hideAll();
-                if (showing) {
-                    artistsEl.classList.remove('hidden');
+                if (isHidden) {
+                    artistsEl.style.display = 'block';
                     mainEl.classList.add('has-right-sidebar');
                 }
             }
