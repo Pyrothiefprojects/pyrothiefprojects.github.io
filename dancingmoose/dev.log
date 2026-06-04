@@ -11,7 +11,7 @@ ROADMAP — ORDER OF OPERATIONS
 
 Phase 1 — Foundation (mostly done)
 -----------------------------------
-  1. Rename dancingmoose.html → index.html, update all nav links
+  1. Rename dancingmoose.html → index.html, update all nav links ✓ DONE
   2. Finalize the color scheme / design
   3. Adjust the splash image opacity
   4. Domain & hosting already set up (dancingmoose.ca via BlackSun)
@@ -79,8 +79,8 @@ CURRENT SITE STRUCTURE
 ==========================================================================
 
 Files:
-  - dancingmoose.html  — Splash page (storefront image, nav, copyright)
-                         (will be renamed to index.html)
+  - index.html          — Splash page (storefront image, nav, copyright)
+                         (renamed from dancingmoose.html)
   - shop.html          — Shop (coming soon)
   - artists.html       — Local Artists
   - about.html         — About the store
