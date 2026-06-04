@@ -14,7 +14,10 @@ Phase 1 — Template + Store Test
   1. Rename dancingmoose.html → index.html, update all nav links ✓ DONE
   2. Desktop layout (sidebar, background image, content cards) ✓ DONE
   3. Extract shared styles.css ✓ DONE
-  4. Get access to owner's Square dashboard
+  3b. Consolidate to single page (index.html) ✓ DONE
+  3c. Toggle panels: About, Shop, Local Artists ✓ DONE
+  3d. Live site verified working ✓ DONE
+  4. Get access to owner's Square dashboard  ← NEXT
   5. Activate Square Online from the dashboard
   6. Upload product photos to catalog items
   7. Toggle which items are visible online (start with screenprints)
