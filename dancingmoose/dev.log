@@ -1,0 +1,422 @@
+Dancing Moose Gifts - Development Log
+======================================
+Location: 986 Front Street, Dawson City, Yukon
+Domain: dancingmoose.ca
+Date: June 3, 2026
+
+
+==========================================================================
+ROADMAP — ORDER OF OPERATIONS
+==========================================================================
+
+Phase 1 — Foundation (mostly done)
+-----------------------------------
+  1. Rename dancingmoose.html → index.html, update all nav links
+  2. Finalize the color scheme / design
+  3. Adjust the splash image opacity
+  4. Domain & hosting already set up (dancingmoose.ca via BlackSun)
+  5. Upload files to cPanel
+
+Phase 2 — Content
+-----------------------------------
+  6. Get the full artist list from the owner
+  7. Collect artist photos, bios, and photos of their work
+  8. Build out individual artist profile pages
+  9. Write/refine copy for all pages
+
+Phase 3 — Shop
+-----------------------------------
+  10. Owner sets up products in her Square dashboard (photos, prices, descriptions)
+  11. Generate Square Buy Now buttons (free plan to start)
+  12. Build out the shop page layout — categories, product grid
+  13. Embed the Square buttons on each product
+  14. Test the checkout flow
+
+Phase 4 — Polish & Launch
+-----------------------------------
+  15. Test on mobile, different browsers
+  16. Set up SSL (free with BlackSun)
+  17. SEO basics (page titles, meta descriptions)
+  18. Add a favicon (small icon in browser tab — moose icon or logo)
+  19. Create a returns/refund policy page (need owner's rules — Square
+      handles the actual refund processing, this is just the written policy)
+  20. Create a privacy policy page (legally required for e-commerce in
+      Canada — free generators available online)
+  21. Optimize images (compress photos so site loads fast — important
+      for tourists on spotty Yukon cell service)
+  22. Link dancingmoose.ca on her Google Business listing (the box that
+      shows up when you Google the store — free, drives traffic)
+  23. Go live
+
+Phase 5 — Future
+-----------------------------------
+  24. CMS/admin panel so she can manage the site herself
+  25. Site-wide search
+  26. Shipping logistics figured out
+  27. Upgrade Square plan if needed
+
+
+==========================================================================
+OPEN QUESTIONS — NEED ANSWERS FROM OWNER
+==========================================================================
+
+  - Full list of artists consigned in the shop?
+  - Photographer on tap (confirmed) — coordinate photo sessions for
+    products and artist portraits
+  - What's her consignment split with artists? (matters for tracking)
+  - Does she want to handle online orders herself, or does she need help?
+  - Seasonal hours? Site says "Open Daily 10-6" but some sources say
+    May-December — which is it?
+  - What are her return/refund rules? (e.g. 30 days? no returns on
+    one-of-a-kind art?) Need this to write the policy page.
+  - Does she have a logo, or just the storefront sign?
+  - Does she have a Google Business listing already? If so, we just
+    need to add dancingmoose.ca as the website link there.
+
+
+==========================================================================
+CURRENT SITE STRUCTURE
+==========================================================================
+
+Files:
+  - dancingmoose.html  — Splash page (storefront image, nav, copyright)
+                         (will be renamed to index.html)
+  - shop.html          — Shop (coming soon)
+  - artists.html       — Local Artists
+  - about.html         — About the store
+  - contact.html       — Contact info (address, hours, phone, email)
+  - dancingmoose.jpg   — Storefront image (background)
+  - dev.log            — This file
+  - invoice.md         — Invoice (costs TBD)
+
+Nav Layout:
+  Left:  Facebook icon | Instagram icon
+  Right: Home | Shop | Local Artists | About | Contact
+
+Footer:
+  Copyright pinned to bottom of every page
+
+
+==========================================================================
+HOSTING & DOMAIN
+==========================================================================
+
+  - Domain: dancingmoose.ca (already owned via MSPCorp/BlackSun)
+  - Hosting: Standard Shared Hosting
+    - $183.49/year (next due Sept 21, 2026)
+    - 100GB storage, unlimited bandwidth, 3 websites
+    - cPanel with FTP/SFTP/SSH access
+    - Free SSL included
+  - Upload: Custom HTML files via cPanel file manager or FTP
+    - No website builder required — just upload and go
+  - NOTE: Currently on Standard plan (3 websites) but only need 1.
+    Basic plan is $11.99/mo (~$144/year) and has everything we need
+    (25GB storage, 50GB bandwidth, cPanel, FTP, SSL, free domain).
+    Would save ~$40/year. Ask MSPCorp about downgrading when it
+    renews in September 2026.
+
+
+==========================================================================
+SHOP
+==========================================================================
+
+Product Types (two different beasts):
+  - Owner's screenprints (shirts, sweaters, hats)
+    - Repeatable inventory — sizes, colors, quantities
+    - Straightforward to sell online
+  - Consignment art
+    - Mostly one-of-a-kind — once sold, it's gone
+    - Listing needs to disappear or show "sold"
+    - Can't oversell
+
+Shop Structure:
+  - Split by category: "Screenprints & Clothing" (owner's stuff) and by
+    medium/artist for consignment pieces
+  - Each product: photo(s), description, price, availability
+  - One-of-a-kind items: simple "Available / Sold" status
+  - "New Arrivals" or "Featured" section on shop landing page
+
+Practical Approach:
+  - Start with just her screenprint clothing line (simpler — standard sizes,
+    repeatable stock)
+  - Add consignment pieces once the flow is working
+  - This gives time to photograph and catalog everything
+
+
+==========================================================================
+SQUARE INTEGRATION
+==========================================================================
+
+Current Setup:
+  - She already uses Square POS in-store (Square Terminal)
+  - Full product catalog already exists in Square — items have serial
+    numbers, descriptions, and can be searched/selected at the terminal
+  - Inventory is already being tracked through Square
+  - Photos: not currently attached to products in Square, but she takes
+    photos for Instagram already. Just needs to upload them to the
+    matching products in the Square dashboard (squareup.com → Items →
+    select product → add image). May also be possible directly on the
+    terminal via the Item Library.
+  - Square Online: NOT yet activated — terminal shows "create site to
+    access additional settings." One click to set up when ready, will
+    pull from the existing product catalog.
+  - All Square options sync inventory (in-store + online = one system)
+
+How the sync works:
+  - Website pulls directly from her Square catalog
+  - When she adds a photo to a product in Square → shows on website
+  - When she updates a price in Square → updates on website
+  - When something sells at the till → disappears or shows "sold" online
+  - One system, no double entry
+
+Integration Options:
+  - Option 1: Square Online — Square's own e-commerce page. Automatically
+    reflects everything in her catalog (photos, prices, stock). When she
+    adds a new product in Square, it appears on the site automatically.
+    Less control over how it looks, but she can manage the shop herself
+    without calling the developer.
+  - Option 2: Square Web Payments SDK — fully custom cart/checkout on our
+    site, Square handles payment processing. Most work, full design control.
+  - Option 3: Square Buy Now Buttons — embed buy buttons on product
+    listings. Existing products auto-update (price, stock, photos), BUT
+    new products don't appear automatically — developer has to generate
+    a new button and paste it into the HTML each time.
+  - Option 4 (sweet spot?): Embed Square Online into our custom site.
+    Square Online handles the shop page content (auto-updating from her
+    catalog), and we wrap the rest of the site in our custom design.
+    She manages products, we control the look.
+  - Recommendation: Option 1 or 4 if she wants to manage the shop
+    herself. Option 3 if she's fine with developer adding new listings.
+
+Key question for owner:
+  Does she want to add new products to the website herself without
+  calling the developer? If yes → Square Online (Option 1 or 4).
+  If she's fine with occasional dev help → Buy Now buttons (Option 3).
+
+Workflow for adding products (with Square Online):
+  1. She takes a photo of a product (already doing this for Instagram)
+  2. Uploads it to the matching product in her Square dashboard
+  3. It shows up on the website automatically — no code editing needed
+
+Square Online Pricing (Canada):
+  - Free plan: $0/month
+    - Basic store, buy buttons, inventory sync with POS
+    - Square branding on checkout, limited customization
+  - Plus: $36/mo (annual)
+    - Custom domain, no Square branding, more design control
+  - Premium: $99/mo (annual)
+    - Real-time shipping rates, lower fees, 24/7 support
+  - Transaction fees: ~2.8% + $0.30 per online sale (vs 2.5% in-store)
+  - Buy Now buttons: free on all plans — just paste HTML snippet into site
+  - Start on free plan, upgrade later if needed
+
+Open Questions:
+  - Can we integrate Square Online directly into our custom site?
+  - Or build our own cart and use Square just for payment processing?
+  - Do we need a full e-commerce platform (Shopify, WooCommerce) instead?
+  - Transaction fees for each option?
+  - Canadian tax collection (GST) — how does that get handled?
+
+
+==========================================================================
+SHIPPING
+==========================================================================
+
+Big open question — Dawson City is remote, costs will be higher than average.
+Need to be upfront about shipping costs.
+
+Options to explore:
+  - Canada Post? Flat rate vs calculated rates?
+  - Flat rate might be simpler (less sticker shock at checkout)
+  - Domestic vs international shipping
+  - Fragile items (stained glass, ceramics) — surcharge or "in-store only"?
+  - Local pickup option for tourists and locals
+
+
+==========================================================================
+LOCAL ARTISTS
+==========================================================================
+
+Page Structure:
+  - Main page shows all artists (clickable)
+  - Clicking an artist opens their showcase page:
+    - Photo of the artist
+    - Short synopsis/bio
+    - Gallery of their wares
+  - Idea: browse by section/medium (embroidery, stained glass, etc.) — TBD
+
+IMPORTANT: Do NOT include contact info for artists — customers could bypass
+the store and go directly to the artist, undermining the business
+
+TODO:
+  - Get full list of artist names from the owner
+  - Find their Instagram accounts, download photos of their work for the site
+
+Artists Found Online (need to confirm with owner):
+  - Martha Jane Ritchie — printmaking, mixed media (Haines Junction)
+  - Audrey Levesque / Made by Auds — sustainable clothing
+    (Dawson City, studio inside the shop)
+  - Priska Wettstein — photography, photo painting, jewellery (Dawson City)
+  - Atsushi Sugimoto / Arctic Media Creation — photography products (Whitehorse)
+
+Consignment Tracking:
+  - When a consignment piece sells, owner needs to pay artist their cut
+  - Admin panel could track sales per artist for payouts
+  - Ties into the CMS idea
+
+
+==========================================================================
+DESIGN
+==========================================================================
+
+  - Reimagine the color scheme (current: dark brown nav/footer, gold accents)
+  - Revisit the splash image opacity (currently 0.7 white overlay)
+  - Find a palette that better complements the storefront image
+
+
+==========================================================================
+ONGOING MAINTENANCE — WHO UPDATES WHAT?
+==========================================================================
+
+The Problem:
+  Right now the site is static HTML (plain webpage files). Every time
+  something needs to change — new product, new artist, price update,
+  mark something sold — someone has to manually edit the HTML code and
+  re-upload it to the server. That's fine for a launch, but not
+  sustainable long-term if changes are frequent.
+
+Options for handling updates:
+
+  Option A: Developer does it (simplest, but creates dependency)
+    - Owner sends updates (new artist, new product, etc.)
+    - Developer edits the HTML files and uploads via cPanel
+      (cPanel = the control panel for managing the web hosting server)
+    - Pro: no new tech to build
+    - Con: owner depends on developer for every change
+
+  Option B: Square handles the shop, developer handles artists
+    - Shop inventory managed through owner's existing Square dashboard
+      — she already knows how to use it
+    - She adds/removes products, updates prices in Square
+    - Square keeps the online shop in sync automatically
+    - Artist pages still need manual HTML edits by developer
+    - Pro: shop runs itself, only artist changes need dev work
+    - Con: artist pages still manual
+
+  Option C: Build a CMS (Content Management System) — the real solution
+    - CMS = a simple admin panel / website the owner logs into
+    - She fills in a form (artist name, photo, bio) and it updates the
+      live site automatically — no code editing needed
+    - Could manage: artist profiles, shop inventory, contact info, hours
+    - Pro: owner is fully independent
+    - Con: big build — requires a backend (server-side code, database),
+      not just HTML anymore. Significant development effort.
+
+  Option D: Rebuild in WordPress
+    - WordPress = a popular website platform with a built-in admin panel
+    - BlackSun hosting supports it with one-click install
+    - Owner manages content through WordPress dashboard (no code needed)
+    - Pro: proven system, tons of plugins for shops/galleries
+    - Con: means rebuilding the whole site in WordPress instead of
+      custom HTML. Less design control unless you build a custom theme.
+
+Recommendation:
+  - For now: Option B — Square handles the shop, developer handles
+    artist pages manually
+  - Ask the owner: how often does the artist roster change? If it's a
+    few times a year, manual updates are fine. If it's constant, she
+    needs Option C or D.
+  - Long-term: either build a CMS (Option C) or migrate to WordPress
+    (Option D) so she's not dependent on a developer
+
+
+==========================================================================
+SITE-WIDE IDEAS
+==========================================================================
+
+Search:
+  - Add a search function to the nav menu
+  - Would search across the entire site (artists, shop items, etc.)
+
+CMS (Content Management System) / Owner Admin Panel — IDEA:
+  - Build a simple program/interface so the store owner can edit the
+    website herself
+  - Could manage: artist profiles, shop inventory, contact info, hours, etc.
+  - TBD — just an idea, needs further exploration
+
+
+==========================================================================
+GLOSSARY — WHAT THE ACRONYMS MEAN
+==========================================================================
+
+  HTML   — HyperText Markup Language. The code that makes up a webpage.
+  CSS    — Cascading Style Sheets. Controls how the webpage looks
+           (colors, fonts, layout).
+  CMS    — Content Management System. A tool that lets non-technical
+           people edit a website through a simple interface instead of
+           editing code directly. WordPress is the most common example.
+  cPanel — Control Panel. The dashboard for managing web hosting — file
+           uploads, email accounts, databases, etc. Provided by BlackSun.
+  FTP    — File Transfer Protocol. A way to upload/download files to/from
+           a web server. Like drag-and-drop for websites.
+  SFTP   — Secure File Transfer Protocol. Same as FTP but encrypted
+           (more secure).
+  SSH    — Secure Shell. A way to remotely access and control a server
+           via command line (text commands).
+  SSL    — Secure Sockets Layer. Encrypts the connection between a
+           visitor's browser and the website. Makes the URL show "https"
+           and the padlock icon. Required for taking payments online.
+  SEO    — Search Engine Optimization. Making the site show up higher
+           in Google search results.
+  POS    — Point of Sale. The system used to process payments in-store
+           (the till / cash register). She uses Square POS.
+  API    — Application Programming Interface. A way for two systems to
+           talk to each other. Example: our website talking to Square
+           to process a payment.
+  SDK    — Software Development Kit. A set of tools/code provided by a
+           company (like Square) to help developers build integrations
+           with their system.
+  GST    — Goods and Services Tax. Canadian federal sales tax (5%).
+  2FA    — Two-Factor Authentication. A security feature that requires
+           a second verification step (like a code sent to your phone)
+           when logging in.
+
+
+==========================================================================
+HOURS TRACKED
+==========================================================================
+
+Date        | Hours | Description
+------------|-------|---------------------------------------------
+2026-06-03  | 3.0   | Planning, research, initial site build,
+            |       | dev log, Square research, store visit
+
+
+Total hours: 3.0
+
+
+==========================================================================
+INVOICE
+==========================================================================
+
+  - invoice.md created — no costs set yet
+  - Will need to price out completed work and future phases
+
+
+==========================================================================
+GENERAL NOTES
+==========================================================================
+
+  - Mobile responsive (hamburger menu already in place)
+  - Background image consistent across all pages
+  - Email: info@dancingmoose.ca already set up
+  - Backup strategy: keep local copies of all site files
+  - Favicon: small icon for browser tab (need logo or moose icon)
+  - Privacy policy: legally required for e-commerce in Canada. Says what
+    data is collected and how it's used. Free generators available online.
+  - Returns/refund policy: Square handles the refund processing through
+    its dashboard, but the site needs a written page with the store's
+    rules (timeframe, conditions, exceptions for one-of-a-kind items).
+  - Google Business: the info box on Google with address, hours, reviews.
+    She probably already has one. Just need to add dancingmoose.ca as the
+    website link. Free, takes 5 minutes, drives traffic.
