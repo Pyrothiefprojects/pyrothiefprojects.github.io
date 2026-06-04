@@ -12,8 +12,10 @@ ROADMAP — ORDER OF OPERATIONS
 Phase 1 — Foundation (mostly done)
 -----------------------------------
   1. Rename dancingmoose.html → index.html, update all nav links ✓ DONE
-  2. Finalize the color scheme / design
-  3. Adjust the splash image opacity
+  2. Finalize the color scheme / design ✓ DONE (sidebar layout, transparent, dark text)
+  3. Adjust the splash image opacity ✓ DONE (removed white overlay entirely)
+  3b. Extract shared styles.css ✓ DONE
+  3c. Mobile responsive layout — TODO (hamburger menu for narrow screens)
   4. Domain & hosting already set up (dancingmoose.ca via BlackSun)
   5. Upload files to cPanel
 
@@ -269,9 +271,67 @@ Consignment Tracking:
 DESIGN
 ==========================================================================
 
-  - Reimagine the color scheme (current: dark brown nav/footer, gold accents)
-  - Revisit the splash image opacity (currently 0.7 white overlay)
-  - Find a palette that better complements the storefront image
+Phase 2 redesign (June 4, 2026):
+
+  Layout — Sidebar + Background Image:
+    - Removed the top navigation bar entirely
+    - Left sidebar: nav links (Home, Shop, Local Artists, About) +
+      contact info (address, hours, phone, email) + social icons
+    - Right sidebar (artists page only): scrollable portrait cards
+      for each artist with photo placeholder + name + medium
+    - Sidebar widths use calc((100vw - 100vh) / 2) — dynamically
+      sized to fit exactly in the empty margins beside the square
+      background image. No overlap.
+    - Sidebars are transparent (no background color), dark text on
+      the white page background
+
+  Background Image:
+    - Storefront image (1500x1500, square) is the background on all
+      pages via background-size: contain + center + fixed
+    - On desktop (landscape), image is constrained by viewport height,
+      leaving horizontal margins where the sidebars sit
+    - Home page: just the background image, nothing over it
+    - Inner pages: white semi-transparent card (rgba 255,255,255,0.85)
+      appears centered over the image with page content
+
+  Color Scheme:
+    - Removed dark brown nav/footer bars
+    - Removed the 0.7 white overlay that was washing out the image
+    - Page background: #f5f0eb (warm off-white)
+    - Text: dark browns (#2c1810, #3d2a1c, #5a4a3a)
+    - Transparent sidebars — text sits directly on the white margin
+
+  CSS:
+    - All styles moved to shared styles.css (was duplicated inline
+      in every HTML file before)
+    - contact.html still exists but may be redundant — contact info
+      is now in the sidebar on every page
+
+  Mobile vs Desktop — IMPORTANT:
+    - The sidebar-in-margins layout only works on landscape/desktop
+      screens. On portrait/phone screens, the square image fills the
+      full width — there are no side margins for sidebars.
+    - Mobile is currently broken:
+      - Sidebar text is transparent bg over the image — unreadable
+      - Content cards are fixed-center and don't scroll
+      - Artists page shows nothing (right sidebar is off-screen)
+      - Hamburger menu exists but sidebar behind it is unusable
+    - Desktop layout is still being experimented with. Once the
+      desktop design is finalized, mobile needs its own layout pass.
+    - Same HTML files, same CSS file — but the @media block for
+      mobile will need its own design decisions (hamburger menu,
+      card positioning, image sizing, artist display, etc.)
+    - ANY structural/layout changes after both are built will
+      require checking both the desktop CSS and the mobile @media
+      block. Not two sites, but two sets of layout rules to maintain.
+
+  Files changed:
+    - styles.css (NEW) — shared stylesheet for all pages
+    - index.html — sidebar layout, no content card (splash only)
+    - shop.html — sidebar layout + centered content card
+    - artists.html — sidebar layout + right sidebar with artist cards
+    - about.html — sidebar layout + centered content card
+    - contact.html — sidebar layout + centered content card
 
 
 ==========================================================================
@@ -390,9 +450,12 @@ Date        | Hours | Description
 ------------|-------|---------------------------------------------
 2026-06-03  | 3.0   | Planning, research, initial site build,
             |       | dev log, Square research, store visit
+2026-06-04  | 1.0   | Redesign: sidebar layout, shared CSS,
+            |       | background image, artist right sidebar,
+            |       | color scheme, desktop layout experimentation
 
 
-Total hours: 3.0
+Total hours: 4.0
 
 
 ==========================================================================
