@@ -8,6 +8,10 @@
     box-sizing: border-box;
 }
 
+.hidden {
+    display: none !important;
+}
+
 body {
     font-family: 'Georgia', serif;
     min-height: 100vh;
@@ -158,10 +162,6 @@ body {
 }
 
 /* Content card — white panel over the background */
-
-.hidden {
-    display: none !important;
-}
 
 .content-card {
     max-width: 700px;
