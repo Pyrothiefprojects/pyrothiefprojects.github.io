@@ -16,13 +16,17 @@
 
     <aside class="sidebar">
         <ul class="sidebar-nav">
-            <li><a href="index.html" class="active">Home</a></li>
-            <li><a href="shop.html">Shop</a></li>
-            <li><a href="artists.html">Local Artists</a></li>
-            <li><a href="about.html">About</a></li>
+            <li><a href="#" title="Home" onclick="hideAll(); return false;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></a></li>
+            <li><a href="#" onclick="togglePanel('shop'); return false;">Shop</a></li>
+            <li><a href="#" onclick="togglePanel('artists'); return false;">Local Artists</a></li>
+            <li><a href="#" onclick="togglePanel('about'); return false;">About</a></li>
         </ul>
 
-        <hr class="sidebar-divider">
+        <div id="sidebar-about" class="sidebar-about hidden">
+            <div class="sidebar-about-card">
+                Nestled on historic Front Street in the heart of Dawson City, The Dancing Moose has celebrated the creativity and spirit of the North since 2001. Offering a curated collection of handcrafted goods, ladies fashion, jewellery, and unique gifts you won't find anywhere else.
+            </div>
+        </div>
 
         <div class="sidebar-contact">
             <p>986 Front Street<br>Dawson City, YT Y0B 0A3</p>
@@ -41,8 +45,85 @@
         </div>
     </aside>
 
-    <div class="main">
+    <div id="main" class="main">
+        <div id="shop-card" class="content-card hidden">
+            <p>Coming soon.</p>
+        </div>
     </div>
+
+    <aside id="artists-panel" class="right-sidebar hidden">
+        <div class="artist-list">
+            <a class="artist-card" href="#">
+                <div class="artist-portrait">
+                    <span class="artist-portrait-placeholder">MR</span>
+                </div>
+                <div class="artist-info">
+                    <div class="artist-name">Martha Jane Ritchie</div>
+                    <div class="artist-medium">Printmaking, Mixed Media</div>
+                </div>
+            </a>
+            <a class="artist-card" href="#">
+                <div class="artist-portrait">
+                    <span class="artist-portrait-placeholder">AL</span>
+                </div>
+                <div class="artist-info">
+                    <div class="artist-name">Audrey Levesque</div>
+                    <div class="artist-medium">Sustainable Clothing</div>
+                </div>
+            </a>
+            <a class="artist-card" href="#">
+                <div class="artist-portrait">
+                    <span class="artist-portrait-placeholder">PW</span>
+                </div>
+                <div class="artist-info">
+                    <div class="artist-name">Priska Wettstein</div>
+                    <div class="artist-medium">Photography, Jewellery</div>
+                </div>
+            </a>
+            <a class="artist-card" href="#">
+                <div class="artist-portrait">
+                    <span class="artist-portrait-placeholder">AS</span>
+                </div>
+                <div class="artist-info">
+                    <div class="artist-name">Atsushi Sugimoto</div>
+                    <div class="artist-medium">Photography Products</div>
+                </div>
+            </a>
+        </div>
+    </aside>
+
+    <script>
+        function hideAll() {
+            document.getElementById('sidebar-about').classList.add('hidden');
+            document.getElementById('shop-card').classList.add('hidden');
+            document.getElementById('artists-panel').classList.add('hidden');
+            document.getElementById('main').classList.remove('has-right-sidebar');
+        }
+
+        function togglePanel(panel) {
+            var aboutEl = document.getElementById('sidebar-about');
+            var shopEl = document.getElementById('shop-card');
+            var artistsEl = document.getElementById('artists-panel');
+            var mainEl = document.getElementById('main');
+
+            if (panel === 'about') {
+                var showing = aboutEl.classList.contains('hidden');
+                hideAll();
+                if (showing) aboutEl.classList.remove('hidden');
+            } else if (panel === 'shop') {
+                var showing = shopEl.classList.contains('hidden');
+                hideAll();
+                if (showing) shopEl.classList.remove('hidden');
+            } else if (panel === 'artists') {
+                var showing = artistsEl.classList.contains('hidden');
+                hideAll();
+                if (showing) {
+                    artistsEl.classList.remove('hidden');
+                    mainEl.classList.add('has-right-sidebar');
+                }
+            }
+        }
+    </script>
 
 </body>
 </html>
