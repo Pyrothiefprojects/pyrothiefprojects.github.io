@@ -17,15 +17,18 @@ Phase 1 — Template + Store Test
   3b. Consolidate to single page (index.html) ✓ DONE
   3c. Toggle panels: About, Shop, Local Artists ✓ DONE
   3d. Live site verified working ✓ DONE
-  4. Get access to owner's Square dashboard  ← NEXT
-  5. Activate Square Online from the dashboard
-  6. Upload product photos to catalog items
-  7. Toggle which items are visible online (start with screenprints)
-  8. Set up online categories/layout within Square's tools
-  9. Grab the Square Online store URL
-  10. Point Shop nav link to the Square Online store URL
-  11. Test the checkout flow locally (click Shop link → opens real store)
-  12. Confirm store works before moving on
+  4. Get access to owner's Square dashboard ✓ DONE
+  5. Activate Square Online from the dashboard ✓ DONE
+  6. Set up Square Online free subdomain (dancingmoose.square.site) ✓ DONE
+  7. Enable pickup fulfillment ✓ DONE
+  8. Test checkout flow — working ✓ DONE
+  9. Point Shop nav link to Square Online store URL — TODO
+  10. Disable shipping on all items (must be done per item, max 250
+      at a time — no global toggle) — TODO
+  11. Upload product photos to catalog items — TODO
+  12. Clean up / organize inventory on Square terminal — TODO
+  13. Toggle which items are visible online (start with screenprints) — TODO
+  14. Set up online categories/layout within Square's tools — TODO
 
 Phase 2 — Finalize Site Design
 -----------------------------------
@@ -77,6 +80,15 @@ OPEN QUESTIONS — NEED ANSWERS FROM OWNER
   - Does she have a logo, or just the storefront sign?
   - Does she have a Google Business listing already? If so, we just
     need to add dancingmoose.ca as the website link there.
+  - Shipping — Canada only or international? Tourists visit from
+    everywhere. If someone from overseas wants to order, can she ship it?
+
+Answered (June 4):
+  - Owner needs to be able to edit website content herself
+    → WordPress migration confirmed as the long-term plan
+  - Developer will have separate WordPress credentials for setup/support
+  - info@dancingmoose.ca email is hosted through BlackSun
+    → Cannot switch away from BlackSun without migrating email too
 
 
 ==========================================================================
@@ -421,6 +433,92 @@ Recommendation:
 
 
 ==========================================================================
+WORDPRESS MIGRATION — LONG-TERM PLAN
+==========================================================================
+
+Why:
+  - Current site is custom HTML/CSS — only a developer can edit it
+  - Owner needs to be able to update the site herself (add artists,
+    change hours, update content) without calling the developer
+  - WordPress gives her a dashboard to do all of this in a browser
+
+How it works:
+  - WordPress is available through BlackSun's cPanel — no extra cost,
+    included in the current $183/year hosting plan
+  - Set it up through cPanel, and it creates a dashboard at
+    dancingmoose.ca/wp-admin
+  - Owner logs into that URL to edit the site — no code, just forms
+    and a visual editor
+  - Completely separate from BlackSun's cPanel (which is for managing
+    the hosting account itself — storage, email, billing)
+
+What's needed to convert:
+  - Convert our current HTML/CSS design into a WordPress custom theme
+    (break index.html into PHP template files: header.php, footer.php,
+    index.php, style.css, functions.php — our CSS carries over)
+  - Install Advanced Custom Fields (ACF) plugin (free) to create an
+    "Artists" custom post type with fields: name, photo, bio, medium
+  - Owner then sees "Artists" in her WordPress menu, clicks "Add New",
+    fills in the form, hits Publish — artist appears on the site
+  - Shop link still points to Square Online — no change there
+
+Hosting comparison (explored alternatives):
+  - BlackSun (current): $183/year — includes cPanel, WordPress, SSL,
+    email hosting. Already set up and paid for.
+  - GitHub Pages: free, but static HTML only — can't run WordPress.
+    Good for the current custom HTML site, not for WordPress.
+  - Squarespace: $432/year for e-commerce. More expensive, and she
+    already has Square for the shop.
+  - Square Online with custom domain: $432/year. Same cost issue.
+  - Verdict: BlackSun is the cheapest option that supports WordPress
+    and everything she needs.
+
+Developer access:
+  - WordPress uses 2FA on login
+  - Owner's account is tied to info@dancingmoose.ca — developer would
+    need her 2FA code every time
+  - Solution: create a separate WordPress admin account for the
+    developer with its own credentials, so both can log in independently
+
+Timeline:
+  - WordPress theme files built and ready in wp-theme/dancingmoose/
+  - Next: enable WordPress on BlackSun via cPanel Softaculous
+  - Upload theme to wp-content/themes/dancingmoose/ via File Manager
+  - Activate theme in WordPress dashboard
+
+Accounts Setup (June 6):
+  Three separate logins — none share credentials:
+
+  1. BlackSun (hosting company website)
+     - Owner's account — billing, account management, support
+     - Login: blacksun.ca
+     - Developer does NOT need access here
+
+  2. cPanel (server management)
+     - Owner: main account (info@dancingmoose.ca)
+     - Developer: team member account (mrwizard303@dancingmoose.ca)
+     - Login: dancingmoose.ca/cpanel
+     - Used for: file manager, databases, enabling WordPress,
+       email accounts, SSL, etc.
+
+  3. WordPress (website editing)
+     - Developer: admin account (mrwizard303@dancingmoose.ca)
+       — set up during WordPress enable, first admin user
+     - Owner: second admin account to be created after setup
+       — she logs into dancingmoose.ca/wp-admin to edit content
+     - Used for: editing pages, adding artists, updating about
+       text, contact info, hours, etc.
+
+  4. Email (dancingmoose.ca inboxes)
+     - info@dancingmoose.ca — owner's email (hosted on BlackSun)
+     - mrwizard303@dancingmoose.ca — developer email
+     - Managed through cPanel email settings
+
+  NOTE: Do NOT store passwords in this file — it's in a public git repo.
+  Credentials stored securely elsewhere.
+
+
+==========================================================================
 SITE-WIDE IDEAS
 ==========================================================================
 
@@ -485,9 +583,16 @@ Date        | Hours | Description
             |       | color scheme, desktop layout experimentation,
             |       | roadmap restructure, Square Online research
             |       | + planning
+2026-06-06  | 1.0   | Account setup: cPanel team member, email,
+            |       | WordPress theme build, hosting research,
+            |       | BlackSun/cPanel/WordPress credential planning
+2026-06-08  | 2.5   | Square Online setup: activated store,
+            |       | subdomain, pickup/shipping config, checkout
+            |       | testing, inventory review (not invoiced —
+            |       | in-store work, time tracking only)
 
 
-Total hours: 5.0
+Total hours: 8.5
 
 
 ==========================================================================
