@@ -3,148 +3,475 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DTG</title>
+    <title>DTG — Weekly Schedule</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            min-height: 100vh;
             background: #0a0a0a;
             font-family: 'Orbitron', sans-serif;
-            letter-spacing: 0.15em;
             color: #f5f5f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem 1.5rem 3rem;
         }
-        .prompt {
+
+        /* ── Page Header ─────────────────────────────────── */
+        .page-header {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            align-items: baseline;
             gap: 1.5rem;
-            width: 100%;
-            max-width: 360px;
-            padding: 2rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,107,53,0.25);
         }
-        .title {
-            font-size: 1.8rem;
+        .page-title {
+            font-size: 1.6rem;
             font-weight: 700;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
             background: linear-gradient(135deg, #ffa500, #ff6b35);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        input[type="password"] {
-            width: 100%;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,107,53,0.3);
-            border-radius: 4px;
-            color: #f5f5f5;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
-            letter-spacing: 0.2em;
-            padding: 0.75rem 1rem;
-            text-align: center;
-        }
-        input[type="password"]:focus { outline: none; border-color: rgba(255,107,53,0.7); }
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 600;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: #0a0a0a;
-            background: linear-gradient(135deg, #ffa500, #ff6b35);
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover { opacity: 0.85; }
-        .remember {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
+        .page-subtitle {
             font-size: 0.7rem;
-            color: #5a4a40;
-            cursor: pointer;
-            user-select: none;
+            letter-spacing: 0.15em;
+            color: #6a5a50;
+            text-transform: uppercase;
         }
-        .remember input { accent-color: #ff6b35; cursor: pointer; }
-        .error {
-            font-size: 0.75rem;
-            color: #ff6b35;
+
+        /* ── Scroll wrapper ──────────────────────────────── */
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        /* ── Table ───────────────────────────────────────── */
+        table {
+            border-collapse: collapse;
+            min-width: 100%;
+            table-layout: fixed;
+        }
+
+        /* column widths */
+        col.name-col   { width: 160px; }
+        col.day-col    { width: 110px; }
+
+        /* ── Header row ──────────────────────────────────── */
+        .hdr-name {
+            background: #111;
+            border: 1px solid rgba(255,107,53,0.15);
+            padding: 0;
+            height: 44px;
+        }
+        .hdr-day {
+            background: #111;
+            border: 1px solid rgba(255,107,53,0.15);
+            text-align: center;
+            height: 44px;
+            padding: 4px 2px;
+        }
+        .hdr-day .day-name {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #ffa500;
+            display: block;
+        }
+        .hdr-day .day-date {
+            font-size: 0.6rem;
+            letter-spacing: 0.08em;
+            color: #6a5a50;
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* ── Day notes row ───────────────────────────────── */
+        .notes-row td {
+            background: #0d0d0d;
+            border: 1px solid rgba(255,107,53,0.1);
+            height: 26px;
+            font-size: 0.55rem;
+            letter-spacing: 0.08em;
+            text-align: center;
+            color: #6a5a50;
+            text-transform: uppercase;
+        }
+
+        /* ── Section header ──────────────────────────────── */
+        .section-hdr td {
+            background: rgba(255,107,53,0.07);
+            border: 1px solid rgba(255,107,53,0.2);
+            height: 26px;
+            text-align: center;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(255,165,0,0.7);
+        }
+
+        /* ── Employee rows ───────────────────────────────── */
+        .emp-row td {
+            border: 1px solid rgba(255,107,53,0.12);
+            height: 34px;
+        }
+        .emp-row.even td { background: #111; }
+        .emp-row.odd  td { background: #0e0e0e; }
+
+        /* name cell */
+        .name-cell {
+            padding: 0 8px;
+            position: relative;
+        }
+        .name-text {
+            font-size: 0.65rem;
             letter-spacing: 0.1em;
-            min-height: 1rem;
+            color: #d0c0b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 34px;
+        }
+        .badges {
+            position: absolute;
+            top: 3px;
+            right: 4px;
+            display: flex;
+            gap: 2px;
+        }
+        .badge {
+            font-size: 0.45rem;
+            font-weight: 700;
+            padding: 1px 3px;
+            border-radius: 999px;
+            color: #fff;
+            letter-spacing: 0.05em;
+        }
+        .badge-P  { background: #7c3aed; }
+        .badge-R  { background: #1d4ed8; }
+        .badge-HL { background: #c2410c; }
+
+        /* shift cells */
+        .day-cell {
+            text-align: center;
+            font-size: 0.65rem;
+            letter-spacing: 0.08em;
+            color: #a09080;
+            font-family: monospace;
+        }
+        .day-cell.status-off    { background: rgba(160,20,20,0.75)  !important; color: #ffd0d0; }
+        .day-cell.status-sick   { background: rgba(130,20,20,0.85)  !important; color: #ffd0d0; }
+        .day-cell.status-shift  { background: rgba(20,110,50,0.75)  !important; color: #c0ffd0; }
+        .day-cell.status-late   { background: rgba(150,120,0,0.65)  !important; color: #fff0a0; }
+        .day-cell.working       { color: #e0e0e0; }
+
+        /* ── Footer info row ─────────────────────────────── */
+        .info-row td {
+            background: #0a0a0a;
+            border: 1px solid rgba(255,107,53,0.1);
+            height: 26px;
+            text-align: center;
+            font-size: 0.5rem;
+            letter-spacing: 0.1em;
+            color: #5a4a40;
+            text-transform: uppercase;
+        }
+
+        /* ── Day summary footer ──────────────────────────── */
+        .summary-row td {
+            background: #0d0d0d;
+            border: 1px solid rgba(255,107,53,0.12);
+            height: 46px;
+            text-align: center;
+            vertical-align: middle;
+            padding: 4px 2px;
+        }
+        .summary-label {
+            font-size: 0.55rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #5a4a40;
+        }
+        .summary-counts {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 3px;
+        }
+        .summary-counts span {
+            font-size: 0.55rem;
+            letter-spacing: 0.06em;
+            color: #7a6a60;
+        }
+        .summary-badges {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+            margin-top: 3px;
+        }
+        .sbadge {
+            font-size: 0.45rem;
+            font-weight: 700;
+            padding: 1px 3px;
+            border-radius: 999px;
+            color: #fff;
+        }
+        .sbadge-P  { background: #7c3aed; }
+        .sbadge-R  { background: #1d4ed8; }
+        .sbadge-HL { background: #c2410c; }
+
+        /* ── Print ───────────────────────────────────────── */
+        @media print {
+            body { background: #fff; color: #000; padding: 0.5rem; }
+            .page-title { color: #000; -webkit-text-fill-color: #000; background: none; }
+            .page-subtitle { color: #555; }
+            .page-header { border-bottom-color: #999; }
+            table { width: 100%; }
+            .emp-row.even td, .emp-row.odd td { background: #fff; }
+            .section-hdr td { background: #eee; color: #333; }
+            .hdr-name, .hdr-day { background: #f5f5f5; }
+            .hdr-day .day-name { color: #c04400; }
+            .hdr-day .day-date { color: #777; }
+            .notes-row td, .info-row td, .summary-row td { background: #f9f9f9; }
+            .name-text { color: #222; }
+            .day-cell { color: #333; }
+            .day-cell.status-off   { background: #ffcccc !important; color: #600; }
+            .day-cell.status-sick  { background: #ffbbbb !important; color: #600; }
+            .day-cell.status-shift { background: #ccffdd !important; color: #040; }
+            .day-cell.status-late  { background: #fffaaa !important; color: #660; }
         }
     </style>
 </head>
 <body>
-    <div class="prompt">
-        <div class="title">DTG</div>
-        <input type="password" id="pw" placeholder="Password" onkeydown="if(event.key==='Enter')unlock()">
-        <label class="remember">
-            <input type="checkbox" id="remember">
-            Remember me
-        </label>
-        <button onclick="unlock()">Enter</button>
-        <div class="error" id="err"></div>
+
+    <div class="page-header">
+        <div class="page-title">DTG</div>
+        <div class="page-subtitle" id="week-label"></div>
     </div>
-    <script>
-        const PAYLOAD = {"salt":"OewP/j97jKXCa5JIESSezA==","iv":"bOXRd3aAIuSKPCYh","ct":"yBsnTavx3CuqFoKny+n9K1+NePjyrnJQQW7AZ3+JSpANJyqBIqz9KZgKUJWsbuPFqV5UgA6VyrzPPE/e7HxYGffk75zPSn58U7YZgKCgQZ6WjWFmTTyFU5uf42aLZ2594pdbNHfrDT2QIw5Ajh1h2a4Uzu2BNM2S+CPDxJSSkUHG2czdycG6GKez0PG2CIuORTrgzEqoFMlE7MpkzBJ0JEFMsmOCFh3KVaW8K5iO2nC8W9fmkO3wPj3gURL/TGZnExA4hWadnH06VbIGO9pGvBOyxZwJfwLOtIFASzwMyChZk+K+kBeovpjHCKt8U+dJlh49NvFvE3eVbJqPnfW5qKRoIdOzJzjqkUYpiMRwrcGrtOXBvuIhmLx4dzL2/OywBgw0zTz0caVwJ6VRzshij+kqXpQgPehJi+GvwwytkCF3auWGP83y5YAnj3p4URmjOBwZOf/Sk8qtP+jHn72o5ORU+jTZhxIu8ApDO8UqM91pcMqKeTddLe830atDU/RDJJx3CcfnBXfJijQ1TkC2LF3Ti2Kmm6clB7cHV0x6bqVKo56JzysqEeB8NxrqDvezV4zdlaBOdrbdYfkRfRP41A0+NG9zeXNwswO8Y/VE8JcgjFiaUkalQci/1dq0My/w+QgnHyu/20Rc0pMfQRPmkd1Xszhz7/PAdwOsztOOY/FcJ8r+PlnpE6QacClytqHX+yHZtMQSVepIxC9WnkobbUjcxQgbg3XvxsodE9EoQmrrJCA/QqJIP0KD4cwY5eje0z+CmwNLsR28hox9URswrkpLoPqwP3z3bA6TcCHgM30SgYijgJT/c6BOhuZ/xfzAsUU8vzHCeMpYWczaWBSoipZBTpwuYIH8JrxmeXIL+fVuWOZXD0bBucIjDLnYFon/YUH2cve/+TARSb0G9AmoYvCz3l017DUtmLkPPNZ4ZKWDzvOzDNOYsQAuyAsx7rtL+zVduJ7bS3Y6mVNYGuZ6SvYQmWX9TkJ80I437EYEQ/7QP4Wes0M3pCYT+FkVRUt+ku+R+d38GHHc34VQbTBLzu/UHQ5schTCtLsgsRCSiNju/mR0JUzHWbCW7UGwlnCEWOumWw/nfla0zr2xgrMPr/cojXizjo4oiEFneHw3mMZyA3d/z+qKzM6k6KVgqULy74bZq9gnjIQgb0lc1HtfRITXQAuTNmVw4y5NULy/pCYQvU/aue8nIbRf4ldCnDumBWNm7nH26eFs+gJFLop3ji5UHSSpFx3Zg2tuUDcWACB2hj8unnnNriyJUMj7FZGkKbojyPq5uieBJO8HMWciwtkb6cvkKO92Tpyar9QrDHq/vAakB/hjWZ+HlkzFKY/5AJQpHeKJ/tQ4eAbSSMmB4q4sibuqzlsE3hAY1TJcpumvIyPKe3uLqgpf+6ZmYeKEzygCdtnIjZ1ELxl+8gIiZg8x1QaNvpg="};
-        const STORAGE_KEY = 'dtg_pw';
 
-        function fromBase64(b64) {
-            return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    <div class="table-scroll">
+        <table id="schedule-table">
+            <colgroup>
+                <col class="name-col">
+                <col class="day-col"><col class="day-col"><col class="day-col">
+                <col class="day-col"><col class="day-col"><col class="day-col"><col class="day-col">
+            </colgroup>
+            <tbody id="schedule-body"></tbody>
+        </table>
+    </div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  EDIT SCHEDULE DATA HERE
+// ═══════════════════════════════════════════════
+
+const WEEK_START = "2026-09-07"; // Monday  YYYY-MM-DD
+
+// One note per day, Mon–Sun (leave "" for none)
+const DAY_NOTES = ["", "", "", "", "Long weekend", "", ""];
+
+// ── Employees ────────────────────────────────
+// role:    "APB" | "Multi-Dealers" | "BJ/RD Dealers" | "Slots" | "White Ram Heros"
+// badges:  any combo of "P" (Poker), "R" (Roulette), "HL" (OmahaHiLo)
+// days:    [Mon, Tue, Wed, Thu, Fri, Sat, Sun]  — shift start time, or "" not working
+// status:  [Mon…Sun] — null=normal | "off"=time off | "sick"=sick | "shift"=special | "late"=late
+
+const EMPLOYEES = [
+    // ── APB ─────────────────────────────────────────────────────────────────
+    { name: "Employee 1", role: "APB", badges: ["P","R","HL"],
+      days:   ["9:00","9:00","",    "9:00","",    "9:00",""],
+      status: [null,  null,  "off", null,  "off", null,  null] },
+
+    { name: "Employee 2", role: "APB", badges: ["P"],
+      days:   ["",    "10:00","10:00","",    "10:00","10:00",""],
+      status: [null,  null,   null,  null,  null,   null,   null] },
+
+    // ── Multi-Dealers ────────────────────────────────────────────────────────
+    { name: "Employee 3", role: "Multi-Dealers", badges: ["P","R"],
+      days:   ["9:00","",    "9:00","9:00","",    "",    "9:00"],
+      status: [null,  null,  null,  null,  null,  null,  null] },
+
+    { name: "Employee 4", role: "Multi-Dealers", badges: ["R","HL"],
+      days:   ["",    "9:00","",    "9:00","9:00","9:00",""],
+      status: [null,  null,  null,  null,  null,  "late",null] },
+
+    // ── BJ/RD Dealers ────────────────────────────────────────────────────────
+    { name: "Employee 5", role: "BJ/RD Dealers", badges: ["P"],
+      days:   ["10:00","10:00","10:00","",     "10:00","",     ""],
+      status: [null,   null,   null,   null,   null,   null,   null] },
+
+    { name: "Employee 6", role: "BJ/RD Dealers", badges: [],
+      days:   ["",     "",     "10:00","10:00","",     "10:00","10:00"],
+      status: [null,   null,   null,   null,   null,   null,   null] },
+
+    { name: "Employee 7", role: "BJ/RD Dealers", badges: ["R"],
+      days:   ["9:00","9:00","",    "9:00","9:00","",    ""],
+      status: [null,  null,  null,  null,  null,  null,  "sick"] },
+
+    // ── Slots ────────────────────────────────────────────────────────────────
+    { name: "Employee 8", role: "Slots", badges: [],
+      days:   ["10:00","",     "10:00","10:00","",     "10:00","10:00"],
+      status: [null,   null,   null,   null,   null,   null,   null] },
+
+    { name: "Employee 9", role: "Slots", badges: [],
+      days:   ["",    "10:00","",    "10:00","10:00","",    "10:00"],
+      status: [null,  "shift",null,  null,   null,   null,  null] },
+
+    // ── White Ram Heros ──────────────────────────────────────────────────────
+    { name: "Employee 10", role: "White Ram Heros", badges: ["P","R"],
+      days:   ["9:00","9:00","9:00","",    "9:00","",    ""],
+      status: [null,  null,  null,  null,  null,  null,  null] },
+];
+
+// ═══════════════════════════════════════════════
+//  END DATA  —  no edits needed below this line
+// ═══════════════════════════════════════════════
+
+const ROLE_ORDER  = ["APB", "Multi-Dealers", "BJ/RD Dealers", "Slots", "White Ram Heros"];
+const ROLE_LABELS = {
+    "APB":             "Assistant Pit Boss",
+    "Multi-Dealers":   "Multi-Dealers",
+    "BJ/RD Dealers":   "BlackJack / RD Dealers",
+    "Slots":           "Slots",
+    "White Ram Heros": "White Ram Heros"
+};
+const DAY_NAMES = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
+
+function addDays(dateStr, n) {
+    const d = new Date(dateStr + "T00:00:00");
+    d.setDate(d.getDate() + n);
+    return d;
+}
+function fmtDate(d) {
+    return (d.getMonth()+1) + "/" + d.getDate();
+}
+
+const weekDates = Array.from({length:7}, (_,i) => addDays(WEEK_START, i));
+const endDate   = weekDates[6];
+
+// Week label in header
+document.getElementById("week-label").textContent =
+    "Week of " + fmtDate(weekDates[0]) + " – " + fmtDate(endDate) + " / " + endDate.getFullYear();
+
+const tbody = document.getElementById("schedule-body");
+
+function tr(cls) {
+    const r = document.createElement("tr");
+    if (cls) r.className = cls;
+    return r;
+}
+function td(cls, html) {
+    const c = document.createElement("td");
+    if (cls) c.className = cls;
+    if (html !== undefined) c.innerHTML = html;
+    return c;
+}
+
+// ── Header row ────────────────────────────────
+const hdr = tr();
+hdr.appendChild(td("hdr-name"));
+weekDates.forEach((d, i) => {
+    const c = td("hdr-day");
+    c.innerHTML = `<span class="day-name">${DAY_NAMES[i]}</span><span class="day-date">${fmtDate(d)}</span>`;
+    hdr.appendChild(c);
+});
+tbody.appendChild(hdr);
+
+// ── Day notes row ─────────────────────────────
+const notesRow = tr("notes-row");
+notesRow.appendChild(td());
+DAY_NOTES.forEach(note => notesRow.appendChild(td("", note || "")));
+tbody.appendChild(notesRow);
+
+// ── Employee sections ─────────────────────────
+const grouped = {};
+ROLE_ORDER.forEach(r => grouped[r] = []);
+EMPLOYEES.forEach(e => { if (grouped[e.role]) grouped[e.role].push(e); });
+
+ROLE_ORDER.forEach(role => {
+    const emps = grouped[role];
+    if (!emps.length) return;
+
+    // Section header
+    const sHdr = tr("section-hdr");
+    const sCell = document.createElement("td");
+    sCell.colSpan = 8;
+    sCell.textContent = ROLE_LABELS[role];
+    sHdr.appendChild(sCell);
+    tbody.appendChild(sHdr);
+
+    // Employee rows
+    emps.forEach((emp, idx) => {
+        const row = tr("emp-row " + (idx % 2 === 0 ? "even" : "odd"));
+
+        // Name + badges
+        const nameCell = td("name-cell");
+        nameCell.innerHTML = `<span class="name-text">${emp.name}</span>`;
+        if (emp.badges.length) {
+            const bdg = document.createElement("span");
+            bdg.className = "badges";
+            emp.badges.forEach(b => {
+                bdg.innerHTML += `<span class="badge badge-${b}">${b}</span>`;
+            });
+            nameCell.appendChild(bdg);
         }
+        row.appendChild(nameCell);
 
-        async function deriveKey(password, salt) {
-            const enc = new TextEncoder();
-            const km = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
-            return crypto.subtle.deriveKey(
-                { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-                km,
-                { name: 'AES-GCM', length: 256 },
-                false,
-                ['decrypt']
-            );
+        // Day cells
+        for (let d = 0; d < 7; d++) {
+            const time   = emp.days[d]   || "";
+            const status = emp.status[d] || null;
+            let cls = "day-cell";
+            if (status)    cls += " status-" + status;
+            else if (time) cls += " working";
+            row.appendChild(td(cls, time));
         }
+        tbody.appendChild(row);
+    });
+});
 
-        async function tryUnlock(password) {
-            const salt = fromBase64(PAYLOAD.salt);
-            const iv   = fromBase64(PAYLOAD.iv);
-            const ct   = fromBase64(PAYLOAD.ct);
-            const key  = await deriveKey(password, salt);
-            const dec  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
-            const html = new TextDecoder().decode(dec);
-            document.open();
-            document.write(html);
-            document.close();
-        }
+// ── Info footer row ───────────────────────────
+const infoRow = tr("info-row");
+const infoCell = document.createElement("td");
+infoCell.colSpan = 8;
+infoCell.textContent = "All shifts are scheduled until 2:15am";
+infoRow.appendChild(infoCell);
+tbody.appendChild(infoRow);
 
-        async function unlock() {
-            const password = document.getElementById('pw').value;
-            if (!password) return;
-            try {
-                if (document.getElementById('remember').checked) {
-                    localStorage.setItem(STORAGE_KEY, password);
-                }
-                await tryUnlock(password);
-            } catch {
-                localStorage.removeItem(STORAGE_KEY);
-                document.getElementById('err').textContent = 'Incorrect password.';
-                document.getElementById('pw').value = '';
-            }
-        }
+// ── Day summary row ───────────────────────────
+const sumRow = tr("summary-row");
+const sumLabel = document.createElement("td");
+sumLabel.innerHTML = `<div class="summary-label">Day<br>Summary</div>`;
+sumRow.appendChild(sumLabel);
 
-        (async () => {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                try { await tryUnlock(saved); } catch { localStorage.removeItem(STORAGE_KEY); }
-            }
-        })();
-    </script>
+for (let d = 0; d < 7; d++) {
+    let apbs=0, dealers=0, poker=0, rou=0, hl=0;
+    EMPLOYEES.forEach(emp => {
+        const time   = emp.days[d]   || "";
+        const status = emp.status[d] || null;
+        if (!time || status === "off" || status === "sick") return;
+        if (emp.role === "APB") apbs++; else dealers++;
+        if (emp.badges.includes("P"))  poker++;
+        if (emp.badges.includes("R"))  rou++;
+        if (emp.badges.includes("HL")) hl++;
+    });
+    const c = document.createElement("td");
+    let badgeHtml = "";
+    if (poker) badgeHtml += `<span class="sbadge sbadge-P">P×${poker}</span>`;
+    if (rou)   badgeHtml += `<span class="sbadge sbadge-R">R×${rou}</span>`;
+    if (hl)    badgeHtml += `<span class="sbadge sbadge-HL">HL×${hl}</span>`;
+    c.innerHTML = `
+        <div class="summary-counts">
+            <span>APB ${apbs}</span>
+            <span>Dlr ${dealers}</span>
+        </div>
+        <div class="summary-badges">${badgeHtml}</div>`;
+    sumRow.appendChild(c);
+}
+tbody.appendChild(sumRow);
+</script>
 </body>
 </html>
