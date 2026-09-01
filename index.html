@@ -512,11 +512,11 @@
     <!-- Hero -->
     <header class="hero">
         <img src="pyrothieflogo.png" alt="Pyrothief Projects" class="logo">
-        <h1 class="project-title">Nova</h1>
+        <h1 class="project-title" id="title">Nova</h1>
     </header>
 
     <!-- Games -->
-    <section class="section">
+    <section class="section" id="games" style="padding-bottom: 0.5rem;">
         <div class="showcase-layout">
             <div class="showcase-column">
                 <img src="content/PN_play_parallax_cryo.png" alt="Parallax gameplay screenshot — Cryo" class="screenshot-img">
@@ -528,7 +528,7 @@
                 <a href="https://www.pyrothief.ca/parallax/" target="_blank" rel="noopener" class="play-now-btn">Dev Build</a>
                 <div class="trailer-placeholder">
                     <div class="play-icon"></div>
-                    Playreel Coming Soon
+                    Playreel Coming In The Future
                 </div>
             </div>
             <div class="showcase-column">
@@ -536,6 +536,25 @@
                 <img src="content/PN_play_redshift4.png" alt="Redshift gameplay screenshot" class="screenshot-img">
                 <img src="content/PN_edit_redshift1.png" alt="Redshift editor screenshot" class="screenshot-img">
                 <img src="content/PN_edit_redshift3.png" alt="Redshift editor screenshot" class="screenshot-img">
+            </div>
+        </div>
+    </section>
+
+    <!-- Nova Engine / Dogfighter -->
+    <section class="section" style="padding-top: 0.5rem;">
+        <div class="showcase-layout">
+            <div class="showcase-column">
+                <div class="screenshot-placeholder">Coming Later</div>
+                <div class="screenshot-placeholder">Coming Later</div>
+                <div class="screenshot-placeholder">Coming Later</div>
+                <div class="screenshot-placeholder">Coming Later</div>
+            </div>
+            <div class="showcase-center"></div>
+            <div class="showcase-column">
+                <img src="content/PN_edit_hub1.png" alt="Nova hub screen" class="screenshot-img">
+                <img src="content/PN_play_dogfight1.png" alt="Dogfighter gameplay screenshot" class="screenshot-img">
+                <div class="screenshot-placeholder">Coming Soon</div>
+                <div class="screenshot-placeholder">Coming Soon</div>
             </div>
         </div>
     </section>
@@ -578,6 +597,11 @@ This software is provided "as is" without warranty of any kind.</div>
     </div>
 
     <script>
+        // Auto-scroll on load
+        window.addEventListener('load', () => {
+            document.getElementById('title').scrollIntoView({ behavior: 'smooth' });
+        });
+
         // Lightbox with cycling
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = lightbox.querySelector('img');
