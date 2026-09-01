@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DTG</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -17,18 +17,104 @@
             align-items: center;
             justify-content: center;
         }
-        h1 {
-            font-size: clamp(2rem, 8vw, 4rem);
+        .prompt {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 360px;
+            padding: 2rem;
+        }
+        .title {
+            font-size: 1.8rem;
             font-weight: 700;
             text-transform: uppercase;
-            background: linear-gradient(135deg, #ffa500 0%, #ff6b35 50%, #cc4400 100%);
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+        input[type="password"] {
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,107,53,0.3);
+            border-radius: 4px;
+            color: #f5f5f5;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            padding: 0.75rem 1rem;
+            text-align: center;
+        }
+        input[type="password"]:focus { outline: none; border-color: rgba(255,107,53,0.7); }
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #0a0a0a;
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { opacity: 0.85; }
+        .error {
+            font-size: 0.75rem;
+            color: #ff6b35;
+            letter-spacing: 0.1em;
+            min-height: 1rem;
+        }
     </style>
 </head>
 <body>
-    <h1>DTG</h1>
+    <div class="prompt">
+        <div class="title">DTG</div>
+        <input type="password" id="pw" placeholder="Password" onkeydown="if(event.key==='Enter')unlock()">
+        <button onclick="unlock()">Enter</button>
+        <div class="error" id="err"></div>
+    </div>
+    <script>
+        const PAYLOAD = {"salt":"RUbd6tr/V1Wcg/6n1pg4ng==","iv":"qbKfSfarHu3nbYoz","ct":"1zeBkbjZltRZ9KVROVckfUZXUk1izciDrXib+Wb15KcCyLm7I4j2EF0k40pj3kSDjKbxcGBpAl/FHQ/FY8X+qmVFKWadLXpON97KUhGC6i1rom7ZR5Dmx0neZyrgqJEeTvhqJ4OOxEh35CBqQga0k131rjfRTV5t+mEF8L0jCfHEF5WuTSV320QClxc0voxKJSKXKCOD5SLZQtPAntD1gfXzf2D3OiOa3g+bDHdSh8z+RGTpj9e+U5UXyeJ/doGqscJCGEVQhUExtrMgechyQIF5LdE+dAfJ/yp0wH/46Wz3dR6PlS3iJTz1ZEkHnrH8INanRHylM/TyrskAYfU2Z0yK7org2+xvoRVlPAK7iv4mSMkchI8NHwGB3qzodGozyaK5BxFwtG9E6bEC6c5wnMNgIZeGxQEDFFhG6B6CFJnnmLoinvNxEPG4MQ8dBlBzL6A1bpIxRTi7F54+XJEsmT2omZH6kuhkrj24hpBzeyqO31rZ0QKUIiMVKZ76Y3hWMvWLjT8RvYqs1E1p/RVfhLEr5WH507VZiEII8YzyHzZ18eQgmIFJbvs9pGrLVYpyEPKuo6nP1d0sOdpkYEYwM0GAwmDL4r556B79eqI23XpVnYcU0bm4iTdHVfOlgW4hOdMVXvz6SeaEYFGwxmWLgvR8C5bHU1OmtkM4klAASqDxuBlizk7A8CZsi7CB/o/ueGvcAIFpFy6pqu+pxVYHzaMYQfEvDIIXm1kSJZYpUfQGxiajFTJZ4WmCwrDvyoQ/y6qP1Uj0iBrmNozEbw6fFStLTsqTRel2VfIkCMCMJt2vgqmlpaLfpb6q1DeKOXrA8x5yDV2q6D0pU4XBu1XLggsQBMVBpLeAiIE0gclkLWfc5EQPrZIF1PT7ZaZCO54QuHfJQQ0KkY4Dny+nJXrH65a8PK2lXIzNKq03UXjINN9fcI6I6bdab3MSDinrZZLkIl/6raw5mReVk4oN7MBc4X2TUIOx/BOQ6628lXIqj9pn577DXudVjVNGAPYnzzwp0l6rseEfi7TPNXGAgrchgP7VwOqgfNqtLyZFyvNVmkUF4pCHrAXWEAIMmSU3MyTrT+NJJTLk9P+kWc05IL5CHCZK0KURioi8tvbuWvueHcK/UvogIcdWhuVdbho07eHRwrBy7vHjY6tl4JBDNe0VwY0heObfB/PEcAo1SJG5d/zzmhIQm8gzpCFDCe92dEQsu4dsX9S41dtz8rSWhcSI2Ul7/VGpEieg+EoDMmQSwwigiz8ugachZskVQ7KfFFrhcrCsTsQ2A5OiEOYoZm5wH3CHcCOA0IL5drWAwgeWcFytGkmuNsvsDJJ1ongav7edmPYLNdl13sStQ5We52NQck8KhN2EqhP4U8rOJmP9frfd4vbQTSbDetHLoTKGcKHPXeWawwAu/AERl9XIvZqGky8pR97ikoY="};
+
+        function fromBase64(b64) {
+            return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        }
+
+        async function deriveKey(password, salt) {
+            const enc = new TextEncoder();
+            const km = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+                km,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['decrypt']
+            );
+        }
+
+        async function unlock() {
+            const password = document.getElementById('pw').value;
+            if (!password) return;
+            try {
+                const salt = fromBase64(PAYLOAD.salt);
+                const iv   = fromBase64(PAYLOAD.iv);
+                const ct   = fromBase64(PAYLOAD.ct);
+                const key  = await deriveKey(password, salt);
+                const dec  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+                const html = new TextDecoder().decode(dec);
+                document.open();
+                document.write(html);
+                document.close();
+            } catch {
+                document.getElementById('err').textContent = 'Incorrect password.';
+                document.getElementById('pw').value = '';
+            }
+        }
+    </script>
 </body>
 </html>
