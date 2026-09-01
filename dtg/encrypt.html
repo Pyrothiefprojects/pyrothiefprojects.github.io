@@ -248,6 +248,16 @@
             cursor: pointer;
         }
         button:hover { opacity: 0.85; }
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.7rem;
+            color: #5a4a40;
+            cursor: pointer;
+            user-select: none;
+        }
+        .remember input { accent-color: #ff6b35; cursor: pointer; }
         .error {
             font-size: 0.75rem;
             color: #ff6b35;
@@ -260,11 +270,16 @@
     <div class="prompt">
         <div class="title">DTG</div>
         <input type="password" id="pw" placeholder="Password" onkeydown="if(event.key==='Enter')unlock()">
+        <label class="remember">
+            <input type="checkbox" id="remember">
+            Remember me
+        </label>
         <button onclick="unlock()">Enter</button>
         <div class="error" id="err"></div>
     </div>
     <script>
         const PAYLOAD = ${payload};
+        const STORAGE_KEY = 'dtg_pw';
 
         function fromBase64(b64) {
             return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
@@ -282,24 +297,39 @@
             );
         }
 
+        async function tryUnlock(password) {
+            const salt = fromBase64(PAYLOAD.salt);
+            const iv   = fromBase64(PAYLOAD.iv);
+            const ct   = fromBase64(PAYLOAD.ct);
+            const key  = await deriveKey(password, salt);
+            const dec  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+            const html = new TextDecoder().decode(dec);
+            document.open();
+            document.write(html);
+            document.close();
+        }
+
         async function unlock() {
             const password = document.getElementById('pw').value;
             if (!password) return;
             try {
-                const salt = fromBase64(PAYLOAD.salt);
-                const iv   = fromBase64(PAYLOAD.iv);
-                const ct   = fromBase64(PAYLOAD.ct);
-                const key  = await deriveKey(password, salt);
-                const dec  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
-                const html = new TextDecoder().decode(dec);
-                document.open();
-                document.write(html);
-                document.close();
+                if (document.getElementById('remember').checked) {
+                    localStorage.setItem(STORAGE_KEY, password);
+                }
+                await tryUnlock(password);
             } catch {
+                localStorage.removeItem(STORAGE_KEY);
                 document.getElementById('err').textContent = 'Incorrect password.';
                 document.getElementById('pw').value = '';
             }
         }
+
+        (async () => {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try { await tryUnlock(saved); } catch { localStorage.removeItem(STORAGE_KEY); }
+            }
+        })();
     <\/script>
 </body>
 </html>`;

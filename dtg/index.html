@@ -63,6 +63,16 @@
             cursor: pointer;
         }
         button:hover { opacity: 0.85; }
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.7rem;
+            color: #5a4a40;
+            cursor: pointer;
+            user-select: none;
+        }
+        .remember input { accent-color: #ff6b35; cursor: pointer; }
         .error {
             font-size: 0.75rem;
             color: #ff6b35;
@@ -75,11 +85,16 @@
     <div class="prompt">
         <div class="title">DTG</div>
         <input type="password" id="pw" placeholder="Password" onkeydown="if(event.key==='Enter')unlock()">
+        <label class="remember">
+            <input type="checkbox" id="remember">
+            Remember me
+        </label>
         <button onclick="unlock()">Enter</button>
         <div class="error" id="err"></div>
     </div>
     <script>
-        const PAYLOAD = {"salt":"RUbd6tr/V1Wcg/6n1pg4ng==","iv":"qbKfSfarHu3nbYoz","ct":"1zeBkbjZltRZ9KVROVckfUZXUk1izciDrXib+Wb15KcCyLm7I4j2EF0k40pj3kSDjKbxcGBpAl/FHQ/FY8X+qmVFKWadLXpON97KUhGC6i1rom7ZR5Dmx0neZyrgqJEeTvhqJ4OOxEh35CBqQga0k131rjfRTV5t+mEF8L0jCfHEF5WuTSV320QClxc0voxKJSKXKCOD5SLZQtPAntD1gfXzf2D3OiOa3g+bDHdSh8z+RGTpj9e+U5UXyeJ/doGqscJCGEVQhUExtrMgechyQIF5LdE+dAfJ/yp0wH/46Wz3dR6PlS3iJTz1ZEkHnrH8INanRHylM/TyrskAYfU2Z0yK7org2+xvoRVlPAK7iv4mSMkchI8NHwGB3qzodGozyaK5BxFwtG9E6bEC6c5wnMNgIZeGxQEDFFhG6B6CFJnnmLoinvNxEPG4MQ8dBlBzL6A1bpIxRTi7F54+XJEsmT2omZH6kuhkrj24hpBzeyqO31rZ0QKUIiMVKZ76Y3hWMvWLjT8RvYqs1E1p/RVfhLEr5WH507VZiEII8YzyHzZ18eQgmIFJbvs9pGrLVYpyEPKuo6nP1d0sOdpkYEYwM0GAwmDL4r556B79eqI23XpVnYcU0bm4iTdHVfOlgW4hOdMVXvz6SeaEYFGwxmWLgvR8C5bHU1OmtkM4klAASqDxuBlizk7A8CZsi7CB/o/ueGvcAIFpFy6pqu+pxVYHzaMYQfEvDIIXm1kSJZYpUfQGxiajFTJZ4WmCwrDvyoQ/y6qP1Uj0iBrmNozEbw6fFStLTsqTRel2VfIkCMCMJt2vgqmlpaLfpb6q1DeKOXrA8x5yDV2q6D0pU4XBu1XLggsQBMVBpLeAiIE0gclkLWfc5EQPrZIF1PT7ZaZCO54QuHfJQQ0KkY4Dny+nJXrH65a8PK2lXIzNKq03UXjINN9fcI6I6bdab3MSDinrZZLkIl/6raw5mReVk4oN7MBc4X2TUIOx/BOQ6628lXIqj9pn577DXudVjVNGAPYnzzwp0l6rseEfi7TPNXGAgrchgP7VwOqgfNqtLyZFyvNVmkUF4pCHrAXWEAIMmSU3MyTrT+NJJTLk9P+kWc05IL5CHCZK0KURioi8tvbuWvueHcK/UvogIcdWhuVdbho07eHRwrBy7vHjY6tl4JBDNe0VwY0heObfB/PEcAo1SJG5d/zzmhIQm8gzpCFDCe92dEQsu4dsX9S41dtz8rSWhcSI2Ul7/VGpEieg+EoDMmQSwwigiz8ugachZskVQ7KfFFrhcrCsTsQ2A5OiEOYoZm5wH3CHcCOA0IL5drWAwgeWcFytGkmuNsvsDJJ1ongav7edmPYLNdl13sStQ5We52NQck8KhN2EqhP4U8rOJmP9frfd4vbQTSbDetHLoTKGcKHPXeWawwAu/AERl9XIvZqGky8pR97ikoY="};
+        const PAYLOAD = {"salt":"OewP/j97jKXCa5JIESSezA==","iv":"bOXRd3aAIuSKPCYh","ct":"yBsnTavx3CuqFoKny+n9K1+NePjyrnJQQW7AZ3+JSpANJyqBIqz9KZgKUJWsbuPFqV5UgA6VyrzPPE/e7HxYGffk75zPSn58U7YZgKCgQZ6WjWFmTTyFU5uf42aLZ2594pdbNHfrDT2QIw5Ajh1h2a4Uzu2BNM2S+CPDxJSSkUHG2czdycG6GKez0PG2CIuORTrgzEqoFMlE7MpkzBJ0JEFMsmOCFh3KVaW8K5iO2nC8W9fmkO3wPj3gURL/TGZnExA4hWadnH06VbIGO9pGvBOyxZwJfwLOtIFASzwMyChZk+K+kBeovpjHCKt8U+dJlh49NvFvE3eVbJqPnfW5qKRoIdOzJzjqkUYpiMRwrcGrtOXBvuIhmLx4dzL2/OywBgw0zTz0caVwJ6VRzshij+kqXpQgPehJi+GvwwytkCF3auWGP83y5YAnj3p4URmjOBwZOf/Sk8qtP+jHn72o5ORU+jTZhxIu8ApDO8UqM91pcMqKeTddLe830atDU/RDJJx3CcfnBXfJijQ1TkC2LF3Ti2Kmm6clB7cHV0x6bqVKo56JzysqEeB8NxrqDvezV4zdlaBOdrbdYfkRfRP41A0+NG9zeXNwswO8Y/VE8JcgjFiaUkalQci/1dq0My/w+QgnHyu/20Rc0pMfQRPmkd1Xszhz7/PAdwOsztOOY/FcJ8r+PlnpE6QacClytqHX+yHZtMQSVepIxC9WnkobbUjcxQgbg3XvxsodE9EoQmrrJCA/QqJIP0KD4cwY5eje0z+CmwNLsR28hox9URswrkpLoPqwP3z3bA6TcCHgM30SgYijgJT/c6BOhuZ/xfzAsUU8vzHCeMpYWczaWBSoipZBTpwuYIH8JrxmeXIL+fVuWOZXD0bBucIjDLnYFon/YUH2cve/+TARSb0G9AmoYvCz3l017DUtmLkPPNZ4ZKWDzvOzDNOYsQAuyAsx7rtL+zVduJ7bS3Y6mVNYGuZ6SvYQmWX9TkJ80I437EYEQ/7QP4Wes0M3pCYT+FkVRUt+ku+R+d38GHHc34VQbTBLzu/UHQ5schTCtLsgsRCSiNju/mR0JUzHWbCW7UGwlnCEWOumWw/nfla0zr2xgrMPr/cojXizjo4oiEFneHw3mMZyA3d/z+qKzM6k6KVgqULy74bZq9gnjIQgb0lc1HtfRITXQAuTNmVw4y5NULy/pCYQvU/aue8nIbRf4ldCnDumBWNm7nH26eFs+gJFLop3ji5UHSSpFx3Zg2tuUDcWACB2hj8unnnNriyJUMj7FZGkKbojyPq5uieBJO8HMWciwtkb6cvkKO92Tpyar9QrDHq/vAakB/hjWZ+HlkzFKY/5AJQpHeKJ/tQ4eAbSSMmB4q4sibuqzlsE3hAY1TJcpumvIyPKe3uLqgpf+6ZmYeKEzygCdtnIjZ1ELxl+8gIiZg8x1QaNvpg="};
+        const STORAGE_KEY = 'dtg_pw';
 
         function fromBase64(b64) {
             return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
@@ -97,24 +112,39 @@
             );
         }
 
+        async function tryUnlock(password) {
+            const salt = fromBase64(PAYLOAD.salt);
+            const iv   = fromBase64(PAYLOAD.iv);
+            const ct   = fromBase64(PAYLOAD.ct);
+            const key  = await deriveKey(password, salt);
+            const dec  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+            const html = new TextDecoder().decode(dec);
+            document.open();
+            document.write(html);
+            document.close();
+        }
+
         async function unlock() {
             const password = document.getElementById('pw').value;
             if (!password) return;
             try {
-                const salt = fromBase64(PAYLOAD.salt);
-                const iv   = fromBase64(PAYLOAD.iv);
-                const ct   = fromBase64(PAYLOAD.ct);
-                const key  = await deriveKey(password, salt);
-                const dec  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
-                const html = new TextDecoder().decode(dec);
-                document.open();
-                document.write(html);
-                document.close();
+                if (document.getElementById('remember').checked) {
+                    localStorage.setItem(STORAGE_KEY, password);
+                }
+                await tryUnlock(password);
             } catch {
+                localStorage.removeItem(STORAGE_KEY);
                 document.getElementById('err').textContent = 'Incorrect password.';
                 document.getElementById('pw').value = '';
             }
         }
+
+        (async () => {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try { await tryUnlock(saved); } catch { localStorage.removeItem(STORAGE_KEY); }
+            }
+        })();
     </script>
 </body>
 </html>
