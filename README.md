@@ -2,7 +2,7 @@
 
 > **License:** This project is proprietary. All rights reserved by Pyrothiefprojects. Individual components may carry their own license terms — see [LICENSE](LICENSE) for details.
 
-Project Nova is the full scope of this project — a multi-genre game framework built from custom engines, each powering a Nova Universe title and serving as a reusable dev kit. It comprises four interconnected games and a shared hub world (Club Nova), all set in the Nova Universe. Development builds will be available on the website, with a planned Steam release.
+Project Nova is the full scope of this project — It comprises four interconnected games and a shared hub world (Club Nova), all set in the Nova Universe. Development builds will be available on the website, with a planned Steam release.
 
 All game and engine names below are developmental titles and subject to change.
 
@@ -23,11 +23,10 @@ All game and engine names below are developmental titles and subject to change.
 ## Engines
 
 - **Parallax** — Point-and-click engine (JavaScript, browser-based) — [public repo](https://github.com/pyrothiefprojects/parallax)
-- **Redshift** — Ship systems roguelike engine (Java) — private repo
-- **Nova Engine** — C/OpenGL engine powering the Squadron Dogfighter and Club Nova hub — private repo
+- **Redshift** — Ship systems roguelike engine (Java)
+- **Nova Engine** — C/OpenGL engine powering the Squadron Dogfighter and Club Nova hub
 - **Club Nova Engine** *(planned)* — Hub world and future titles (C, compiles to native + Wasm), built on the Nova Engine foundation
 
-> **Note:** Redshift and Nova engine repos are private. The website repo (`pyrothiefprojects.github.io`) must remain public as GitHub Pages requires a public repo on the free plan.
 
 ---
 
