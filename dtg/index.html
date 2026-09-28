@@ -14,7 +14,6 @@
             letter-spacing: 0.15em;
             color: #f5f5f5;
         }
-        /* Lock screen */
         #lock-screen {
             display: flex;
             align-items: center;
@@ -83,47 +82,29 @@
             letter-spacing: 0.1em;
             min-height: 1rem;
         }
-        /* Main */
         #main { display: none; }
-        .week-nav {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: #0d0d0d;
-            border-bottom: 1px solid rgba(255,107,53,0.2);
+        #content { padding-bottom: 2rem; }
+        /* Injected nav arrows — sit alongside .page-subtitle */
+        .dtg-nav-wrap {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 2rem;
-            padding: 0.6rem 2rem;
+            gap: 0.8rem;
         }
-        .nav-btn {
+        .dtg-nav-arrow {
             background: none;
             border: none;
             color: #ffa500;
             font-size: 1.6rem;
-            cursor: pointer;
-            padding: 0 0.4rem;
             font-family: sans-serif;
             line-height: 1;
-            opacity: 1;
+            cursor: pointer;
+            padding: 0 0.2rem;
             transition: opacity 0.15s;
+            vertical-align: middle;
         }
-        .nav-btn:disabled { opacity: 0.2; cursor: default; }
-        .nav-btn:not(:disabled):hover { opacity: 0.65; }
-        .week-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #ffa500, #ff6b35);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            min-width: 240px;
-            text-align: center;
-        }
-        #content { padding-bottom: 2rem; }
+        .dtg-nav-arrow:disabled { opacity: 0.15; cursor: default; }
+        .dtg-nav-arrow:not(:disabled):hover { opacity: 0.6; }
     </style>
 </head>
 <body>
@@ -141,11 +122,6 @@
     </div>
 
     <div id="main">
-        <div class="week-nav">
-            <button class="nav-btn" id="prev-btn" onclick="prevWeek()" disabled>&#8249;</button>
-            <span class="week-label" id="week-label"></span>
-            <button class="nav-btn" id="next-btn" onclick="nextWeek()" disabled>&#8250;</button>
-        </div>
         <div id="content"></div>
     </div>
 
@@ -171,15 +147,29 @@
             );
         }
 
-        function weekLabel(dateStr) {
-            const [y, m, d] = dateStr.split('-').map(Number);
-            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            return 'Week of ' + months[m-1] + ' ' + d + ', ' + y;
-        }
+        function injectNavArrows() {
+            const subtitle = document.querySelector('#content .page-subtitle');
+            if (!subtitle || subtitle.parentNode.classList.contains('dtg-nav-wrap')) return;
 
-        function updateNavButtons() {
-            document.getElementById('prev-btn').disabled = currentIndex >= weeks.length - 1;
-            document.getElementById('next-btn').disabled = currentIndex <= 0;
+            const wrap = document.createElement('div');
+            wrap.className = 'dtg-nav-wrap';
+
+            const prev = document.createElement('button');
+            prev.className = 'dtg-nav-arrow';
+            prev.innerHTML = '&#8249;';
+            prev.disabled = currentIndex >= weeks.length - 1;
+            prev.onclick = prevWeek;
+
+            const next = document.createElement('button');
+            next.className = 'dtg-nav-arrow';
+            next.innerHTML = '&#8250;';
+            next.disabled = currentIndex <= 0;
+            next.onclick = nextWeek;
+
+            subtitle.parentNode.replaceChild(wrap, subtitle);
+            wrap.appendChild(prev);
+            wrap.appendChild(subtitle);
+            wrap.appendChild(next);
         }
 
         async function loadWeek(index, passwordOverride) {
@@ -197,26 +187,22 @@
             const html = new TextDecoder().decode(dec);
             const content = document.getElementById('content');
             content.innerHTML = html;
-            // Re-execute inline scripts (row highlighting etc.)
+            // Re-execute inline scripts (row click highlighting etc.)
             content.querySelectorAll('script').forEach(s => {
                 const ns = document.createElement('script');
                 ns.textContent = s.textContent;
                 document.body.appendChild(ns);
                 document.body.removeChild(ns);
             });
-            document.getElementById('week-label').textContent = weekLabel(weekDate);
             currentIndex = index;
-            updateNavButtons();
+            injectNavArrows();
             window.scrollTo(0, 0);
         }
 
         function prevWeek() {
-            // prev = older = higher index (weeks[0] is newest)
             if (currentIndex < weeks.length - 1) loadWeek(currentIndex + 1).catch(() => {});
         }
-
         function nextWeek() {
-            // next = newer = lower index
             if (currentIndex > 0) loadWeek(currentIndex - 1).catch(() => {});
         }
 
@@ -225,7 +211,6 @@
             if (!manifestRes.ok) throw new Error('no manifest');
             weeks = await manifestRes.json();
             if (!weeks || weeks.length === 0) throw new Error('empty manifest');
-            // Validates password — throws on wrong key
             await loadWeek(0, password);
             savedPassword = password;
             document.getElementById('lock-screen').style.display = 'none';
