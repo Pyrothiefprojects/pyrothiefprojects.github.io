@@ -206,12 +206,28 @@
             if (currentIndex > 0) loadWeek(currentIndex - 1).catch(() => {});
         }
 
+        function findCurrentWeekIndex() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            for (let i = 0; i < weeks.length; i++) {
+                const start = new Date(weeks[i] + 'T00:00:00');
+                const end = new Date(start);
+                end.setDate(end.getDate() + 6);
+                if (today >= start && today <= end) return i;
+            }
+            for (let i = 0; i < weeks.length; i++) {
+                const start = new Date(weeks[i] + 'T00:00:00');
+                if (start <= today) return i;
+            }
+            return weeks.length - 1;
+        }
+
         async function tryUnlock(password) {
             const manifestRes = await fetch('manifest.json');
             if (!manifestRes.ok) throw new Error('no manifest');
             weeks = await manifestRes.json();
             if (!weeks || weeks.length === 0) throw new Error('empty manifest');
-            await loadWeek(0, password);
+            await loadWeek(findCurrentWeekIndex(), password);
             savedPassword = password;
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('main').style.display = 'block';
