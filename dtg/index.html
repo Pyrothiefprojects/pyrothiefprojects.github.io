@@ -84,7 +84,6 @@
         }
         #main { display: none; }
         #content { padding-bottom: 2rem; }
-        /* Injected nav arrows — sit alongside .page-subtitle */
         .dtg-nav-wrap {
             display: flex;
             align-items: center;
@@ -150,22 +149,18 @@
         function injectNavArrows() {
             const subtitle = document.querySelector('#content .page-subtitle');
             if (!subtitle || subtitle.parentNode.classList.contains('dtg-nav-wrap')) return;
-
             const wrap = document.createElement('div');
             wrap.className = 'dtg-nav-wrap';
-
             const prev = document.createElement('button');
             prev.className = 'dtg-nav-arrow';
             prev.innerHTML = '&#8249;';
             prev.disabled = currentIndex >= weeks.length - 1;
             prev.onclick = prevWeek;
-
             const next = document.createElement('button');
             next.className = 'dtg-nav-arrow';
             next.innerHTML = '&#8250;';
             next.disabled = currentIndex <= 0;
             next.onclick = nextWeek;
-
             subtitle.parentNode.replaceChild(wrap, subtitle);
             wrap.appendChild(prev);
             wrap.appendChild(subtitle);
@@ -187,7 +182,6 @@
             const html = new TextDecoder().decode(dec);
             const content = document.getElementById('content');
             content.innerHTML = html;
-            // Re-execute inline scripts (row click highlighting etc.)
             content.querySelectorAll('script').forEach(s => {
                 const ns = document.createElement('script');
                 ns.textContent = s.textContent;
