@@ -20,6 +20,16 @@ Games Manager is a macOS and iPadOS staff scheduling and floor management applic
 
 ---
 
+## Planned
+
+| | |
+|---|---|
+| iPhone | Dedicated iPhone UI — currently runs via universal iOS build |
+| Windows | Native port via .NET MAUI (C#) — Windows + Android from a single codebase |
+| Android | Included in the Windows/.NET MAUI port |
+
+---
+
 ## Tech Stack
 
 - **Language:** Swift
@@ -104,6 +114,28 @@ Data import controls, appearance options, collapsible section groups. GitHub Pub
 4. Build appears automatically for all tester groups — no re-invitation needed
 
 **App Store version:** Release build (DEV_FEATURES stripped). Generic rebrand — no venue-specific terminology. Category: Business. Demo data seeded from bundle on first launch for App Review.
+
+---
+
+## Platform Ports
+
+### iPhone
+Currently runs via the universal iOS build — not yet optimized for the smaller form factor. A dedicated iPhone UI is planned.
+
+### Windows / Android
+A native Windows port is a planned future direction. Recommended target: **.NET MAUI** (C#) for Windows + Android from a single codebase, or **WinUI 3 / Windows App SDK** if Windows-only maximum native feel is the priority.
+
+**What maps cleanly:**
+- JSON data models and file-based persistence
+- Business logic (FFLogic, BSLogic, schedule generation)
+- App structure and navigation
+
+**What needs rebuilding:**
+- All UI views — SwiftUI is Apple-only, full rewrite required
+- Football field canvas — custom drawing, achievable in both targets
+- PDFKit — cross-platform PDF library needed
+- AppStorage / NSCache — platform equivalents required
+- App container file paths — platform-aware storage paths
 
 ---
 
