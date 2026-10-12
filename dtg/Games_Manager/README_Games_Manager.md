@@ -8,7 +8,7 @@ Games Manager is a macOS and iPadOS staff scheduling and floor management applic
 
 ## Current Status
 
-| Area | Status |
+| | Status |
 |---|---|
 | macOS app | Live — in active daily use |
 | iPadOS app | Live — iPad is primary on-floor test device |
