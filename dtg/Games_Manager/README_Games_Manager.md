@@ -12,10 +12,11 @@ Games Manager is a macOS and iPadOS staff scheduling and floor management applic
 |---|---|
 | macOS app | Live — in active daily use |
 | iPadOS app | Live — iPad is primary on-floor test device |
+| iPhone app | In progress |
 | TestFlight | Live — internal and external tester groups active |
 | Beta App Review | Passed (external tester bar) |
 | Apple Developer Program | Active |
-| App Store release | In progress — venue-specific refs to be removed, demo data to be seeded |
+| App Store release | In progress |
 
 ---
 
