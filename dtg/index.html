@@ -220,7 +220,14 @@
             const manifestRes = await fetch('manifest.json');
             if (!manifestRes.ok) throw new Error('no manifest');
             weeks = await manifestRes.json();
-            if (!weeks || weeks.length === 0) throw new Error('empty manifest');
+            if (!weeks || weeks.length === 0) {
+                // Correct password, nothing published yet
+                savedPassword = password;
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('main').style.display = 'block';
+                document.getElementById('content').innerHTML = '<p style="color:#888;font-family:Orbitron,sans-serif;font-size:0.85rem;letter-spacing:0.15em;text-align:center;padding:4rem 2rem;">No schedules published.</p>';
+                return;
+            }
             await loadWeek(findCurrentWeekIndex(), password);
             savedPassword = password;
             document.getElementById('lock-screen').style.display = 'none';
