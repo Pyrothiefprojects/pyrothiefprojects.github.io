@@ -1,8 +1,8 @@
-# Remote
+# Drift Remote
 
 > **License:** Proprietary — not open source. All rights reserved. See [License](#license) for details.
 
-Remote is an iOS app that turns an iPhone into a Bluetooth Low Energy trackpad, keyboard, and media controller for macOS. No Wi-Fi, no pairing screen — connection is handled entirely over BLE using Apple's iCloud device trust.
+Drift Remote is an iOS app that turns an iPhone into a Bluetooth Low Energy trackpad, keyboard, and media controller for macOS. No Wi-Fi, no pairing screen — connection is handled entirely over BLE using Apple's iCloud device trust.
 
 ---
 
@@ -84,7 +84,7 @@ Sheet accessible from the top bar. Sections: Connected (swipe to rename, swipe t
 - Multi-subscriber support — `allSubscribers: [CBCentral]`, only `targetCentral` receives HID reports
 - Top bar unified across all screens — scan button (state-aware), connected device name, mode toggle, settings gear
 - Three modes: trackpad → keyboard → media (cycles via single button)
-- `#if DEBUG` — file logging (`Documents/sneaky_remote.log`), dev report share sheet
+- `#if DEBUG || BETA` — file logging (`Documents/drift_remote.log`), dev report share sheet
 
 ---
 
@@ -142,14 +142,14 @@ BLE HID peripheral mode on Android uses `BluetoothLeAdvertiser` + `BluetoothGatt
 - **CBPeripheralManager (peripheral role)** — iPhone advertises as the HID device; Mac connects as central. Reverse of the typical BLE pattern
 - **iCloud trust handshake** — connecting to a Mac on the same Apple ID skips the standard Bluetooth pairing prompt entirely
 - **Standard HID over GATT** — mouse report (Report ID 1), consumer control (Report ID 2), keyboard report (Report ID 3). No custom protocol — any HID host works
-- **`#if DEBUG` flag over separate targets** — file logging and share sheet compiled out entirely in Release builds. Single codebase, one build switch
+- **`#if DEBUG || BETA` flag over separate targets** — file logging and share sheet compiled out entirely in Release builds. Single codebase, one build switch
 - **No third-party libraries** — no external dependencies, no package manager
 
 ---
 
 ## License
 
-Remote is **not open source.**
+Drift Remote is **not open source.**
 
 All software, source code, assets, and tooling in this project are the exclusive property of Pyrothiefprojects.
 The App Store version of this app is distributed under standard Apple App Store terms.
