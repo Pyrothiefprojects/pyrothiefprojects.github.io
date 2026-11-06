@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — Drift Remote</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a0a;
+            background: radial-gradient(ellipse at center top, #1a0f08 0%, #0a0a0a 60%);
+            font-family: 'Orbitron', system-ui, sans-serif;
+            letter-spacing: 0.15em;
+            color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .glow {
+            position: fixed;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(255, 107, 53, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 5rem 2rem 3rem;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .logo {
+            display: block;
+            max-width: 200px;
+            width: 100%;
+            height: auto;
+            margin: 0 auto 2.5rem auto;
+            filter: drop-shadow(0 0 40px rgba(255, 107, 53, 0.3));
+        }
+
+        .page-title {
+            font-size: clamp(1.6rem, 5vw, 2.8rem);
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffa500 0%, #ff6b35 50%, #cc4400 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #5a4a40;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .content {
+            width: 100%;
+            max-width: 800px;
+            padding: 3rem 2rem 5rem;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #ff6b35;
+            margin: 2.5rem 0 1rem;
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        .body-text {
+            color: #c0b0a0;
+            font-size: 0.85rem;
+            line-height: 1.9;
+            letter-spacing: 0.05em;
+        }
+
+        .body-text p {
+            margin-bottom: 0.8rem;
+        }
+
+        .divider {
+            width: 100%;
+            max-width: 800px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.3), transparent);
+        }
+
+        footer {
+            width: 100%;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 107, 53, 0.1);
+            margin-top: auto;
+        }
+
+        .footer-brand {
+            color: #5a4a40;
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .footer-copyright {
+            color: #3a2a20;
+            font-size: 0.7rem;
+            margin-top: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #5a4a40;
+            text-decoration: none;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .back-link:hover {
+            color: #ff6b35;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 3.5rem 1.5rem 2rem;
+            }
+
+            .content {
+                padding: 2rem 1.5rem 4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="glow"></div>
+
+    <header class="hero">
+        <a href="/"><img src="pyrothieflogo.png" alt="Pyrothief Projects" class="logo"></a>
+        <h1 class="page-title">Privacy Policy</h1>
+        <p class="page-subtitle">Drift Remote</p>
+        <a href="/" class="back-link">&#8592; Back</a>
+    </header>
+
+    <div class="divider"></div>
+
+    <main class="content">
+
+        <h2 class="section-title">Overview</h2>
+        <div class="body-text">
+            <p>Drift Remote does not collect, store, or transmit any personal data. This policy describes what the app does and does not do with information on your device.</p>
+        </div>
+
+        <h2 class="section-title">Data Collection</h2>
+        <div class="body-text">
+            <p>Drift Remote does not collect any data. No analytics, no crash reporting, no advertising identifiers, and no third-party SDKs are included in the app.</p>
+        </div>
+
+        <h2 class="section-title">Local Storage</h2>
+        <div class="body-text">
+            <p>The app stores preferences locally on your device using iOS standard storage (UserDefaults). This includes settings such as haptics preferences and display options. This data never leaves your device and is not accessible to Pyrothief Projects or any third party.</p>
+        </div>
+
+        <h2 class="section-title">Bluetooth</h2>
+        <div class="body-text">
+            <p>Drift Remote uses Bluetooth Low Energy (BLE) to communicate directly with nearby Apple devices. Device names and identifiers are used only to establish and maintain the connection and are never transmitted off your device or stored beyond the current session.</p>
+        </div>
+
+        <h2 class="section-title">Contact</h2>
+        <div class="body-text">
+            <p>If you have questions about this policy, you can reach Pyrothief Projects via GitHub at <a href="https://github.com/Pyrothiefprojects" target="_blank" rel="noopener" style="color:#ff6b35;text-decoration:none;">github.com/Pyrothiefprojects</a>.</p>
+        </div>
+
+        <h2 class="section-title">Last Updated</h2>
+        <div class="body-text">
+            <p>November 2026</p>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="footer-brand">Pyrothiefprojects</div>
+        <div class="footer-copyright">&copy; 2026 Pyrothiefprojects. All rights reserved.</div>
+    </footer>
+</body>
+</html>
