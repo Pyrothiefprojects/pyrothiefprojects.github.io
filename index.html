@@ -151,9 +151,7 @@
             background: rgba(10, 10, 10, 0.55);
             -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 107, 53, 0.35);
             border-radius: 10px;
-            box-shadow: 0 0 40px rgba(255, 107, 53, 0.12), inset 0 0 30px rgba(255, 107, 53, 0.04);
             opacity: 0;
             /* --dx: sideways, for a codex flip (out the way it's going, in from the other side) */
             transform: translate(-50%, 0) translate(var(--dx, 0px), 18px);
@@ -190,24 +188,6 @@
             background: linear-gradient(180deg, #fd9d0a, #e8271e);
             transform: scale(1.4);
             box-shadow: 0 0 8px rgba(244, 111, 12, 0.7);
-        }
-        .card-head {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.4rem 0.9rem;
-            margin-bottom: 0.55rem;
-        }
-        .card-name {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.3rem;
-            font-weight: 700;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #ffa500, #ff6b35);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
         .pill {
             display: inline-flex;
@@ -437,7 +417,6 @@
             .projects-menu { right: 1rem; }
             .projects-menu button { font-size: 0.8rem; padding: 0.65rem 0.6rem 0.65rem 0.9rem; }
             .card { bottom: 4.6rem; padding: 1.1rem 1.1rem 1rem; }
-            .card-name { font-size: 1.05rem; }
             .card-text { font-size: 0.9rem; }
         }
         /* Back out of the sphere (shown while inside) */
@@ -479,10 +458,6 @@
         <button type="button" data-project="license">License</button>
     </nav>
     <article class="card" id="card" aria-live="polite" hidden>
-        <div class="card-head">
-            <h2 class="card-name" id="cardName"></h2>
-            <span class="pill" id="cardStatus"><i></i><span id="cardStatusText"></span></span>
-        </div>
         <p class="card-tagline" id="cardTagline"></p>
         <div class="card-text" id="cardText"></div>
         <p class="card-tech" id="cardTech"></p>
@@ -553,7 +528,7 @@
         }
         var DOT_SIZE = 3.2;
         var GLOW_SIZE = 6.5;
-        var CARD_DIM = 0.72;    // how much the stars fade back while a project's card shows (its icon stays full)
+        var CARD_DIM = 0.72;    // how much the stars fade back while a project shows (its icon stays full)
         var cardDim = 0;        // eased 0 → 1 while a card shows
 
         // Pointer bulge: dots within this angle of the point under the pointer swell outwards and glow
@@ -783,10 +758,10 @@
                     "names and identifiers are used only to establish and maintain the connection and are never " +
                     "transmitted off your device or stored beyond the current session.",
                 { h: "Contact" },
-                "If you have questions about this policy, you can reach Pyrothief Projects via GitHub (link below)."
+                "If you have questions about this policy, you can reach Pyrothief Projects at support@pyrothief.ca (link below)."
             ],
             tech: "Last updated November 2026",
-            link: { label: "github.com/Pyrothiefprojects", href: "https://github.com/Pyrothiefprojects" }
+            link: { label: "support@pyrothief.ca", href: "mailto:support@pyrothief.ca" }
         };
         // The license, whole (as it was on the old Nova page)
         PROJECTS.license = {
@@ -1041,9 +1016,6 @@
             }
             hideHud();   // a card (Privacy, License)
             function fill() {
-                document.getElementById("cardName").textContent = p.name;
-                document.getElementById("cardStatus").hidden = !p.status;
-                document.getElementById("cardStatusText").textContent = p.status || "";
                 document.getElementById("cardTagline").textContent = p.tagline;
                 // One paragraph, or several (the License), with headings ({ h: … }) between them (Privacy)
                 var textBox = document.getElementById("cardText");
@@ -1060,11 +1032,10 @@
                 if (p.link) {
                     link.textContent = p.link.label + " →";
                     link.href = p.link.href;
-                    // The policy is on this site; the license on GitHub, in a new tab
+                    // A web address opens in a new tab; an email address in the mail app
                     if (/^https?:/.test(p.link.href)) { link.target = "_blank"; link.rel = "noopener"; }
                     else { link.removeAttribute("target"); link.removeAttribute("rel"); }
                 }
-                if (p.kind) card.style.setProperty("--status", STATUS_COLORS[p.kind]);
                 card.hidden = false;
                 // Start on the side it comes in from, without animating there, then glide in
                 card.classList.add("still");
@@ -1394,11 +1365,11 @@
             canvas.classList.add("dragging");
         });
         // Pointer moves are followed over the whole page, not just the canvas, so pointing, the swing and Skew carry on over the
-        // password page and the buttons; only the canvas turns the globe, though
+        // menu, the card and the buttons; only the canvas turns the globe, though
         window.addEventListener("pointermove", function (e) {
             if (tourActive) return;   // the tour's ghost is pointing
             var onCanvas = e.target === canvas;   // (a pressed pointer is captured by the canvas, so counts)
-            if (e.pointerType === "touch" && !onCanvas) return;   // a finger on the password box or a button: typing, not pointing
+            if (e.pointerType === "touch" && !onCanvas) return;   // a finger on the menu, the card or a button: tapping, not pointing
             pointAt(e.clientX, e.clientY);
             // Hover turns the globe outside; inside, only a press turns it
             if (onCanvas && (!inside || pressed) && lastX !== null) turn(e.clientX - lastX, e.clientY - lastY);
@@ -1413,7 +1384,7 @@
             lastY = null;
         }
         // A finger lifting: once none are left there's nothing to point with. A mouse is still there — it's only gone once
-        // it leaves the page (moving onto the password page or a button isn't leaving)
+        // it leaves the page (moving onto the menu or a button isn't leaving)
         function pointerEnded(e) {
             if (e.pointerType === "touch") {
                 delete fingers[e.pointerId];
