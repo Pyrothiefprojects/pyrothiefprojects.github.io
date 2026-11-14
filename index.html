@@ -2365,10 +2365,10 @@
 
         }
 
-        // ---------------- The tour: a link like construction.html#drift plays the way there by itself ----------------
+        // ---------------- The tour: a link like pyrothief.ca/#drift plays the way there by itself ----------------
         // From the home screen a ghost cursor glides to the flame (it gathers), clicks it (the swing, the zoom, the burst),
         // then clicks the project in the menu — every animation as a visitor would see it. A click, touch, scroll or key
-        // stops it and hands over. With "&tool" (construction.html#drift&tool) a player bar shows: play / pause, a slider
+        // stops it and hands over. With "&tool" (pyrothief.ca/#drift&tool) a player bar shows: play / pause, a slider
         // over the whole run (letting go plays the page through to that moment, unseen, then carries on), speed, restart
         var TOUR_SLUGS = {
             nova: "nova", drift: "drift", "drift-remote": "drift", dtg: "games", "dtg-manager": "games",
@@ -2460,6 +2460,11 @@
             tourActive = false;
             ghost.style.opacity = 0;
             pointerGone();
+            // The bar goes too, the page's clock back to real time, and the link back to plain, so a reload starts at home
+            tourBar.hidden = true;
+            playing = true;
+            speed = 1;
+            history.replaceState(null, "", location.pathname + location.search);
         }
         // A click, touch, scroll or key (not on the bar) stops the tour where it is
         var tourBar = document.getElementById("tourBar");
@@ -2540,7 +2545,7 @@
             }
             fastForwarding = false;
         }
-        if (tourHash.paused) playing = false;
+        if (tourHash.paused && tourActive) playing = false;
         showPlaying();
         requestAnimationFrame(frame);
     })();
