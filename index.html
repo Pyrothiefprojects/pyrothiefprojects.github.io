@@ -21,8 +21,6 @@
             inset: 0;
             touch-action: none;
         }
-        #sphere.locked { cursor: grab; }
-        #sphere.locked.dragging { cursor: grabbing; }
         /* The header: the PYROTHIEF wordmark (pyrothieftext.png), centred at the top, outside and inside. The image's black
            background is screened away, so only the letters show over the stars */
         main {
@@ -39,6 +37,7 @@
             height: 22px;
             width: auto;
             mix-blend-mode: screen;
+            opacity: 0;   /* until the flame gathers (the frame sets it) */
         }
         /* PROJECTS (projectstext.png): under the wordmark, lined up with its right edge as in the logo; as you zoom in it
            slides to the left margin, level with the wordmark, and becomes the button for the menu (the frame places it) */
@@ -72,43 +71,6 @@
             .wordmark { height: 16px; }
             .wordmark-sub { height: 9px; }
         }
-        .title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #ffa500, #ff6b35);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        /* Random / Nova switch, top right */
-        .modes[hidden] { display: none; }
-        .modes {
-            position: fixed;
-            top: 1.5rem;
-            right: 1rem;
-            display: flex;
-            gap: 0.5rem;
-        }
-        .modes button {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.7rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: rgba(245, 245, 245, 0.6);
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 107, 53, 0.3);
-            border-radius: 4px;
-            padding: 0.5rem 0.75rem;
-            cursor: pointer;
-        }
-        .modes button[hidden] { display: none; }
-        .modes button.on {
-            color: #0a0a0a;
-            background: linear-gradient(135deg, #ffa500, #ff6b35);
-            border-color: transparent;
-        }
-        /* The name of the constellation under the pointer (Nova) */
         /* While the menu is open: the stars dim behind it (darkest at the top left, where the menu is) so the rows read
            clearly. It doesn't catch the pointer, so a tap on the stars still closes the menu */
         .dim {
@@ -135,15 +97,9 @@
             overflow-y: auto;
             overscroll-behavior: contain;
         }
-        .projects-menu[hidden], .projects-menu .submenu[hidden] { display: none; }
-        .projects-menu .submenu {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.15rem;
-            margin-left: 1.1rem;
-            padding-left: 0.6rem;
-        }
+        .projects-menu[hidden] { display: none; }
+        /* An empty space between the projects and Privacy / License */
+        .projects-menu .menu-gap { height: 1.1rem; flex: none; }
         .projects-menu button {
             position: relative;
             font-family: 'Orbitron', sans-serif;
@@ -324,6 +280,8 @@
         .hud[hidden] { display: none; }
         .hud.shown { opacity: 1; }
         .hud.shown.tucked { opacity: 0; }
+        /* A project whose HUD is laid out (so its icon sits where the others do) but not shown */
+        .hud.veiled { visibility: hidden; }
         .hud-lines {
             position: absolute;
             inset: 0;
@@ -459,51 +417,6 @@
             animation: ghostClick 0.6s ease-out forwards;
         }
         @keyframes ghostClick { from { transform: scale(1); opacity: 1; } to { transform: scale(2.6); opacity: 0; } }
-        /* The tour's player bar (a link with "&tool"): play / pause, the whole run as a slider, speed, restart */
-        .tour-bar {
-            position: fixed;
-            left: 50%;
-            bottom: 1rem;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            width: min(560px, calc(100vw - 2rem));
-            padding: 0.55rem 0.7rem;
-            background: rgba(10, 10, 10, 0.62);
-            -webkit-backdrop-filter: blur(8px);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 107, 53, 0.35);
-            border-radius: 10px;
-            font-family: 'Orbitron', sans-serif;
-        }
-        .tour-bar[hidden] { display: none; }
-        .tour-bar button {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.62rem;
-            letter-spacing: 0.08em;
-            color: rgba(245, 245, 245, 0.75);
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 107, 53, 0.3);
-            border-radius: 4px;
-            padding: 0.35rem 0.5rem;
-            cursor: pointer;
-            flex: none;
-        }
-        .tour-bar button.on {
-            color: #0a0a0a;
-            background: linear-gradient(135deg, #ffa500, #ff6b35);
-            border-color: transparent;
-        }
-        .tour-bar input[type="range"] { flex: 1; min-width: 0; accent-color: #ff6b35; }
-        .tour-time {
-            font-size: 0.58rem;
-            letter-spacing: 0.08em;
-            color: rgba(245, 245, 245, 0.6);
-            width: 3.2rem;
-            text-align: right;
-            flex: none;
-        }
         /* A link to the full text (Privacy, License) */
         .card-link {
             display: inline-block;
@@ -519,16 +432,6 @@
         }
         .card-link[hidden], .card-pager[hidden] { display: none; }
         .card-link:hover { color: #ff6b35; border-color: #ff6b35; }
-        /* Nova's jump: the page goes dark as the stars streak past, then the Nova page */
-        .jump-fade {
-            position: fixed;
-            inset: 0;
-            background: #0a0a0a;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.7s ease-in;
-        }
-        .jump-fade.on { opacity: 1; }
         /* A phone: the menu across the top, bigger rows; the card along the bottom */
         @media (max-width: 600px) {
             .projects-menu { right: 1rem; }
@@ -536,48 +439,6 @@
             .card { bottom: 4.6rem; padding: 1.1rem 1.1rem 1rem; }
             .card-name { font-size: 1.05rem; }
             .card-text { font-size: 0.9rem; }
-        }
-        /* Inside the sphere: Warp, Drift and Reach, along the bottom */
-        .inside-controls {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 1.5rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .inside-controls[hidden] { display: none; }
-        .inside-controls button {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.7rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: rgba(245, 245, 245, 0.6);
-            background: rgba(10, 10, 10, 0.6);
-            border: 1px solid rgba(255, 107, 53, 0.3);
-            border-radius: 4px;
-            padding: 0.5rem 0.75rem;
-            cursor: pointer;
-        }
-        .inside-controls button.on {
-            color: #0a0a0a;
-            background: linear-gradient(135deg, #ffa500, #ff6b35);
-            border-color: transparent;
-        }
-        .inside-controls label {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.6rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: rgba(245, 245, 245, 0.6);
-        }
-        .inside-controls input[type="range"] {
-            width: 6rem;
-            accent-color: #ff6b35;
         }
         /* Back out of the sphere (shown while inside) */
         .exit {
@@ -597,62 +458,6 @@
         }
         .exit:hover { color: #ffa500; border-color: #ffa500; box-shadow: 0 0 12px rgba(255, 107, 53, 0.5); }
         .exit[hidden] { display: none; }
-        .label {
-            position: fixed;
-            transform: translate(-50%, -50%);
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #ff6b35;
-            text-shadow: 0 0 8px #0a0a0a, 0 0 2px #0a0a0a;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        /* Nova: the 12 signs; picking one turns the globe to it */
-        .signs {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 1rem;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 0.4rem;
-            padding: 0 1rem;
-            transition: opacity 0.3s;
-        }
-        .signs[hidden] { display: none; }
-        .signs button {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.65rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: rgba(245, 245, 245, 0.7);
-            background: rgba(10, 10, 10, 0.6);
-            border: 1px solid rgba(255, 107, 53, 0.3);
-            border-radius: 4px;
-            padding: 0.45rem 0.6rem;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .signs button .glyph { margin-right: 0.35rem; }
-        .signs button.on {
-            color: #0a0a0a;
-            background: linear-gradient(135deg, #ffa500, #ff6b35);
-            border-color: transparent;
-        }
-        /* A phone: one scrolling row instead of several */
-        @media (max-width: 600px) {
-            .signs {
-                flex-wrap: nowrap;
-                justify-content: flex-start;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-            }
-            .signs::-webkit-scrollbar { display: none; }
-        }
     </style>
 </head>
 <body>
@@ -664,28 +469,12 @@
     <button type="button" class="projects-button" id="lockup" aria-label="Projects" aria-expanded="false" tabindex="-1">
         <img class="wordmark-sub" src="content/logo/projectstext.png" alt="Projects">
     </button>
-    <div class="modes" role="group" aria-label="Sphere">
-        <button type="button" data-mode="random">Random</button>
-        <button type="button" data-mode="nova">Nova</button>
-        <button type="button" id="lock">Lock</button>
-    </div>
-    <div class="inside-controls" id="insideControls" role="group" aria-label="Inside the sphere" hidden>
-        <button type="button" id="warp">Warp</button>
-        <button type="button" id="drift">Drift</button>
-        <label>Reach <input type="range" id="reachSlider" min="0.3" max="3" step="0.1" value="1"></label>
-    </div>
     <button type="button" class="exit" id="exit" aria-label="Back out of the sphere" hidden>✕</button>
-    <div class="label" id="label"></div>
-    <nav class="signs" id="signs" aria-label="Zodiac signs" hidden></nav>
     <nav class="projects-menu" id="projectsMenu" aria-label="Projects" hidden>
         <button type="button" data-project="nova">Nova</button>
         <button type="button" data-project="drift">Drift Remote</button>
-        <div class="submenu">
-            <button type="button" data-project="games">DTG Manager</button>
-            <button type="button" data-project="docparser">Document Parser</button>
-            <button type="button" data-project="mrwizard">Mrwizard</button>
-            <button type="button" data-project="scout">Scout</button>
-        </div>
+        <button type="button" data-project="games">DTG</button>
+        <div class="menu-gap" aria-hidden="true"></div>
         <button type="button" data-project="privacy">Privacy</button>
         <button type="button" data-project="license">License</button>
     </nav>
@@ -713,16 +502,6 @@
     </div>
     <div class="card-pager" id="cardPager" aria-label="Projects" hidden></div>
     <div class="ghost" id="ghost"></div>
-    <div class="tour-bar" id="tourBar" hidden>
-        <button type="button" id="tourPlay" aria-label="Pause">❚❚</button>
-        <input type="range" id="tourSlider" min="0" max="9" step="0.05" value="0" aria-label="Tour time">
-        <span class="tour-time" id="tourTime">0.0s</span>
-        <button type="button" data-speed="1" class="on">1×</button>
-        <button type="button" data-speed="2">2×</button>
-        <button type="button" data-speed="4">4×</button>
-        <button type="button" id="tourRestart" aria-label="Restart">↺</button>
-    </div>
-    <div class="jump-fade" id="jumpFade"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
@@ -774,9 +553,6 @@
         }
         var DOT_SIZE = 3.2;
         var GLOW_SIZE = 6.5;
-        var STAR_SIZE = 6;
-        var LINE_COLOR = new THREE.Color(0xe0e0e0);
-        var DIM_DOTS = 0.65;    // how much the random dots fade back in Nova
         var CARD_DIM = 0.72;    // how much the stars fade back while a project's card shows (its icon stays full)
         var cardDim = 0;        // eased 0 → 1 while a card shows
 
@@ -785,10 +561,10 @@
         var BULGE_HEIGHT = 70;
         var BULGE_EASE = 0.14;
 
-        // Warp (inside the sphere): dots near the pointer are pushed aside on screen and light up
-        var WARP_RADIUS = 220;     // px
-        var WARP_STRENGTH = 120;   // px at the pointer
-        var WARP_EASE = 0.16;
+        // Skew (inside the sphere): dots near the pointer are pushed aside on screen and light up
+        var SKEW_RADIUS = 220;     // px
+        var SKEW_STRENGTH = 120;   // px at the pointer
+        var SKEW_EASE = 0.16;
 
         // Spin
         var SPIN_GAIN = 0.0002;    // with the friction, the globe turns about 0.003 rad per pixel the pointer moves
@@ -804,94 +580,13 @@
         var globe = new THREE.Group();
         scene.add(globe);
 
-        // The 12 zodiac constellations as their stick figures: each line a run of [right ascension, declination] in
-        // degrees. From d3-celestial's data/constellations.lines.json (https://github.com/ofrohn/d3-celestial):
-        //
-        //   Copyright (c) 2015, Olaf Frohn
-        //   All rights reserved.
-        //
-        //   Redistribution and use in source and binary forms, with or without modification, are permitted provided
-        //   that the following conditions are met:
-        //   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the
-        //      following disclaimer.
-        //   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and
-        //      the following disclaimer in the documentation and/or other materials provided with the distribution.
-        //   3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or
-        //      promote products derived from this software without specific prior written permission.
-        //
-        //   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
-        //   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-        //   PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-        //   ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-        //   TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-        //   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-        //   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-        //   POSSIBILITY OF SUCH DAMAGE.
-        var ZODIAC = [
-            { name: "Aries", lines: [[[42.5,27.26],[31.79,23.46],[28.66,20.81],[28.38,19.29]]] },
-            { name: "Taurus", lines: [[[84.41,21.14],[68.98,16.51],[67.17,15.87],[64.95,15.63],[65.73,17.54],[67.15,19.18],[81.57,28.61]],[[64.95,15.63],[60.17,12.49],[51.79,9.73],[60.79,5.99]],[[51.79,9.73],[51.2,9.03],[54.22,0.4]]] },
-            { name: "Gemini", lines: [[[93.72,22.51],[95.74,22.51],[100.98,25.13],[107.78,30.25],[113.65,31.89],[116.33,28.03],[113.98,26.9],[110.03,21.98],[106.03,20.57],[99.43,16.4],[101.32,12.9]],[[110.03,21.98],[109.52,16.54]]] },
-            { name: "Cancer", lines: [[[134.62,11.86],[131.17,18.15],[130.82,21.47],[131.67,28.77]],[[131.17,18.15],[124.13,9.19]]] },
-            { name: "Leo", lines: [[[152.09,11.97],[151.83,16.76],[154.99,19.84],[168.53,20.52],[177.26,14.57],[168.56,15.43],[152.09,11.97]],[[154.99,19.84],[154.17,23.42],[148.19,26.01],[146.46,23.77]]] },
-            { name: "Virgo", lines: [[[176.46,6.53],[177.67,1.76],[184.98,-0.67],[190.42,-1.45],[197.49,-5.54],[201.3,-11.16],[214,-6],[220.77,-5.66]],[[195.54,10.96],[193.9,3.4],[190.42,-1.45]],[[197.49,-5.54],[203.67,-0.6],[210.41,1.54],[221.56,1.89]]] },
-            { name: "Libra", lines: [[[226.02,-25.28],[222.72,-16.04],[229.25,-9.38],[233.88,-14.79],[234.26,-28.14],[234.66,-29.78]],[[222.72,-16.04],[233.88,-14.79]]] },
-            { name: "Scorpius", lines: [[[239.71,-26.11],[240.08,-22.62],[241.36,-19.81]],[[240.08,-22.62],[245.3,-25.59],[247.35,-26.43],[248.97,-28.22],[252.54,-34.29],[252.97,-38.05],[253.65,-42.36],[258.04,-43.24],[264.33,-43],[266.9,-40.13],[265.62,-39.03],[263.4,-37.1]]] },
-            { name: "Sagittarius", lines: [[[274.41,-36.76],[276.04,-34.38],[275.25,-29.83],[276.99,-25.42],[273.44,-21.06]],[[290.66,-44.46],[290.97,-40.62],[285.65,-29.88],[281.41,-26.99],[276.99,-25.42]],[[298.82,-41.87],[299.93,-35.28],[298.96,-26.3],[294.18,-24.88],[291.32,-24.51],[288.89,-25.26],[283.82,-26.3],[281.41,-26.99],[275.25,-29.83],[271.45,-30.42],[276.04,-34.38],[285.65,-29.88],[286.74,-27.67],[283.82,-26.3],[286.17,-21.74],[287.44,-21.02],[289.41,-18.95],[290.42,-17.85],[290.43,-15.96]],[[286.17,-21.74],[284.43,-21.11],[283.54,-22.74],[283.82,-26.3]]] },
-            { name: "Capricornus", lines: [[[304.41,-12.51],[305.25,-14.78],[307.22,-17.81],[311.52,-25.27],[312.96,-26.92],[321.67,-22.41],[326.76,-16.13],[325.02,-16.66],[320.56,-16.83],[316.49,-17.23],[304.41,-12.51]]] },
-            { name: "Aquarius", lines: [[[311.92,-9.5],[313.16,-8.98],[322.89,-5.57],[331.45,-0.32],[335.41,-1.39],[337.21,-0.02],[338.84,-0.12],[343.15,-7.58],[349.48,-9.18],[347.36,-21.17]],[[322.89,-5.57],[331.61,-13.87]],[[331.45,-0.32],[334.21,-7.78]],[[337.21,-0.02],[336.32,1.38]],[[350.74,-20.1],[349.48,-9.18],[355.44,-17.82]]] },
-            { name: "Pisces", lines: [[[18.44,24.58],[17.92,30.09],[19.87,27.26],[18.44,24.58],[17.86,21.03],[22.87,15.35],[26.35,9.16],[30.51,2.76],[28.39,3.19],[25.36,5.49],[22.55,6.14],[18.43,7.58],[15.74,7.89],[12.17,7.59],[359.83,6.86],[354.99,5.63],[351.99,6.38],[350.09,5.38],[349.29,3.28],[351.73,1.26],[355.51,1.78],[356.6,3.49],[354.99,5.63]],[[349.29,3.28],[345.97,3.82]]] }
-        ];
-
-        // Their astrology names and symbols, in the same order (\uFE0E asks for the plain symbol, not an emoji)
-        var SIGNS = [
-            { name: "Aries", glyph: "\u2648\uFE0E" }, { name: "Taurus", glyph: "\u2649\uFE0E" },
-            { name: "Gemini", glyph: "\u264A\uFE0E" }, { name: "Cancer", glyph: "\u264B\uFE0E" },
-            { name: "Leo", glyph: "\u264C\uFE0E" }, { name: "Virgo", glyph: "\u264D\uFE0E" },
-            { name: "Libra", glyph: "\u264E\uFE0E" }, { name: "Scorpio", glyph: "\u264F\uFE0E" },
-            { name: "Sagittarius", glyph: "\u2650\uFE0E" }, { name: "Capricorn", glyph: "\u2651\uFE0E" },
-            { name: "Aquarius", glyph: "\u2652\uFE0E" }, { name: "Pisces", glyph: "\u2653\uFE0E" }
-        ];
-
-        // Sky position → a direction on the globe, seen from outside like a star chart: north up, east to the left
-        function skyDir(ra, dec) {
-            var r = THREE.MathUtils.degToRad(ra);
-            var d = THREE.MathUtils.degToRad(dec);
-            return new THREE.Vector3(-Math.sin(r) * Math.cos(d), Math.sin(d), Math.cos(r) * Math.cos(d));
-        }
-
-        // Each constellation's stars (shared where its lines meet), its segments and its middle, for the label
-        var stars = [];            // { dir, constellation }
-        var segments = [];         // [star index, star index]
-        var constellations = [];   // { name, centre, starIndices }
-        ZODIAC.forEach(function (c, ci) {
-            var seen = {};
-            var info = { name: SIGNS[ci].name, glyph: SIGNS[ci].glyph, centre: new THREE.Vector3(), starIndices: [] };
-            c.lines.forEach(function (line) {
-                var prev = -1;
-                line.forEach(function (p) {
-                    var key = p[0] + "," + p[1];
-                    if (seen[key] === undefined) {
-                        seen[key] = stars.length;
-                        stars.push({ dir: skyDir(p[0], p[1]), constellation: ci });
-                        info.starIndices.push(seen[key]);
-                        info.centre.add(stars[seen[key]].dir);
-                    }
-                    if (prev >= 0) segments.push([prev, seen[key]]);
-                    prev = seen[key];
-                });
-            });
-            info.centre.normalize();
-            constellations.push(info);
-        });
-        var STAR_COUNT = stars.length;
-
         // The Pyrothief flame (pyrothieflogo.png, sampled once on a grid): [across, up] as fractions of its height,
         // centred, and the logo's colour there. The mask's black is left out, so it shows as a gap
         var LOGO = [[-0.023,0.474,0xfea10b],[-0.049,0.447,0xfd9c09],[-0.023,0.447,0xfd9b0a],[-0.049,0.421,0xfd9b08],[-0.023,0.421,0xfd9908],[0.004,0.421,0x532b0f],[-0.049,0.394,0xfc9908],[-0.023,0.394,0xfc9608],[0.004,0.394,0xfa9308],[0.083,0.394,0xfe6d0d],[-0.049,0.368,0xfc9707],[-0.023,0.368,0xfb9507],[0.004,0.368,0xfa9008],[0.030,0.368,0xf78b0a],[0.109,0.368,0xfb340f],[-0.049,0.342,0xfb9508],[-0.023,0.342,0xfa9008],[0.004,0.342,0xf98d09],[0.030,0.342,0xf88609],[0.057,0.342,0xf37a09],[-0.049,0.315,0xfc9109],[-0.023,0.315,0xfa8c0a],[0.004,0.315,0xf7860a],[0.030,0.315,0xf68009],[0.057,0.315,0xf4790b],[0.083,0.315,0xf3740c],[-0.128,0.289,0xfe830c],[-0.049,0.289,0xfb890a],[-0.023,0.289,0xf8840a],[0.004,0.289,0xf7800a],[0.030,0.289,0xf57b0b],[0.057,0.289,0xf4760b],[0.083,0.289,0xf5720d],[0.109,0.289,0xf76f0e],[-0.128,0.262,0xfc790c],[-0.023,0.262,0xf87e08],[0.004,0.262,0xf77a0a],[0.030,0.262,0xf5760b],[0.057,0.262,0xf4720d],[0.083,0.262,0xf46e0d],[0.109,0.262,0xf36a0e],[0.136,0.262,0xf46710],[-0.128,0.236,0xf86e08],[-0.023,0.236,0xf97807],[0.004,0.236,0xf7740a],[0.030,0.236,0xf5720c],[0.057,0.236,0xf36d0d],[0.083,0.236,0xf36a0e],[0.109,0.236,0xf2660f],[0.136,0.236,0xf26310],[0.162,0.236,0xf15e12],[-0.075,0.209,0xf5680a],[-0.023,0.209,0xe7680b],[0.004,0.209,0xf5710b],[0.030,0.209,0xf56e0d],[0.057,0.209,0xf36a0e],[0.083,0.209,0xf2670e],[0.109,0.209,0xf1630f],[0.136,0.209,0xf05f10],[0.162,0.209,0xf05911],[0.189,0.209,0xee5415],[-0.075,0.183,0xf56c08],[0.004,0.183,0xf46f0d],[0.030,0.183,0xf36b0e],[0.057,0.183,0xf2680e],[0.083,0.183,0xf1640f],[0.109,0.183,0xf05f10],[0.136,0.183,0xf05b11],[0.162,0.183,0xef5713],[0.189,0.183,0xef5415],[0.215,0.183,0xe74f1d],[-0.075,0.157,0xf36c0f],[0.004,0.157,0xf56b0f],[0.030,0.157,0xf2680f],[0.057,0.157,0xf16510],[0.083,0.157,0xf16110],[0.109,0.157,0xf15c12],[0.136,0.157,0xf05913],[0.162,0.157,0xee5414],[0.189,0.157,0xef5116],[0.215,0.157,0xf04d16],[-0.208,0.130,0xfd990c],[-0.102,0.130,0xf46c0e],[-0.075,0.130,0xf36a0d],[-0.023,0.130,0xf0660f],[0.004,0.130,0xf26810],[0.030,0.130,0xf26511],[0.057,0.130,0xf06112],[0.083,0.130,0xf05e12],[0.109,0.130,0xf05912],[0.136,0.130,0xee5514],[0.162,0.130,0xed5016],[0.189,0.130,0xed4d18],[0.215,0.130,0xee4817],[0.242,0.130,0xc82f1a],[-0.234,0.104,0xfc8a0e],[-0.208,0.104,0xc95f10],[-0.128,0.104,0xf36e0d],[-0.102,0.104,0xf36c0e],[-0.075,0.104,0xf1690d],[-0.049,0.104,0xf06711],[-0.023,0.104,0xf36611],[0.004,0.104,0xf26411],[0.030,0.104,0xf16112],[0.057,0.104,0xf05e13],[0.083,0.104,0xef5913],[0.109,0.104,0xef5414],[0.136,0.104,0xef5115],[0.162,0.104,0xec4c17],[0.189,0.104,0xec4919],[0.215,0.104,0xec4619],[0.242,0.104,0xca301d],[-0.260,0.077,0xc0620e],[-0.234,0.077,0xfb800c],[-0.208,0.077,0xfb870e],[-0.155,0.077,0xf46f0b],[-0.128,0.077,0xf36e0c],[-0.102,0.077,0xf36a0e],[-0.075,0.077,0xf2670e],[-0.049,0.077,0xf26510],[-0.023,0.077,0xf16412],[0.004,0.077,0xf16011],[0.030,0.077,0xf15d12],[0.057,0.077,0xf05913],[0.083,0.077,0xef5514],[0.109,0.077,0xee4f15],[0.136,0.077,0xee4d16],[0.162,0.077,0xed4818],[0.189,0.077,0xed461a],[0.215,0.077,0xeb421a],[0.242,0.077,0xc72c1b],[0.268,0.077,0xc62b1e],[-0.260,0.051,0xf87d09],[-0.234,0.051,0xf87c09],[-0.208,0.051,0xf77809],[-0.155,0.051,0xf46d0c],[-0.128,0.051,0xf46d0d],[-0.102,0.051,0xf3690e],[-0.075,0.051,0xf2660f],[-0.049,0.051,0xf26310],[-0.023,0.051,0xf16112],[0.004,0.051,0xf25e13],[0.030,0.051,0xf05914],[0.057,0.051,0xef5514],[0.083,0.051,0xef5115],[0.109,0.051,0xee4b16],[0.136,0.051,0xed4718],[0.162,0.051,0xed441a],[0.189,0.051,0xed421b],[0.215,0.051,0xeb401b],[0.242,0.051,0xc3281a],[0.268,0.051,0xc0261a],[-0.287,0.025,0xbc5a0e],[-0.260,0.025,0xf77a0a],[-0.234,0.025,0xf6770a],[-0.208,0.025,0xf6740a],[-0.181,0.025,0xf36f0c],[-0.155,0.025,0xf26c0d],[-0.128,0.025,0xf26a0d],[-0.102,0.025,0xf36710],[-0.075,0.025,0xf26411],[-0.049,0.025,0xf16011],[-0.023,0.025,0xf15d12],[0.004,0.025,0xf25913],[0.030,0.025,0xf05515],[0.057,0.025,0xef5015],[0.083,0.025,0xef4c16],[0.109,0.025,0xee4618],[0.136,0.025,0xee441a],[0.162,0.025,0xec401b],[0.189,0.025,0xec3f1c],[0.215,0.025,0xeb3d1d],[0.242,0.025,0xbe251a],[0.268,0.025,0xbd221c],[0.294,0.025,0xbe201c],[-0.287,-0.002,0xf7780f],[-0.260,-0.002,0xf6750b],[-0.234,-0.002,0xf5740b],[-0.208,-0.002,0xf4700b],[-0.181,-0.002,0xf46f0d],[-0.155,-0.002,0xf26b0e],[-0.128,-0.002,0xf16810],[-0.102,-0.002,0xf26511],[-0.075,-0.002,0xf16111],[-0.049,-0.002,0xf15e13],[-0.023,-0.002,0xef5913],[0.004,-0.002,0xf05513],[0.030,-0.002,0xf05115],[0.057,-0.002,0xef4b16],[0.083,-0.002,0xee4619],[0.109,-0.002,0xee4219],[0.136,-0.002,0xee3f1b],[0.162,-0.002,0xec3e1c],[0.189,-0.002,0xeb3e1d],[0.215,-0.002,0xbe261c],[0.242,-0.002,0xbc231c],[0.268,-0.002,0xb8211d],[0.294,-0.002,0xb51f1f],[-0.287,-0.028,0xf7750f],[-0.260,-0.028,0xf6730d],[-0.234,-0.028,0xf56f0d],[-0.208,-0.028,0xf46d0d],[-0.181,-0.028,0xf36b0e],[-0.155,-0.028,0xf3690f],[-0.128,-0.028,0xf26611],[-0.102,-0.028,0xf26312],[-0.075,-0.028,0xf15f12],[-0.049,-0.028,0xf15a12],[-0.023,-0.028,0xf05613],[0.004,-0.028,0xf05114],[0.030,-0.028,0xf04e16],[0.057,-0.028,0xee4818],[0.083,-0.028,0xee431a],[0.109,-0.028,0xec3f1b],[0.136,-0.028,0xec3d1c],[0.162,-0.028,0xeb3c1b],[0.189,-0.028,0xcc2f1a],[0.215,-0.028,0xbd241d],[0.242,-0.028,0xb9211d],[0.268,-0.028,0xb51e1f],[0.294,-0.028,0xaf1e1f],[-0.287,-0.055,0xf7750e],[-0.260,-0.055,0xf6700d],[-0.234,-0.055,0xf66d0f],[-0.208,-0.055,0xf46a0e],[-0.181,-0.055,0xf4680e],[-0.155,-0.055,0xf3660f],[-0.128,-0.055,0xf46411],[-0.102,-0.055,0xf36112],[-0.075,-0.055,0xf15b12],[-0.049,-0.055,0xf15813],[-0.023,-0.055,0xf05214],[0.004,-0.055,0xf04f16],[0.030,-0.055,0xef4a18],[0.057,-0.055,0xef4419],[0.083,-0.055,0xef411c],[0.109,-0.055,0xed3f1c],[0.136,-0.055,0xeb3d1c],[0.162,-0.055,0xd2311a],[0.189,-0.055,0xc2261d],[0.215,-0.055,0xbd221d],[0.242,-0.055,0xb71f1e],[0.268,-0.055,0xb11c1f],[0.294,-0.055,0xab1d20],[-0.287,-0.081,0xf6700e],[-0.260,-0.081,0xf66d0e],[-0.234,-0.081,0xf66a10],[-0.208,-0.081,0xf5670e],[-0.181,-0.081,0xf5660f],[-0.155,-0.081,0xf46510],[-0.128,-0.081,0xf46211],[-0.102,-0.081,0xf35d11],[-0.075,-0.081,0xf15813],[-0.049,-0.081,0xf05413],[-0.023,-0.081,0xef4f15],[0.004,-0.081,0xf04c18],[0.030,-0.081,0xef4719],[0.057,-0.081,0xef431b],[0.083,-0.081,0xee3f1b],[0.109,-0.081,0xec3c1a],[0.136,-0.081,0xc72b1c],[0.162,-0.081,0xc3261d],[0.189,-0.081,0xc0231e],[0.215,-0.081,0xbb1e1e],[0.242,-0.081,0xb31d1f],[0.268,-0.081,0xac1b1f],[0.294,-0.081,0xa51a1f],[-0.313,-0.108,0x603317],[-0.287,-0.108,0xf76e0e],[-0.260,-0.108,0xf76a0d],[-0.208,-0.108,0x974016],[-0.181,-0.108,0xf66513],[-0.155,-0.108,0xf56310],[-0.128,-0.108,0xf55f10],[-0.102,-0.108,0xf35b10],[-0.075,-0.108,0xf35613],[-0.049,-0.108,0xf25215],[-0.023,-0.108,0xf04d17],[0.004,-0.108,0xef4b19],[0.030,-0.108,0xef4719],[0.057,-0.108,0xee4118],[0.083,-0.108,0xc82a1d],[0.109,-0.108,0xc62a1d],[0.136,-0.108,0xc4271c],[0.162,-0.108,0xc2231e],[0.189,-0.108,0xbe201e],[0.268,-0.108,0xa21a1f],[0.294,-0.108,0xa1191f],[-0.287,-0.134,0xf7690d],[-0.260,-0.134,0xf7670e],[-0.128,-0.134,0xdf4313],[-0.102,-0.134,0xd74216],[-0.075,-0.134,0xd73e1a],[-0.049,-0.134,0xd73a1b],[-0.023,-0.134,0xd3381c],[0.004,-0.134,0xcd361d],[0.030,-0.134,0xcb301b],[0.057,-0.134,0xc92b1a],[0.083,-0.134,0xc5291c],[0.109,-0.134,0xc1251c],[0.136,-0.134,0xbe231c],[0.268,-0.134,0x9c1921],[0.294,-0.134,0x9b171f],[-0.287,-0.160,0xf6670f],[-0.260,-0.160,0xf7650f],[0.268,-0.160,0x941620],[0.294,-0.160,0x971520],[-0.287,-0.187,0xf66511],[-0.260,-0.187,0xf56110],[-0.155,-0.187,0xfb6b0c],[0.162,-0.187,0xf5550b],[0.268,-0.187,0x8f1421],[0.294,-0.187,0x8f131f],[-0.287,-0.213,0xf76013],[-0.260,-0.213,0xf25d0f],[-0.234,-0.213,0xf35911],[-0.155,-0.213,0xf8670e],[-0.128,-0.213,0xf6660c],[-0.102,-0.213,0xf3620c],[0.083,-0.213,0xd55617],[0.109,-0.213,0xf35a14],[0.136,-0.213,0xf35913],[0.162,-0.213,0x5d1f12],[0.242,-0.213,0x871423],[0.268,-0.213,0x8a1422],[0.294,-0.213,0x8b1221],[-0.287,-0.240,0xe75514],[-0.260,-0.240,0xf25810],[-0.234,-0.240,0xf15713],[-0.128,-0.240,0x682c14],[-0.102,-0.240,0xef5f0d],[-0.075,-0.240,0xf45c0f],[0.083,-0.240,0xf85d0f],[0.109,-0.240,0xf15610],[0.242,-0.240,0x811422],[0.268,-0.240,0x841322],[-0.260,-0.266,0xf05511],[-0.234,-0.266,0xf25314],[-0.208,-0.266,0xf04f13],[0.215,-0.266,0x781122],[0.242,-0.266,0x7c1323],[0.268,-0.266,0x811322],[-0.260,-0.292,0xef4f13],[-0.234,-0.292,0xf25113],[-0.208,-0.292,0xf04c13],[-0.181,-0.292,0xef4b15],[-0.155,-0.292,0xf44819],[0.189,-0.292,0x6d0f21],[0.215,-0.292,0x710f20],[0.242,-0.292,0x781122],[-0.234,-0.319,0xf25014],[-0.208,-0.319,0xf04b14],[-0.181,-0.319,0xee4715],[-0.155,-0.319,0xec4016],[-0.128,-0.319,0xe63717],[-0.102,-0.319,0xe52f1a],[-0.075,-0.319,0xe32420],[-0.049,-0.319,0xe61a23],[-0.023,-0.319,0xe71a22],[0.215,-0.319,0x700e20],[0.242,-0.319,0x730f1f],[-0.208,-0.345,0xf34614],[-0.181,-0.345,0xef4016],[-0.155,-0.345,0xeb3918],[-0.128,-0.345,0xe9311a],[-0.102,-0.345,0xe8281e],[-0.075,-0.345,0xe51f22],[-0.049,-0.345,0xe61a24],[-0.023,-0.345,0xe61b25],[-0.181,-0.372,0xec3c18],[-0.155,-0.372,0xeb331a],[-0.128,-0.372,0xea291e],[-0.102,-0.372,0xe92121],[-0.075,-0.372,0xe51a25],[-0.049,-0.372,0xe41826],[-0.023,-0.372,0xe41926],[-0.155,-0.398,0xed2c1c],[-0.128,-0.398,0xeb2221],[-0.102,-0.398,0xe91a24],[-0.075,-0.398,0xe41525],[-0.049,-0.398,0xe31528],[-0.023,-0.398,0xe11627],[-0.102,-0.425,0xe81625],[-0.075,-0.425,0xe21125],[-0.049,-0.425,0xe11126],[-0.023,-0.425,0xe01327],[-0.075,-0.451,0xb50e1e],[-0.049,-0.451,0xde1026],[-0.023,-0.451,0xdd1126],[-0.023,-0.477,0xde0c24]];
         var LOGO_COUNT = LOGO.length;
-        // The random dots first, then the stars, then the flame's own dots (hidden on the globe until it gathers)
-        var POINT_COUNT = DOT_COUNT + STAR_COUNT + LOGO_COUNT;
-        var LOGO_START = DOT_COUNT + STAR_COUNT;
+        // The random dots first, then the flame's own dots (hidden on the globe until it gathers)
+        var POINT_COUNT = DOT_COUNT + LOGO_COUNT;
+        var LOGO_START = DOT_COUNT;
 
         // Dots: each in a random direction (new on every load), up to a little above the surface
         var dirs = [];
@@ -901,8 +596,8 @@
         var dotColors = new Float32Array(POINT_COUNT * 3);
         var dotSizes = new Float32Array(POINT_COUNT);
         var dotAlphas = new Float32Array(POINT_COUNT);
-        var warpX = new Float32Array(POINT_COUNT);      // Warp's push on screen, px, eased
-        var warpY = new Float32Array(POINT_COUNT);
+        var skewX = new Float32Array(POINT_COUNT);      // Skew's push on screen, px, eased
+        var skewY = new Float32Array(POINT_COUNT);
         for (var i = 0; i < DOT_COUNT; i++) {
             // A random height and a random angle around it: evenly likely anywhere on the sphere, no bunching
             var y = Math.random() * 2 - 1;
@@ -910,10 +605,6 @@
             var a = Math.random() * Math.PI * 2;
             dirs.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
             lift[i] = Math.random() * 8;   // 0–8 above the surface (the 0–10 of a 360 sphere, scaled to 300)
-        }
-        for (var st = 0; st < STAR_COUNT; st++) {
-            dirs.push(stars[st].dir);
-            lift[DOT_COUNT + st] = 4;
         }
         for (var lg = 0; lg < LOGO_COUNT; lg++) {
             var ly = Math.random() * 2 - 1;
@@ -991,117 +682,8 @@
             depthWrite: false
         })));
 
-        // Constellation lines between their stars (Nova); the one under the pointer turns orange
-        var linePositions = new Float32Array(segments.length * 6);
-        var lineColors = new Float32Array(segments.length * 6);
-        var lineGeometry = new THREE.BufferGeometry();
-        lineGeometry.setAttribute("position", new THREE.BufferAttribute(linePositions, 3));
-        lineGeometry.setAttribute("color", new THREE.BufferAttribute(lineColors, 3));
-        var lineMaterial = new THREE.LineBasicMaterial({
-            vertexColors: true,
-            transparent: true,
-            opacity: 0,
-            depthWrite: false
-        });
-        globe.add(new THREE.LineSegments(lineGeometry, lineMaterial));
         var spikeMaterial = globe.children[1].material;
 
-        // Random is the intro screen, so every visit starts there; picking Nova eases the globe into Nova's map (mix 0 → 1)
-        var mode = "random";
-        var mix = 0;
-        var locked = false;
-        try { locked = localStorage.getItem("construction_sphere_locked") === "1"; } catch (e) {}
-        var lockButton = document.getElementById("lock");
-        // Drift (inside): the camera slides after the pointer (see the frame). Its own switch now, apart from Lock, and off
-        // each time you arrive inside, so the camera holds where the way in left it until you turn it on
-        var driftButton = document.getElementById("drift");
-        function toggleLock() {
-            locked = !locked;
-            try { localStorage.setItem("construction_sphere_locked", locked ? "1" : "0"); } catch (e) {}
-            showMode();
-        }
-        lockButton.addEventListener("click", toggleLock);
-        var driftOn = false;
-        driftButton.addEventListener("click", function () {
-            driftOn = !driftOn;
-            showMode();
-        });
-        var warpOn = true;
-        try { warpOn = localStorage.getItem("construction_sphere_warp") !== "0"; } catch (e) {}
-        // The hand controls (Random / Nova and Lock outside; Warp, Drift and Reach inside) are hidden for now. While
-        // they are, the settings are their defaults, not what was saved: unlocked, Warp on (Drift starts off and Reach
-        // at 1 inside anyway), so nothing can be stuck the wrong way with no button to change it
-        var SHOW_TOOLS = false;
-        if (!SHOW_TOOLS) {
-            locked = false;
-            warpOn = true;
-        }
-        var warpButton = document.getElementById("warp");
-        warpButton.addEventListener("click", function () {
-            warpOn = !warpOn;
-            try { localStorage.setItem("construction_sphere_warp", warpOn ? "1" : "0"); } catch (e) {}
-            showMode();
-        });
-
-        var modeButtons = document.querySelectorAll(".modes button[data-mode]");
-        // The sign list: picking one turns the globe until that constellation faces you, and keeps it lit
-        var selected = -1;
-        var aim = null;             // { x, y }: the rotation that faces the selected constellation, while turning to it
-        var signList = document.getElementById("signs");
-        var signButtons = constellations.map(function (c, ci) {
-            var b = document.createElement("button");
-            b.type = "button";
-            b.innerHTML = '<span class="glyph" aria-hidden="true">' + c.glyph + "</span>" + c.name;
-            b.addEventListener("click", function () { selectSign(ci); });
-            signList.appendChild(b);
-            return b;
-        });
-        function selectSign(ci) {
-            selected = ci;
-            signButtons.forEach(function (b, i) {
-                b.classList.toggle("on", i === ci);
-                b.setAttribute("aria-pressed", i === ci ? "true" : "false");
-            });
-            // Turn about y until the middle is straight ahead left-to-right, then about x to bring it level
-            var d = constellations[ci].centre;
-            var y = Math.atan2(-d.x, d.z);
-            var x = Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z));
-            // The shortest way round from where the globe is now
-            y = globe.rotation.y + Math.atan2(Math.sin(y - globe.rotation.y), Math.cos(y - globe.rotation.y));
-            aim = { x: x, y: y };
-            spinX = 0;
-            spinY = 0;
-        }
-
-        function setOn(b, on) {
-            b.classList.toggle("on", on);
-            b.setAttribute("aria-pressed", on ? "true" : "false");
-        }
-        function showMode() {
-            // Inside the sphere: just Warp and Drift (and ✕); outside: Random / Nova and Lock
-            var isInside = !!inside;
-            signList.hidden = mode !== "nova" || isInside;
-            lockButton.hidden = isInside;
-            document.getElementById("insideControls").hidden = !isInside || !SHOW_TOOLS;   // (looked up here: showMode runs early)
-            document.querySelector(".modes").hidden = !SHOW_TOOLS;
-            // Lock is for both screens and stays as it was: lit while on
-            setOn(lockButton, locked);
-            setOn(driftButton, driftOn);
-            setOn(warpButton, warpOn);
-            canvas.classList.toggle("locked", locked);
-            modeButtons.forEach(function (b) {
-                b.hidden = isInside;
-                setOn(b, b.getAttribute("data-mode") === mode);
-            });
-        }
-        function setMode(m) {
-            mode = m;
-            showMode();
-        }
-        modeButtons.forEach(function (b) {
-            b.addEventListener("click", function () { setMode(b.getAttribute("data-mode")); });
-        });
-        showMode();
 
         // Shapes in dots on the intro (Random). Each is hidden until the pointer comes near its corner of the ball, where it
         // always appears however the globe is turned (it faces you); then dots leave the globe and gather into it, and
@@ -1126,7 +708,7 @@
         }
 
         // The flame. Clicking it scrolls you in for you, exactly as two-finger scrolling with the pointer there does: the
-        // depth runs to the inside while Drift swings the camera toward where you clicked, so the whole star sphere turns
+        // depth runs to the inside while the swing turns the camera toward where you clicked, so the whole star sphere turns
         // as you zoom. On the way you go through the flame: its dots blow out past you, and Projects comes up
         var LOGO_ANCHOR = new THREE.Vector3(0.5, 0.42, 0.76).normalize();
         var LOGO_HEIGHT = 0.8;      // radians up the sphere
@@ -1134,7 +716,7 @@
         var BURST_START = 0.7;      // s in, it begins to blow apart
         var BURST_TIME = 1.0;       // s for the dots to blow out and fade
         var burstFrom = 0;          // the depth when clicked
-        var burstNDC = new THREE.Vector2();   // where it was clicked: Drift follows this through the zoom
+        var burstNDC = new THREE.Vector2();   // where it was clicked: the swing follows this through the zoom
         var logoOffsets = LOGO.map(function (p) { return [p[0] * LOGO_HEIGHT, p[1] * LOGO_HEIGHT]; });
         var logoShape = {
             targets: placeAround(LOGO_ANCHOR, logoOffsets),
@@ -1163,58 +745,22 @@
             spinY = 0;
         }
 
-        // The projects (inside the sphere, from the Projects menu): what each card says, and its icon, which forms in dots
-        // above the card. Nova is under construction: its icon only (its jump to the Nova page, jumpToNova, is kept for
-        // later)
+        // The projects (inside the sphere, from the Projects menu): what each one's HUD (or card) says, and its icon, which
+        // forms in dots. Nova shows just its icon
         var PROJECTS = {
-            // Under construction: just its icon (a bursting star), no card and no link
+            // Just its icon (a bursting star): no HUD, no card, no link
             nova: { name: "Nova", iconOnly: true },
             drift: {
                 name: "Drift Remote", status: "Beta", kind: "beta",
                 tagline: "Control your Apple devices using your iPhone.",
-                text: "Drift Remote turns your iPhone into a trackpad, keyboard and media remote for your Mac and iPad, " +
-                    "over Bluetooth with no pairing screen. New in this build: see your Mac's screen on your phone " +
-                    "while you drive it.",
                 tech: "iOS",
                 link: { label: "Join the beta", href: "https://testflight.apple.com/join/kYvrg2Tb" },
                 callouts: ["Trackpad, keyboard & Media", "Bluetooth, Wi-Fi",
                     "Cast screens to your device", "iPhone → Mac & iPad"]
             },
-            docparser: {
-                name: "Document Parser", status: "Alpha", kind: "alpha",
-                tagline: "Snap a document, get the details, automate.",
-                text: "Photograph or drop in a receipt, invoice or form, and Document Parser pulls out what matters: " +
-                    "the vendor, the date, the totals, kept searchable. It's all read on your Mac itself, so nothing " +
-                    "gets uploaded anywhere.",
-                tech: "macOS",
-                callouts: ["Snap or drop in a document", "Pulls out relevant details", "On-device inference",
-                    "100% local workflow"]
-            },
-            games: {
-                name: "DTG Manager", status: "Beta", kind: "beta",
-                tagline: "Scheduling and floor management.",
-                text: "DTG Manager builds the weekly staff schedule, keeps track of people and their skills, and runs " +
-                    "a live rotation board for the floor. All the data stays on the device.",
-                tech: "macOS · iPadOS",
-                callouts: ["Weekly scheduling", "Staff/patron roster", "Live rotation board",
-                    "Data reporting"]
-            },
-            mrwizard: {
-                name: "Mrwizard", status: "Alpha", kind: "alpha",
-                tagline: "Personal Assistant",
-                text: "Press Option+Space and ask. Mrwizard listens, thinks and answers out loud in a voice cloned from " +
-                    "a short sample of your own, entirely on your Mac, with no internet needed.",
-                tech: "macOS",
-                callouts: ["General assistant", "Voice capable", "Runs local or with a GPT", "Clones your voice"]
-            },
-            scout: {
-                name: "Scout", status: "Alpha", kind: "alpha",
-                tagline: "Live vehicle detection from a drone.",
-                text: "Scout watches a drone's live video on a Mac, boxes and tracks vehicles in real time, and sounds " +
-                    "an alarm when traffic is coming. Built for safer haul roads.",
-                tech: "macOS",
-                callouts: ["Live drone video", "Identifies & tracks vehicles", "Alarm for oncoming traffic", "Follows target vehicle"]
-            }
+            // Just the spade: an empty HUD, laid out but hidden (hudHidden), so the icon is centred as Drift Remote's is
+            // rather than raised as an icon on its own (Nova's) is. Its old text is in the dev log
+            games: { hudHidden: true, callouts: [] }
         };
         // Not projects, but in the menu with them: the privacy policy and the license, each with a link to the full text
         // The privacy policy as it is on its page (Privacy/privacy.html), whole, with its section headings
@@ -1242,7 +788,7 @@
             tech: "Last updated November 2026",
             link: { label: "github.com/Pyrothiefprojects", href: "https://github.com/Pyrothiefprojects" }
         };
-        // The license as it is on the Nova page (nova.html), whole
+        // The license, whole (as it was on the old Nova page)
         PROJECTS.license = {
             name: "License",
             tagline: "All rights reserved.",
@@ -1294,40 +840,18 @@
                 g.beginPath(); g.moveTo(106, 42); g.lineTo(134, 42); g.stroke();
                 g.beginPath(); g.arc(120, 194, 9, 0, Math.PI * 2); g.fill();
             },
-            docparser: function (g) {      // a page with its corner folded, and lines of text
+            games: function (g) {          // a spade, as on a playing card
                 g.beginPath();
-                g.moveTo(58, 18); g.lineTo(150, 18); g.lineTo(186, 54); g.lineTo(186, 222); g.lineTo(58, 222);
+                g.moveTo(120, 18);
+                g.bezierCurveTo(96, 56, 30, 92, 30, 142);       // down the left side
+                g.bezierCurveTo(30, 182, 84, 198, 113, 166);    // round the left lobe, back to the middle
+                g.quadraticCurveTo(112, 202, 82, 222);          // the stem, flaring to its foot
+                g.lineTo(158, 222);
+                g.quadraticCurveTo(128, 202, 127, 166);
+                g.bezierCurveTo(156, 198, 210, 182, 210, 142);  // round the right lobe
+                g.bezierCurveTo(210, 92, 144, 56, 120, 18);     // up the right side to the point
                 g.closePath();
                 g.stroke();
-                g.beginPath(); g.moveTo(150, 18); g.lineTo(150, 54); g.lineTo(186, 54); g.stroke();
-                g.lineWidth = 10;
-                [[96, 160], [128, 160], [160, 160], [192, 128]].forEach(function (l) {
-                    g.beginPath(); g.moveTo(84, l[0]); g.lineTo(l[1], l[0]); g.stroke();
-                });
-            },
-            games: function (g) {          // a calendar
-                roundRect(g, 30, 44, 180, 172, 16);
-                g.stroke();
-                g.fillRect(30, 44, 180, 34);
-                g.beginPath(); g.moveTo(78, 22); g.lineTo(78, 60); g.moveTo(162, 22); g.lineTo(162, 60); g.stroke();
-                for (var r = 0; r < 3; r++) {
-                    for (var c = 0; c < 4; c++) g.fillRect(52 + c * 38, 100 + r * 36, 20, 20);
-                }
-            },
-            mrwizard: function (g) {       // a voice, as a sound wave
-                g.lineWidth = 16;
-                [52, 104, 160, 208, 160, 104, 52].forEach(function (bar, i) {
-                    var x = 36 + i * 28;
-                    g.beginPath(); g.moveTo(x, 120 - bar / 2); g.lineTo(x, 120 + bar / 2); g.stroke();
-                });
-            },
-            scout: function (g) {          // a quadcopter
-                g.lineWidth = 10;
-                [[62, 62], [178, 62], [62, 178], [178, 178]].forEach(function (r) {
-                    g.beginPath(); g.moveTo(120, 120); g.lineTo(r[0], r[1]); g.stroke();
-                    g.beginPath(); g.arc(r[0], r[1], 36, 0, Math.PI * 2); g.stroke();
-                });
-                g.beginPath(); g.arc(120, 120, 24, 0, Math.PI * 2); g.fill();
             },
             privacy: function (g) {        // a padlock
                 g.beginPath(); g.arc(120, 96, 46, Math.PI, 0); g.lineTo(166, 112); g.moveTo(74, 96); g.lineTo(74, 112);
@@ -1392,18 +916,12 @@
         // Inside the sphere: the flame flies the camera in through the surface, like the site this is modelled on; ✕ or
         // Escape flies it back out
         var INSIDE_Z = RADIUS * 0.66;
-        // Drift: inside, the camera slides after the pointer, always aimed at the centre. At the screen's edge it's this
-        // far off-centre, which takes it past the wall: keep pushing and you drift back out of the sphere
-        // (× RADIUS; 1 is the wall at the screen's edge.) Outside and on the way in it's the most there is, 3, so going in
-        // swings the sphere round as far as it can; once you're in it eases to 1, the Reach slider's starting point every
-        // time you go in (the slider changes it from there, for that visit inside)
+        // The swing: the camera slides after the pointer, always aimed at the centre, this far off-centre at the screen's
+        // edge (× RADIUS; 1 is the wall). Outside and on the way in it's the most there is, 3, so going in swings the
+        // sphere round as far as it can; once you're in it eases to 1, and the camera holds where it got to
         var OUTSIDE_REACH = 3;
         var INSIDE_REACH = 1;
-        var insideReach = INSIDE_REACH;
-        var driftReach = OUTSIDE_REACH;   // the reach in use, eased between the two
-        var reachSlider = document.getElementById("reachSlider");
-        reachSlider.value = insideReach;
-        reachSlider.addEventListener("input", function () { insideReach = parseFloat(reachSlider.value); });
+        var swingReach = OUTSIDE_REACH;   // the reach in use, eased between the two
         var cameraForward = new THREE.Vector3();
         var cameraRight = new THREE.Vector3();
         var cameraUp = new THREE.Vector3();
@@ -1418,15 +936,10 @@
         function setInside(on) {
             inside = on;
             exitButton.hidden = !on;
-            if (on) {
-                insideReach = INSIDE_REACH;
-                reachSlider.value = insideReach;
-                driftOn = false;   // arriving inside: Drift off, the camera holds where it got to
-            } else {
+            if (!on) {
                 closeCard();
                 closeMenu();
             }
-            showMode();
         }
         exitButton.addEventListener("click", function () { setInside(false); });
         // Escape: the menu first (a card is tucked away under it), then the card, then out of the sphere
@@ -1442,8 +955,8 @@
             else if (inside) setInside(false);
         });
 
-        // The Projects menu: opens under the header, rows sliding in one after another. Nova, Drift Remote, then the projects
-        // it brings together, tabbed over under it (always shown), then Privacy and License
+        // The Projects menu: opens under the header, rows sliding in one after another. Nova, Drift Remote, DTG, a gap, then
+        // Privacy and License
         var projectsCorner = lockup;   // the header opens the menu
         var projectsMenu = document.getElementById("projectsMenu");
         var projectRows = Array.prototype.slice.call(projectsMenu.querySelectorAll("[data-project]"));
@@ -1573,7 +1086,7 @@
 
         // The codex: the projects in the menu's order, flipped through by swiping the stars or the card, a trackpad's
         // sideways swipe, or ← →; the dots on the card show where you are
-        var CODEX = ["nova", "drift", "games", "docparser", "mrwizard", "scout"];
+        var CODEX = ["nova", "drift", "games"];
         // step: +1 down the list, -1 up it. from: the side the next one comes in from (+1 the right, -1 the left), so a
         // swipe carries the card along with the finger; the keys default to it following the step
         function flipProject(step, from) {
@@ -1587,7 +1100,9 @@
         var pagerDots = CODEX.map(function (id, i) {
             var dot = document.createElement("button");
             dot.type = "button";
-            dot.setAttribute("aria-label", PROJECTS[id].name);
+            // (named as its row in the menu is, for a project with no name of its own)
+            dot.setAttribute("aria-label", PROJECTS[id].name ||
+                projectsMenu.querySelector('[data-project="' + id + '"]').textContent);
             dot.addEventListener("click", function () {
                 var from = CODEX.indexOf(activeProject);
                 pickProject(id, i > from ? 1 : -1);
@@ -1672,17 +1187,18 @@
         function showHud(p) {
             hudProject = p;
             hudStart = simTime;
-            document.getElementById("hudName").textContent = p.name;
-            document.getElementById("hudTagline").textContent = p.tagline;
-            document.getElementById("hudStatusText").textContent = p.status;
-            document.getElementById("hudTech").textContent = p.tech;
+            document.getElementById("hudName").textContent = p.name || "";
+            document.getElementById("hudTagline").textContent = p.tagline || "";
+            document.getElementById("hudStatusText").textContent = p.status || "";
+            document.getElementById("hudTech").textContent = p.tech || "";
             var hudLink = document.getElementById("hudLink");
             hudLink.hidden = !p.link;
             if (p.link) {
                 hudLink.textContent = p.link.label + " →";
                 hudLink.href = p.link.href;
             }
-            hud.style.setProperty("--status", STATUS_COLORS[p.kind]);
+            hud.style.setProperty("--status", STATUS_COLORS[p.kind] || "transparent");
+            hud.classList.toggle("veiled", !!p.hudHidden);
             hudLabels.forEach(function (el, i) {
                 el.textContent = "";
                 el.dataset.shown = "0";
@@ -1772,24 +1288,6 @@
             else if (t === canvas && activeProject) dismissCard();
         });
 
-        // Nova: a jump. Every star streaks past you as the page goes dark, then the Nova page
-        var jumpStart = -1;
-        var jumpFade = document.getElementById("jumpFade");
-        function jumpToNova() {
-            if (jumpStart >= 0) return;
-            closeCard();
-            closeMenu();
-            jumpStart = simTime;
-            jumpFade.classList.add("on");
-            setTimeout(function () { location.href = "nova.html"; }, reducedMotion ? 300 : 800);
-        }
-        // Coming back with the browser's Back button can restore this page as it was: dark and mid-jump
-        window.addEventListener("pageshow", function (e) {
-            if (!e.persisted) return;
-            jumpStart = -1;
-            jumpFade.classList.remove("on");
-        });
-
         // Scrolling (a trackpad's two fingers, or a mouse wheel) flies you in and out by hand, like the site this is
         // modelled on: down goes in, up comes out. When the scrolling stops, it settles the rest of the way to whichever
         // end is nearer
@@ -1822,18 +1320,17 @@
         }, { passive: false });
 
         canvas.addEventListener("click", function (e) {
-            if (mode !== "random" || inside) return;
+            if (inside) return;
             shapes.forEach(function (sh) {
                 if (sh.onClick && sh.form > 0.5 && inBox(sh.box, e.clientX, e.clientY)) sh.onClick();
             });
         });
         // A phone: drag a finger toward the flame's corner (it gathers as the finger comes near, as a pointer does), and
-        // lift it there to go in, the same way a click does on a desktop (Drift swings toward where the finger was)
+        // lift it there to go in, the same way a click does on a desktop (the swing leans toward where the finger was)
         canvas.addEventListener("pointerup", function (e) {
-            if (e.pointerType !== "touch" || mode !== "random" || inside) return;
+            if (e.pointerType !== "touch" || inside) return;
             if (logoShape.form > 0.5 && inBox(logoShape.box, e.clientX, e.clientY, SHAPE_REACH)) startBurst();
         });
-        var label = document.getElementById("label");
 
         // Pointer: where its ray meets the sphere, in the globe's own (rotating) coordinates
         var raycaster = new THREE.Raycaster();
@@ -1865,21 +1362,17 @@
         }
 
         // Spin: moving the pointer (or a finger) over the page turns the globe with it; when it stops, the globe coasts
-        // to a stop and stays where it is. Locked (either screen), pointing and turning are separate: with a mouse, hover
-        // points and click-and-drag turns; on a touchscreen, one finger points and two fingers turn
+        // to a stop and stays where it is
         var spinX = 0;
         var spinY = 0;
         var lastX = null;
         var lastY = null;
         var pressed = false;
         var fingers = {};         // touch pointer id → its latest { x, y }
-        var lastMid = null;       // the two fingers' midpoint at the last move, for a two-finger turn
 
         function fingerCount() { return Object.keys(fingers).length; }
-        function isLocked() { return locked; }
         function turn(dx, dy) {
             if (burstStart >= 0) return;   // hands off while the flame's burst plays
-            aim = null;   // a hand on the globe takes over from a sign's turn
             spinY += dx * SPIN_GAIN;
             spinX += dy * SPIN_GAIN;
         }
@@ -1896,38 +1389,19 @@
             lastY = e.clientY;
             if (e.pointerType === "touch") {
                 fingers[e.pointerId] = { x: e.clientX, y: e.clientY };
-                lastMid = null;
             }
             canvas.setPointerCapture(e.pointerId);
             canvas.classList.add("dragging");
         });
-        // Pointer moves are followed over the whole page, not just the canvas, so pointing, Drift and Warp carry on over the
+        // Pointer moves are followed over the whole page, not just the canvas, so pointing, the swing and Skew carry on over the
         // password page and the buttons; only the canvas turns the globe, though
         window.addEventListener("pointermove", function (e) {
             if (tourActive) return;   // the tour's ghost is pointing
             var onCanvas = e.target === canvas;   // (a pressed pointer is captured by the canvas, so counts)
             if (e.pointerType === "touch" && !onCanvas) return;   // a finger on the password box or a button: typing, not pointing
-            if (e.pointerType === "touch" && isLocked()) {
-                fingers[e.pointerId] = { x: e.clientX, y: e.clientY };
-                var ids = Object.keys(fingers);
-                if (ids.length >= 2) {
-                    // Two fingers: turn by how far their midpoint moves; nothing is pointed at meanwhile
-                    var a = fingers[ids[0]];
-                    var b = fingers[ids[1]];
-                    var mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-                    if (lastMid) turn(mid.x - lastMid.x, mid.y - lastMid.y);
-                    lastMid = mid;
-                    pointerOver = false;
-                } else {
-                    // One finger: points, like hover
-                    lastMid = null;
-                    pointAt(e.clientX, e.clientY);
-                }
-                return;
-            }
             pointAt(e.clientX, e.clientY);
-            // Hover turns the globe outside, unlocked; inside, Drift moves the camera instead, so only a press turns it
-            if (onCanvas && ((!isLocked() && !inside) || pressed) && lastX !== null) turn(e.clientX - lastX, e.clientY - lastY);
+            // Hover turns the globe outside; inside, only a press turns it
+            if (onCanvas && (!inside || pressed) && lastX !== null) turn(e.clientX - lastX, e.clientY - lastY);
             lastX = e.clientX;
             lastY = e.clientY;
         });
@@ -1937,14 +1411,12 @@
             canvas.classList.remove("dragging");
             lastX = null;   // so the next pointer doesn't jump the globe from where this one left
             lastY = null;
-            lastMid = null;
         }
         // A finger lifting: once none are left there's nothing to point with. A mouse is still there — it's only gone once
         // it leaves the page (moving onto the password page or a button isn't leaving)
         function pointerEnded(e) {
             if (e.pointerType === "touch") {
                 delete fingers[e.pointerId];
-                lastMid = null;
                 if (fingerCount() === 0) pointerGone();
                 return;
             }
@@ -1980,8 +1452,7 @@
         // Intro: fly in from far away
         camera.position.z = reducedMotion ? restZ : restZ * 4;
 
-        // The page's own clock (seconds): it runs with real time, but the tour's bar can pause it, run it faster, or play
-        // it through to a moment unseen. Everything that animates goes by it
+        // The page's own clock (seconds), run with real time. Everything that animates goes by it
         var simTime = 0;
         var shapeScratch = new THREE.Vector3();
         var iconRaise = 0.16;   // where the icon sits: up, as a share of the view's height (eased)
@@ -2000,18 +1471,18 @@
             if (!scrolling) depth += ((inside ? 1 : 0) - depth) * (reducedMotion ? 1 : 0.06);
             var depthZ = restZ + (INSIDE_Z - restZ) * depth;
             camera.position.z += (depthZ - camera.position.z) * (t < 2.5 ? 0.05 : 0.2);   // the slow fly-in first
-            // Drift: off-centre after the pointer with Drift on, growing with the depth, so it builds up as you come in
-            // (rather than jumping across when you arrive) and fades out as you leave; back to the middle otherwise
+            // The swing: off-centre after the pointer, growing with the depth, so it builds up as you come in (rather than
+            // jumping across when you arrive) and fades out as you leave; back to the middle otherwise
             var bursting = burstStart >= 0;
-            var driftAt = bursting ? burstNDC : pointerNDC;   // through the flame's scroll in, where it was clicked
-            driftReach += ((inside && !bursting ? insideReach : OUTSIDE_REACH) - driftReach) * 0.03;
-            // Outside and on the way in, Lock decides; inside, the Drift switch does
-            var drifting = inside && !bursting ? driftOn && pointerOver : !locked && (pointerOver || bursting);
-            var drift = drifting ? driftReach * RADIUS * depth : 0;
-            // Inside with Drift off the camera just holds (not back to the middle, which would undo the turn on the way in)
-            if (!(inside && !bursting && !driftOn)) {
-                camera.position.x += (driftAt.x * drift - camera.position.x) * 0.05;
-                camera.position.y += (driftAt.y * drift - camera.position.y) * 0.05;
+            var swingAt = bursting ? burstNDC : pointerNDC;   // through the flame's scroll in, where it was clicked
+            swingReach += ((inside && !bursting ? INSIDE_REACH : OUTSIDE_REACH) - swingReach) * 0.03;
+            // Outside and on the way in it follows the pointer (or the click); inside it holds
+            var swinging = !(inside && !bursting) && (pointerOver || bursting);
+            var swing = swinging ? swingReach * RADIUS * depth : 0;
+            // Inside, the camera just holds (not back to the middle, which would undo the turn on the way in)
+            if (!(inside && !bursting)) {
+                camera.position.x += (swingAt.x * swing - camera.position.x) * 0.05;
+                camera.position.y += (swingAt.y * swing - camera.position.y) * 0.05;
             }
             camera.lookAt(0, 0, 0);
             camera.updateMatrixWorld();
@@ -2023,8 +1494,8 @@
             var starsBright = 1 - CARD_DIM * cardDim;   // the icon's dots are put back to full in the shapes, below
             // PROJECTS slides sideways with the zoom, staying on its row under the wordmark: from under its right edge to the
             // left margin, growing a little about its own middle (not on a phone, where there's less room), and is the
-            // menu's button once you're nearly in. The wordmark stays centred and fades out as PROJECTS moves over (and
-            // back in as it returns)
+            // menu's button once you're nearly in. The wordmark stays centred; like PROJECTS it's hidden on the intro until the
+            // flame gathers, fading with it, and it fades out as PROJECTS moves over on the way in
             var cornerFade = Math.max(0, Math.min(1, (depth - 0.45) / 0.5));
             cornerFade = cornerFade * cornerFade * (3 - 2 * cornerFade);
             var slid = Math.max(0, Math.min(1, (depth - 0.1) / 0.75));
@@ -2034,7 +1505,7 @@
             var ph = lockup.offsetHeight;
             var grown = window.innerWidth <= 600 ? 1 : 1.35;
             var under = { x: wm.right - pw, y: wm.bottom + (window.innerWidth <= 600 ? 4 : 6) };
-            wordmark.style.opacity = 1 - slid;
+            wordmark.style.opacity = Math.min(logoShape.form, 1 - slid);
             // On the intro PROJECTS appears with the flame: hidden until the flame gathers, fading with it; on the way in it
             // stays (and fades in anyway when you scroll in without the flame)
             lockup.style.opacity = Math.max(logoShape.form, slid);
@@ -2063,37 +1534,14 @@
             // Always slowing: pointer moves keep feeding it, and it coasts to a stop
             spinX *= SPIN_FRICTION;
             spinY *= SPIN_FRICTION;
-            if (aim) {
-                globe.rotation.x += (aim.x - globe.rotation.x) * 0.08;
-                globe.rotation.y += (aim.y - globe.rotation.y) * 0.08;
-                if (Math.abs(aim.x - globe.rotation.x) + Math.abs(aim.y - globe.rotation.y) < 0.0005) aim = null;
-            } else {
-                globe.rotation.y += spinY;
-                globe.rotation.x = Math.max(-1.2, Math.min(1.2, globe.rotation.x + spinX));
-            }
+            globe.rotation.y += spinY;
+            globe.rotation.x = Math.max(-1.2, Math.min(1.2, globe.rotation.x + spinX));
             globe.updateMatrixWorld();
             updateHit();
 
-            mix += ((mode === "nova" ? 1 : 0) - mix) * 0.08;
-
-            // The constellation under the pointer: the one whose middle is nearest, within reach
-            var hovered = -1;
-            if (hasHit && mix > 0.5) {
-                var best = Math.cos(0.45);
-                for (var c = 0; c < constellations.length; c++) {
-                    var near = constellations[c].centre.dot(hitDir);
-                    if (near > best) { best = near; hovered = c; }
-                }
-            }
-
             var gm = globe.matrixWorld.elements;   // a dot's height as seen: its direction turned with the globe
             for (var i = 0; i < POINT_COUNT; i++) {
-                var isStar = i >= DOT_COUNT && i < LOGO_START;
-                var w = bulgeWeight(dirs[i]) * (1 - insideMix);   // inside, Warp takes over from the bulge
-                if (isStar) {
-                    var sc = stars[i - DOT_COUNT].constellation;
-                    if (sc === hovered || (sc === selected && mix > 0.5)) w = Math.max(w, 0.8);
-                }
+                var w = bulgeWeight(dirs[i]) * (1 - insideMix);   // inside, Skew takes over from the bulge
                 bulge[i] += (w - bulge[i]) * BULGE_EASE;
                 var b = bulge[i];
                 var radius = RADIUS + lift[i] + b * BULGE_HEIGHT;
@@ -2110,23 +1558,20 @@
                     dotColors[i * 3 + 1] = DOT_COLOR.g;
                     dotColors[i * 3 + 2] = DOT_COLOR.b;
                 }
-                if (isStar) {
-                    dotSizes[i] = (STAR_SIZE + (GLOW_SIZE * 1.3 - STAR_SIZE) * b) * mix;
-                    dotAlphas[i] = mix * starsBright;
-                } else if (i >= LOGO_START) {
+                if (i >= LOGO_START) {
                     dotSizes[i] = DOT_SIZE;
                     dotAlphas[i] = 0;   // shown only as the flame gathers (below)
                 } else {
                     dotSizes[i] = DOT_SIZE + (GLOW_SIZE - DOT_SIZE) * b;
-                    dotAlphas[i] = (1 - DIM_DOTS * mix) * starsBright;
+                    dotAlphas[i] = starsBright;
                 }
             }
             var toGlobe = globeInverse.copy(globe.matrixWorld).invert();
 
-            // Warp, inside: each dot near the pointer on screen is pushed straight away from it, more the nearer it is,
-            // and lights up; with Warp off (or no pointer) they ease back
+            // Skew, inside: each dot near the pointer on screen is pushed straight away from it, more the nearer it is,
+            // and lights up; with no pointer they ease back
             if (insideMix > 0.01) {
-                var warping = warpOn && pointerOver;
+                var skewing = pointerOver;
                 var unitsPerPxAt1 = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / window.innerHeight;
                 for (var wi = 0; wi < POINT_COUNT; wi++) {
                     var world = scratch.set(dotPositions[wi * 3], dotPositions[wi * 3 + 1], dotPositions[wi * 3 + 2])
@@ -2134,32 +1579,32 @@
                     var ahead = target.copy(world).sub(camera.position).dot(cameraForward);   // distance ahead of the camera
                     var pushX = 0;
                     var pushY = 0;
-                    if (warping && ahead > 1) {
+                    if (skewing && ahead > 1) {
                         var onScreen = target.copy(world).project(camera);
                         var dx = (onScreen.x + 1) / 2 * window.innerWidth - pointerPx.x;
                         var dy = (1 - onScreen.y) / 2 * window.innerHeight - pointerPx.y;
                         var dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < WARP_RADIUS && dist > 0.001) {
-                            var force = 1 - dist / WARP_RADIUS;
+                        if (dist < SKEW_RADIUS && dist > 0.001) {
+                            var force = 1 - dist / SKEW_RADIUS;
                             force *= force;
-                            pushX = dx / dist * WARP_STRENGTH * force;
-                            pushY = dy / dist * WARP_STRENGTH * force;
+                            pushX = dx / dist * SKEW_STRENGTH * force;
+                            pushY = dy / dist * SKEW_STRENGTH * force;
                         }
                     }
-                    warpX[wi] += (pushX - warpX[wi]) * WARP_EASE;
-                    warpY[wi] += (pushY - warpY[wi]) * WARP_EASE;
+                    skewX[wi] += (pushX - skewX[wi]) * SKEW_EASE;
+                    skewY[wi] += (pushY - skewY[wi]) * SKEW_EASE;
                     if (ahead <= 1) continue;
                     var units = unitsPerPxAt1 * ahead * insideMix;
-                    world.addScaledVector(cameraRight, warpX[wi] * units).addScaledVector(cameraUp, -warpY[wi] * units);
-                    var warpC = sunrise((1 - world.y / RADIUS) / 2);
+                    world.addScaledVector(cameraRight, skewX[wi] * units).addScaledVector(cameraUp, -skewY[wi] * units);
+                    var skewC = sunrise((1 - world.y / RADIUS) / 2);
                     world.applyMatrix4(toGlobe);
                     dotPositions[wi * 3] = world.x;
                     dotPositions[wi * 3 + 1] = world.y;
                     dotPositions[wi * 3 + 2] = world.z;
-                    var lit = Math.min(1, Math.sqrt(warpX[wi] * warpX[wi] + warpY[wi] * warpY[wi]) / WARP_STRENGTH * 1.25) * insideMix;
-                    dotColors[wi * 3] += (warpC.r - dotColors[wi * 3]) * lit;
-                    dotColors[wi * 3 + 1] += (warpC.g - dotColors[wi * 3 + 1]) * lit;
-                    dotColors[wi * 3 + 2] += (warpC.b - dotColors[wi * 3 + 2]) * lit;
+                    var lit = Math.min(1, Math.sqrt(skewX[wi] * skewX[wi] + skewY[wi] * skewY[wi]) / SKEW_STRENGTH * 1.25) * insideMix;
+                    dotColors[wi * 3] += (skewC.r - dotColors[wi * 3]) * lit;
+                    dotColors[wi * 3 + 1] += (skewC.g - dotColors[wi * 3 + 1]) * lit;
+                    dotColors[wi * 3 + 2] += (skewC.b - dotColors[wi * 3 + 2]) * lit;
                     dotSizes[wi] *= 1 + 0.3 * lit;
                 }
             }
@@ -2213,7 +1658,7 @@
                     }
                 }
                 // An icon forms only for its project; the others gather when the pointer comes near (on the intro)
-                var near = sh.forced || (!sh.inFront && mode === "random" && !inside && pointerOver &&
+                var near = sh.forced || (!sh.inFront && !inside && pointerOver &&
                     (reducedMotion || t > 1.2) && inBox(sh.box, pointerPx.x, pointerPx.y, SHAPE_REACH));
                 // Gathering eases in; once clicked (forced, playing the burst) it finishes about twice as fast
                 sh.form += ((near ? 1 : 0) - sh.form) * (reducedMotion ? 1 : (sh === logoShape && burstStart >= 0 ? 0.15 : 0.07));
@@ -2270,10 +1715,10 @@
                 box.minX -= 12; box.maxX += 12; box.minY -= 12; box.maxY += 12;
                 sh.box = box;
             });
-            canvas.style.cursor = anyHover && mode === "random" ? "pointer" : "";
+            canvas.style.cursor = anyHover ? "pointer" : "";
 
             // The HUD, laid out around where the icon is on screen
-            if (hudProject && !hud.hidden && !fastForwarding) {
+            if (hudProject && !hud.hidden) {
                 var hudAt = scratch.copy(iconCentre).project(camera);
                 var hudX = (hudAt.x + 1) / 2 * window.innerWidth;
                 var hudY = (1 - hudAt.y) / 2 * window.innerHeight;
@@ -2294,60 +1739,12 @@
                 hudDropWanted = hudDrop + Math.max(toCentre, toClear);
             }
 
-            // Nova's jump: every star rushes out from the middle of the view and past you, faster and faster
-            if (jumpStart >= 0 && !reducedMotion) {
-                var jumped = Math.min(1, (t - jumpStart) / 0.8);
-                jumped *= jumped;
-                for (var ji = 0; ji < POINT_COUNT; ji++) {
-                    var jw = scratch.set(dotPositions[ji * 3], dotPositions[ji * 3 + 1], dotPositions[ji * 3 + 2])
-                        .applyMatrix4(globe.matrixWorld);
-                    var jAhead = target.copy(jw).sub(camera.position).dot(cameraForward);
-                    var sideways = shapeScratch.copy(jw).sub(camera.position).addScaledVector(cameraForward, -jAhead);
-                    jw.addScaledVector(sideways, jumped * 2.5).addScaledVector(cameraForward, -jumped * RADIUS * 3);
-                    jw.applyMatrix4(toGlobe);
-                    dotPositions[ji * 3] = jw.x;
-                    dotPositions[ji * 3 + 1] = jw.y;
-                    dotPositions[ji * 3 + 2] = jw.z;
-                    dotSizes[ji] *= 1 + jumped * 3;
-                }
-            }
             dotGeometry.attributes.position.needsUpdate = true;
             dotGeometry.attributes.aColor.needsUpdate = true;
             dotGeometry.attributes.aSize.needsUpdate = true;
             dotGeometry.attributes.aAlpha.needsUpdate = true;
 
-            // Lines follow their stars (bulge included)
-            for (var g = 0; g < segments.length; g++) {
-                var gc = stars[segments[g][0]].constellation;
-                var lit = gc === hovered || (gc === selected && mix > 0.5) ? 1 : 0;
-                for (var end = 0; end < 2; end++) {
-                    var pi = (DOT_COUNT + segments[g][end]) * 3;
-                    var li = g * 6 + end * 3;
-                    linePositions[li] = dotPositions[pi];
-                    linePositions[li + 1] = dotPositions[pi + 1];
-                    linePositions[li + 2] = dotPositions[pi + 2];
-                    lineColors[li] = LINE_COLOR.r + (GLOW_COLOR.r - LINE_COLOR.r) * lit;
-                    lineColors[li + 1] = LINE_COLOR.g + (GLOW_COLOR.g - LINE_COLOR.g) * lit;
-                    lineColors[li + 2] = LINE_COLOR.b + (GLOW_COLOR.b - LINE_COLOR.b) * lit;
-                }
-            }
-            lineGeometry.attributes.position.needsUpdate = true;
-            lineGeometry.attributes.color.needsUpdate = true;
-            lineMaterial.opacity = 0.55 * mix;
-            spikeMaterial.opacity = 0.3 * (1 - 0.6 * mix) * starsBright;
-
-            // The name of the hovered constellation (else the selected one), just outside its middle
-            var named = hovered >= 0 ? hovered : (mix > 0.5 ? selected : -1);
-            if (named >= 0) {
-                var at = constellations[named].centre.clone().multiplyScalar(RADIUS + BULGE_HEIGHT + 30);
-                globe.localToWorld(at).project(camera);
-                label.textContent = constellations[named].name;
-                label.style.left = ((at.x + 1) / 2 * window.innerWidth) + "px";
-                label.style.top = ((1 - at.y) / 2 * window.innerHeight) + "px";
-                label.style.opacity = "1";
-            } else {
-                label.style.opacity = "0";
-            }
+            spikeMaterial.opacity = 0.3 * starsBright;
 
             for (var s = 0; s < SPIKE_COUNT; s++) {
                 var sp = spikes[s];
@@ -2369,14 +1766,11 @@
         // ---------------- The tour: a link like pyrothief.ca/#drift plays the way there by itself ----------------
         // From the home screen a ghost cursor glides to the flame (it gathers), clicks it (the swing, the zoom, the burst),
         // then clicks the project in the menu — every animation as a visitor would see it. A click, touch, scroll or key
-        // stops it and hands over. With "&tool" (pyrothief.ca/#drift&tool) a player bar shows: play / pause, a slider
-        // over the whole run (letting go plays the page through to that moment, unseen, then carries on), speed, restart
+        // stops it and hands over
         var TOUR_SLUGS = {
             nova: "nova", drift: "drift", "drift-remote": "drift", dtg: "games", "dtg-manager": "games",
-            docparser: "docparser", "document-parser": "docparser", mrwizard: "mrwizard", scout: "scout",
             privacy: "privacy", license: "license"
         };
-        var TOUR_LENGTH = 9;     // seconds the bar's slider covers
         var tourHash = {};
         location.hash.replace(/^#/, "").split("&").forEach(function (part) {
             var pair = part.split("=");
@@ -2384,8 +1778,6 @@
         });
         var tourSlug = null;
         Object.keys(tourHash).forEach(function (key) { if (TOUR_SLUGS[key]) tourSlug = key; });
-        var tourTool = !!tourHash.tool;
-        if (tourTool && !tourSlug) tourSlug = "drift";
         var tourTarget = tourSlug ? TOUR_SLUGS[tourSlug] : null;
         var tourActive = !!tourTarget;
         var tour = { clicked: false, arrivedAt: -1, picked: false, pickAt: -1, fromX: 0, fromY: 0 };
@@ -2394,7 +1786,7 @@
             a = Math.max(0, Math.min(1, a));
             return a * a * (3 - 2 * a);
         }
-        // The ghost to a point on screen; it points there too, as a pointer would (the flame gathers, Warp parts the dots)
+        // The ghost to a point on screen; it points there too, as a pointer would (the flame gathers, Skew pushes the dots aside)
         function ghostTo(x, y, alpha) {
             ghost.style.transform = "translate(" + x + "px, " + y + "px)";
             ghost.style.opacity = alpha;
@@ -2461,93 +1853,28 @@
             tourActive = false;
             ghost.style.opacity = 0;
             pointerGone();
-            // The bar goes too, the page's clock back to real time, and the link back to plain, so a reload starts at home
-            tourBar.hidden = true;
-            playing = true;
-            speed = 1;
+            // The link back to plain, so a reload starts at home
             history.replaceState(null, "", location.pathname + location.search);
         }
-        // A click, touch, scroll or key (not on the bar) stops the tour where it is
-        var tourBar = document.getElementById("tourBar");
-        function interruptTour(e) {
-            if (tourActive && !tourBar.contains(e.target)) endTour();
+        // A click, touch, scroll or key stops the tour where it is
+        function interruptTour() {
+            if (tourActive) endTour();
         }
         window.addEventListener("pointerdown", interruptTour, true);
         window.addEventListener("wheel", interruptTour, true);
         window.addEventListener("keydown", interruptTour, true);
 
-        // The bar
-        var playing = true;
-        var speed = 1;
-        var fastForwarding = false;   // playing through to a moment, unseen (layout work skipped until the last step)
-        var tourSlider = document.getElementById("tourSlider");
-        var tourTime = document.getElementById("tourTime");
-        var tourPlay = document.getElementById("tourPlay");
-        var dragging = false;
-        tourSlider.max = TOUR_LENGTH;
-        function showPlaying() {
-            tourPlay.textContent = playing ? "❚❚" : "▶";
-            tourPlay.setAttribute("aria-label", playing ? "Pause" : "Play");
-        }
-        // To a moment: reload with it in the link, and play through to it on the way in
-        function seek(to) {
-            var parts = [tourSlug, "tool"];
-            if (to > 0) parts.push("t=" + to.toFixed(2));
-            if (!playing) parts.push("paused");
-            location.hash = parts.join("&");
-            location.reload();
-        }
-        if (tourTool) {
-            tourBar.hidden = false;
-            tourPlay.addEventListener("click", function () { playing = !playing; showPlaying(); });
-            tourSlider.addEventListener("input", function () {
-                dragging = true;
-                tourTime.textContent = parseFloat(tourSlider.value).toFixed(1) + "s";
-            });
-            tourSlider.addEventListener("change", function () { seek(parseFloat(tourSlider.value)); });
-            tourBar.querySelectorAll("[data-speed]").forEach(function (b) {
-                b.addEventListener("click", function () {
-                    speed = parseInt(b.getAttribute("data-speed"), 10);
-                    tourBar.querySelectorAll("[data-speed]").forEach(function (o) { o.classList.toggle("on", o === b); });
-                });
-            });
-            document.getElementById("tourRestart").addEventListener("click", function () { seek(0); });
-        }
 
-        // The loop: the page's clock moves on with real time (by the bar's speed; not while paused), one step of everything
-        // per moved-on frame, then a picture
+        // The loop: the page's clock moves on with real time, one step of everything per frame, then a picture
         var lastReal = performance.now();
         function frame() {
             var nowReal = performance.now();
-            var realStep = Math.min(0.1, (nowReal - lastReal) / 1000);
+            simTime += Math.min(0.1, (nowReal - lastReal) / 1000);
             lastReal = nowReal;
-            if (playing) {
-                for (var n = 0; n < speed; n++) {
-                    simTime += realStep;
-                    simulate(simTime);
-                }
-            }
-            if (tourTool && !dragging) {
-                tourSlider.value = Math.min(TOUR_LENGTH, simTime);
-                tourTime.textContent = simTime.toFixed(1) + "s";
-            }
+            simulate(simTime);
             renderer.render(scene, camera);
             requestAnimationFrame(frame);
         }
-        // A link with "t=…" (the bar's slider): play the page through to that moment first, unseen
-        var seekTo = parseFloat(tourHash.t) || 0;
-        if (seekTo > 0) {
-            fastForwarding = true;
-            var ffSteps = Math.round(seekTo * 60);
-            for (var ff = 0; ff < ffSteps; ff++) {
-                if (ff === ffSteps - 1) fastForwarding = false;   // the last step lays everything out
-                simTime += 1 / 60;
-                simulate(simTime);
-            }
-            fastForwarding = false;
-        }
-        if (tourHash.paused && tourActive) playing = false;
-        showPlaying();
         requestAnimationFrame(frame);
     })();
     </script>
