@@ -3,644 +3,2547 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pyrothief Projects — Project Nova</title>
+    <title>Pyrothief Projects</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
         body {
-            min-height: 100vh;
             background: #0a0a0a;
-            background: radial-gradient(ellipse at center top, #1a0f08 0%, #0a0a0a 60%);
-            font-family: 'Orbitron', system-ui, sans-serif;
+            font-family: 'Orbitron', sans-serif;
             letter-spacing: 0.15em;
             color: #f5f5f5;
+            overflow: hidden;
+        }
+        /* The sphere fills the window behind everything */
+        #sphere {
+            position: fixed;
+            inset: 0;
+            touch-action: none;
+        }
+        #sphere.locked { cursor: grab; }
+        #sphere.locked.dragging { cursor: grabbing; }
+        /* The header: the PYROTHIEF wordmark (pyrothieftext.png), centred at the top, outside and inside. The image's black
+           background is screened away, so only the letters show over the stars */
+        main {
+            position: fixed;
+            top: 1.65rem;
+            left: 0;
+            right: 0;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-x: hidden;
+            justify-content: center;
+            pointer-events: none;   /* drags and hovers go through to the sphere */
         }
-
-        /* ── Hero ── */
-        .hero {
-            text-align: center;
-            padding: 6rem 2rem 4rem;
-            max-width: 800px;
-            width: 100%;
-        }
-
-        .logo {
+        .wordmark {
             display: block;
-            max-width: 280px;
-            width: 100%;
-            height: auto;
-            margin: 0 auto 3rem auto;
-            filter: drop-shadow(0 0 40px rgba(255, 107, 53, 0.3));
+            height: 22px;
+            width: auto;
+            mix-blend-mode: screen;
         }
-
-        .project-title {
-            font-size: clamp(2.5rem, 8vw, 4.5rem);
-            font-weight: 700;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #ffa500 0%, #ff6b35 50%, #cc4400 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 1.5rem;
-        }
-
-        .cta {
-            display: inline-block;
-            padding: 1rem 3rem;
-            font-size: 1rem;
-            font-weight: 600;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: #0a0a0a;
-            background: linear-gradient(135deg, #ffa500, #ff6b35);
-            border: none;
-            border-radius: 4px;
-            cursor: default;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 4px 30px rgba(255, 107, 53, 0.4);
-            margin-bottom: 1.5rem;
-        }
-
-        .cta:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 40px rgba(255, 107, 53, 0.6);
-        }
-
-        .github-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #a89080;
-            text-decoration: none;
-            font-size: 0.9rem;
-            letter-spacing: 0.1em;
-            transition: color 0.3s ease;
-        }
-
-        .github-link:hover {
-            color: #ff6b35;
-        }
-
-        .github-link svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
-
-        /* ── Ambient glow ── */
-        .glow {
-            position: fixed;
-            top: -50%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(ellipse at center, rgba(255, 107, 53, 0.08) 0%, transparent 60%);
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        /* ── Background ruin ── */
-        .bg-ruin {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40vw;
-            max-width: 500px;
-            opacity: 0.20;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        /* ── Shared section styles ── */
-        .section {
-            width: 100%;
-            max-width: 1000px;
-            padding: 4rem 2rem;
-        }
-
-        .section-title {
-            font-size: clamp(1.5rem, 4vw, 2.2rem);
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #ffa500 0%, #ff6b35 50%, #cc4400 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        .divider {
-            width: 100%;
-            max-width: 1000px;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.3), transparent);
-        }
-
-        /* ── Showcase layout ── */
-        .showcase-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 0;
-            align-items: center;
-        }
-
-        .showcase-column {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-            position: relative;
-            z-index: 2;
-            will-change: transform;
-        }
-
-        .showcase-center {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .play-now-btn {
-            display: inline-block;
-            padding: 0.6rem 1.8rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: #5a4a40;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 107, 53, 0.15);
-            cursor: pointer;
-            text-decoration: none;
-            border-radius: 4px;
-            transition: opacity 0.4s ease;
-        }
-
-        /* ── Screenshots ── */
-        .screenshot-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .screenshot-column-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: #5a4a40;
-            margin-bottom: 0.5rem;
-        }
-
-        .screenshot-column {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .screenshot-placeholder {
-            aspect-ratio: 16 / 10;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed rgba(255, 107, 53, 0.2);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #5a4a40;
-            font-size: 0.75rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-
-        .screenshot-img {
-            width: 100%;
-            aspect-ratio: 16 / 10;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 1px solid rgba(255, 107, 53, 0.15);
-            cursor: pointer;
-            transition: border-color 0.2s ease;
-        }
-
-        .screenshot-img:hover {
-            border-color: rgba(255, 107, 53, 0.5);
-        }
-
-        .lightbox {
-            display: none;
+        /* PROJECTS (projectstext.png): under the wordmark, lined up with its right edge as in the logo; as you zoom in it
+           slides to the left margin, level with the wordmark, and becomes the button for the menu (the frame places it) */
+        .projects-button {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .lightbox.active {
-            display: flex;
-        }
-
-        .lightbox img {
-            max-width: 90%;
-            max-height: 90%;
-            border-radius: 6px;
-            box-shadow: 0 0 60px rgba(255, 107, 53, 0.2);
-        }
-
-        .lightbox-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
+            padding: 0;
             background: none;
             border: none;
-            color: rgba(255, 107, 53, 0.6);
-            font-size: 3rem;
-            cursor: pointer;
-            padding: 1rem;
-            transition: color 0.2s ease;
-            user-select: none;
+            transform-origin: 0 0;
+            pointer-events: none;
+            opacity: 0;   /* until the flame gathers (the frame sets it) */
+            will-change: transform;
+            transition: filter 0.2s;
         }
-
-        .lightbox-arrow:hover {
-            color: #ff6b35;
-        }
-
-        .lightbox-prev { left: 1rem; }
-        .lightbox-next { right: 1rem; }
-
-        /* ── Trailers ── */
-        .trailer-placeholder {
-            aspect-ratio: 16 / 9;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 107, 53, 0.15);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            color: #5a4a40;
-            font-size: 0.8rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            border-radius: 4px;
-        }
-
-        .play-icon {
-            width: 48px;
-            height: 48px;
-            border: 2px solid rgba(255, 107, 53, 0.3);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .play-icon::after {
+        .projects-button::after {   /* a bigger target than the thin lettering, for fingers */
             content: "";
+            position: absolute;
+            inset: -12px -10px;
+        }
+        .projects-button.live { pointer-events: auto; cursor: pointer; }
+        .projects-button.live:hover { filter: brightness(1.25); }
+        .projects-button.open { filter: drop-shadow(0 0 8px rgba(244, 111, 12, 0.7)); }
+        .wordmark-sub {
             display: block;
-            width: 0;
-            height: 0;
-            border-style: solid;
-            border-width: 8px 0 8px 14px;
-            border-color: transparent transparent transparent rgba(255, 107, 53, 0.3);
-            margin-left: 3px;
+            height: 12px;
+            width: auto;
         }
-
-        /* ── Demos ── */
-        .demo-placeholder {
-            text-align: center;
-            padding: 3rem 1.5rem;
+        @media (max-width: 600px) {
+            .wordmark { height: 16px; }
+            .wordmark-sub { height: 9px; }
         }
-
-        .demo-placeholder p {
-            color: #5a4a40;
-            font-size: 0.85rem;
-            letter-spacing: 0.1em;
+        .title {
+            font-size: 1.8rem;
+            font-weight: 700;
             text-transform: uppercase;
-            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-
-        .btn-disabled {
-            display: inline-block;
-            padding: 0.75rem 2rem;
-            font-size: 0.85rem;
-            font-weight: 600;
+        /* Random / Nova switch, top right */
+        .modes[hidden] { display: none; }
+        .modes {
+            position: fixed;
+            top: 1.5rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .modes button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
             letter-spacing: 0.15em;
             text-transform: uppercase;
-            color: #5a4a40;
+            color: rgba(245, 245, 245, 0.6);
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 107, 53, 0.15);
+            border: 1px solid rgba(255, 107, 53, 0.3);
             border-radius: 4px;
-            cursor: default;
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
         }
-
-        /* ── About ── */
-        .about-text {
-            color: #c0b0a0;
-            line-height: 1.8;
-            font-size: 0.95rem;
+        .modes button[hidden] { display: none; }
+        .modes button.on {
+            color: #0a0a0a;
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
+            border-color: transparent;
         }
-
-        .about-text p {
-            margin-bottom: 1rem;
+        /* The name of the constellation under the pointer (Nova) */
+        /* While the menu is open: the stars dim behind it (darkest at the top left, where the menu is) so the rows read
+           clearly. It doesn't catch the pointer, so a tap on the stars still closes the menu */
+        .dim {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 0% 0%, rgba(10, 10, 10, 0.9), rgba(10, 10, 10, 0.62) 55%,
+                rgba(10, 10, 10, 0.5));
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
         }
-
-        .about-text ul {
-            list-style: none;
-            padding: 0;
-            margin-bottom: 1rem;
+        .dim.on { opacity: 1; }
+        /* The Projects menu: under the header, rows sliding in one after another */
+        .projects-menu {
+            position: fixed;
+            top: 4.6rem;
+            left: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.15rem;
+            padding: 0.6rem 0.4rem 0.6rem 0;
+            max-height: calc(100vh - 5.6rem);   /* scrolls rather than running off a short screen */
+            overflow-y: auto;
+            overscroll-behavior: contain;
         }
-
-        .about-text ul li {
-            padding-left: 1.2rem;
+        .projects-menu[hidden], .projects-menu .submenu[hidden] { display: none; }
+        .projects-menu .submenu {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.15rem;
+            margin-left: 1.1rem;
+            padding-left: 0.6rem;
+        }
+        .projects-menu button {
             position: relative;
-            margin-bottom: 0.4rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(245, 245, 245, 0.62);
+            background: none;
+            border: none;
+            padding: 0.45rem 0.6rem 0.45rem 0.9rem;
+            cursor: pointer;
+            text-align: left;
+            text-shadow: 0 0 10px #0a0a0a;
+            animation: rowIn 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+            animation-delay: calc(var(--i, 0) * 55ms);
         }
-
-        .about-text ul li::before {
+        /* The bar at the left, grown in on hover or when it's the one showing */
+        .projects-menu button::before {
             content: "";
             position: absolute;
             left: 0;
-            top: 0.6rem;
-            width: 6px;
-            height: 6px;
-            background: #ff6b35;
-            transform: rotate(45deg);
+            top: 50%;
+            width: 2px;
+            height: 0;
+            background: linear-gradient(180deg, #ffa500, #ff6b35);
+            transform: translateY(-50%);
+            transition: height 0.2s;
         }
-
-        /* ── Story ── */
-        .story-text {
-            color: #c0b0a0;
-            line-height: 2;
-            font-size: 1.05rem;
-            text-align: center;
-            font-style: italic;
-            max-width: 700px;
-            margin: 0 auto;
+        .projects-menu button:hover, .projects-menu button.on {
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
         }
-
-        /* ── License ── */
-        .license-details summary {
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: #5a4a40;
-            text-align: center;
-            list-style: none;
-            transition: color 0.3s ease;
+        .projects-menu button:hover::before, .projects-menu button.on::before { height: 70%; }
+        @keyframes rowIn {
+            from { opacity: 0; transform: translateX(-14px); }
+            to { opacity: 1; transform: none; }
         }
-
-        .license-details summary::-webkit-details-marker {
-            display: none;
+        /* A project's card: glass, low in the middle, rising in (its icon forms in dots above it) */
+        .card {
+            position: fixed;
+            left: 50%;
+            bottom: 5.2rem;
+            width: min(520px, calc(100vw - 2rem));
+            padding: 1.4rem 1.5rem 1.3rem;
+            background: rgba(10, 10, 10, 0.55);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 107, 53, 0.35);
+            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(255, 107, 53, 0.12), inset 0 0 30px rgba(255, 107, 53, 0.04);
+            opacity: 0;
+            /* --dx: sideways, for a codex flip (out the way it's going, in from the other side) */
+            transform: translate(-50%, 0) translate(var(--dx, 0px), 18px);
+            transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: none;
         }
-
-        .license-details summary:hover {
-            color: #ff6b35;
-        }
-
-        .license-details[open] .license-box {
-            margin-top: 1rem;
-        }
-
-        .license-box {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 107, 53, 0.1);
-            border-radius: 8px;
-            padding: 2rem;
-            color: #8a7a6a;
-            font-size: 0.8rem;
-            line-height: 1.8;
-            white-space: pre-line;
-        }
-
-        .license-note {
-            color: #5a4a40;
-            font-size: 0.75rem;
-            text-align: center;
-            margin-top: 1rem;
-            letter-spacing: 0.05em;
-        }
-
-        /* ── Footer ── */
-        footer {
-            width: 100%;
-            padding: 3rem 2rem;
-            text-align: center;
-            border-top: 1px solid rgba(255, 107, 53, 0.1);
-            margin-top: 2rem;
-        }
-
-        .footer-bottom {
+        .card[hidden] { display: none; }
+        .card.shown { opacity: 1; transform: translate(-50%, 0) translate(0, 0); pointer-events: auto; }
+        .card.still { transition: none; }
+        /* On a phone, tucked away while the Projects menu is open (no room for both); back when it closes */
+        .card.shown.tucked { opacity: 0; transform: translate(-50%, 0) translate(0, 18px); pointer-events: none; }
+        /* The codex's pages: one dot per project, the one showing lit */
+        /* The codex's dots: under PROJECTS, lined up with its left edge, while a project is up and the menu is closed
+           (the frame places them) */
+        .card-pager {
+            position: fixed;
+            top: 0;
+            left: 0;
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 0.5rem;
-            margin-top: 0.5rem;
         }
-
-        .footer-brand {
-            color: #5a4a40;
-            font-size: 0.8rem;
+        .card-pager button {
+            width: 7px;
+            height: 7px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            background: rgba(245, 245, 245, 0.25);
+            cursor: pointer;
+            transition: transform 0.25s, background 0.25s;
+        }
+        .card-pager button.on {
+            background: linear-gradient(180deg, #fd9d0a, #e8271e);
+            transform: scale(1.4);
+            box-shadow: 0 0 8px rgba(244, 111, 12, 0.7);
+        }
+        .card-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.4rem 0.9rem;
+            margin-bottom: 0.55rem;
+        }
+        .card-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
             letter-spacing: 0.15em;
             text-transform: uppercase;
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-
-        .footer-copyright {
-            color: #3a2a20;
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.55rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(245, 245, 245, 0.75);
+            border: 1px solid rgba(245, 245, 245, 0.18);
+            border-radius: 999px;
+            padding: 0.3rem 0.65rem;
+        }
+        .pill[hidden] { display: none; }
+        .pill i {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--status, #ff6b35);
+            box-shadow: 0 0 8px var(--status, #ff6b35);
+        }
+        .card-tagline {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.78rem;
+            letter-spacing: 0.1em;
+            color: #ffb27a;
+            margin-bottom: 0.75rem;
+        }
+        .card-text {
+            font-family: system-ui, -apple-system, "Helvetica Neue", sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.55;
+            letter-spacing: normal;
+            color: rgba(245, 245, 245, 0.86);
+            margin-bottom: 0.9rem;
+            /* A long one (the License) scrolls inside the card, so the card never covers the icon above it */
+            max-height: 36vh;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        .card-text p + p { margin-top: 0.65rem; }
+        .card-text h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #ffb27a;
+            margin: 0.9rem 0 0.25rem;
+        }
+        .card-text h3:first-child { margin-top: 0; }
+        .card-tech {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(245, 245, 245, 0.45);
+        }
+        /* The HUD: a project shown around its icon instead of in a card — its name and tagline above, its status and tech
+           below, and leader lines drawing out from the icon to short labels that type themselves in (the frame places it
+           all). On a phone the labels stack in a list under it */
+        .hud {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .hud[hidden] { display: none; }
+        .hud.shown { opacity: 1; }
+        .hud.shown.tucked { opacity: 0; }
+        .hud-lines {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+        .hud-lines path {
+            fill: none;
+            stroke: rgba(244, 111, 12, 0.85);
+            stroke-width: 1.2;
+        }
+        .hud-lines circle { fill: #fd9d0a; }
+        .hud-head, .hud-foot {
+            position: absolute;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .hud-head { transform: translate(-50%, -100%); }
+        /* The badge, then the platforms, on one line */
+        .hud-foot {
+            transform: translate(-50%, 0);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .hud-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hud-tagline {
+            font-family: 'Orbitron', sans-serif;
             font-size: 0.7rem;
-            margin-top: 0.5rem;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.1em;
+            color: #ffb27a;
+            margin-top: 0.35rem;
+            text-shadow: 0 0 10px #0a0a0a;
         }
-
-        /* ── Responsive ── */
-        @media (max-width: 768px) {
-            .hero {
-                padding: 4rem 1.5rem 3rem;
+        .hud-tech {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.56rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(245, 245, 245, 0.45);
+        }
+        /* A project's link (Drift Remote's TestFlight), on the badge line — the one part of the HUD that takes a click */
+        .hud-link {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.56rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            /* The site's orange, glowing (breathing a little), no underline */
+            color: #ff8a3d;
+            text-decoration: none;
+            text-shadow: 0 0 6px rgba(255, 107, 53, 0.85), 0 0 14px rgba(255, 107, 53, 0.45);
+            animation: betaGlow 2.4s ease-in-out infinite;
+            pointer-events: auto;
+            transition: color 0.2s;
+        }
+        @keyframes betaGlow {
+            50% { text-shadow: 0 0 9px rgba(255, 107, 53, 1), 0 0 22px rgba(255, 107, 53, 0.6); }
+        }
+        .hud-link[hidden] { display: none; }
+        .hud-link:hover { color: #ffa500; }
+        .hud-label {
+            position: absolute;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.66rem;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+            color: rgba(245, 245, 245, 0.92);
+            white-space: nowrap;
+            text-shadow: 0 0 10px #0a0a0a, 0 0 3px #0a0a0a;
+        }
+        .hud-label[hidden] { display: none; }
+        /* A phone: the labels as a list, each with a short sunrise tick */
+        .hud-label.listed { white-space: normal; max-width: calc(100vw - 48px); }
+        .hud-label.listed::before {
+            content: "";
+            display: inline-block;
+            width: 14px;
+            height: 1px;
+            margin-right: 0.6rem;
+            vertical-align: middle;
+            background: linear-gradient(90deg, #fd9d0a, #e8271e);
+        }
+        @media (max-width: 600px) {
+            .hud-name { font-size: 1.1rem; }
+            .hud-tagline { font-size: 0.62rem; }
+        }
+        /* The tour's ghost cursor: a glowing ring with a bright centre; a click ripples out from it. Hidden for now — it
+           still points and clicks (the flame gathers, the dots part), it just isn't drawn */
+        .ghost {
+            visibility: hidden;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 26px;
+            height: 26px;
+            margin: -13px 0 0 -13px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 178, 122, 0.95);
+            box-shadow: 0 0 12px rgba(255, 107, 53, 0.8), inset 0 0 6px rgba(255, 107, 53, 0.6);
+            pointer-events: none;
+            opacity: 0;
+        }
+        .ghost::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 6px;
+            height: 6px;
+            margin: -3px 0 0 -3px;
+            border-radius: 50%;
+            background: #ffe0b0;
+            box-shadow: 0 0 6px #ffb27a;
+        }
+        .ghost.click::after {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 2px solid #ffb27a;
+            animation: ghostClick 0.6s ease-out forwards;
+        }
+        @keyframes ghostClick { from { transform: scale(1); opacity: 1; } to { transform: scale(2.6); opacity: 0; } }
+        /* The tour's player bar (a link with "&tool"): play / pause, the whole run as a slider, speed, restart */
+        .tour-bar {
+            position: fixed;
+            left: 50%;
+            bottom: 1rem;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: min(560px, calc(100vw - 2rem));
+            padding: 0.55rem 0.7rem;
+            background: rgba(10, 10, 10, 0.62);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 107, 53, 0.35);
+            border-radius: 10px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .tour-bar[hidden] { display: none; }
+        .tour-bar button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.62rem;
+            letter-spacing: 0.08em;
+            color: rgba(245, 245, 245, 0.75);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 4px;
+            padding: 0.35rem 0.5rem;
+            cursor: pointer;
+            flex: none;
+        }
+        .tour-bar button.on {
+            color: #0a0a0a;
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
+            border-color: transparent;
+        }
+        .tour-bar input[type="range"] { flex: 1; min-width: 0; accent-color: #ff6b35; }
+        .tour-time {
+            font-size: 0.58rem;
+            letter-spacing: 0.08em;
+            color: rgba(245, 245, 245, 0.6);
+            width: 3.2rem;
+            text-align: right;
+            flex: none;
+        }
+        /* A link to the full text (Privacy, License) */
+        .card-link {
+            display: inline-block;
+            margin-top: 0.8rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.62rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #ffb27a;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 107, 53, 0.4);
+            padding-bottom: 0.15rem;
+        }
+        .card-link[hidden], .card-pager[hidden] { display: none; }
+        .card-link:hover { color: #ff6b35; border-color: #ff6b35; }
+        /* Nova's jump: the page goes dark as the stars streak past, then the Nova page */
+        .jump-fade {
+            position: fixed;
+            inset: 0;
+            background: #0a0a0a;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.7s ease-in;
+        }
+        .jump-fade.on { opacity: 1; }
+        /* A phone: the menu across the top, bigger rows; the card along the bottom */
+        @media (max-width: 600px) {
+            .projects-menu { right: 1rem; }
+            .projects-menu button { font-size: 0.8rem; padding: 0.65rem 0.6rem 0.65rem 0.9rem; }
+            .card { bottom: 4.6rem; padding: 1.1rem 1.1rem 1rem; }
+            .card-name { font-size: 1.05rem; }
+            .card-text { font-size: 0.9rem; }
+        }
+        /* Inside the sphere: Warp, Drift and Reach, along the bottom */
+        .inside-controls {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .inside-controls[hidden] { display: none; }
+        .inside-controls button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(245, 245, 245, 0.6);
+            background: rgba(10, 10, 10, 0.6);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 4px;
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+        }
+        .inside-controls button.on {
+            color: #0a0a0a;
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
+            border-color: transparent;
+        }
+        .inside-controls label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.6rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(245, 245, 245, 0.6);
+        }
+        .inside-controls input[type="range"] {
+            width: 6rem;
+            accent-color: #ff6b35;
+        }
+        /* Back out of the sphere (shown while inside) */
+        .exit {
+            position: fixed;
+            top: 1.1rem;
+            right: 1rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: #ff6b35;
+            background: rgba(10, 10, 10, 0.35);   /* an orange ring with an orange ✕ */
+            border: 1.5px solid #ff6b35;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: box-shadow 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .exit:hover { color: #ffa500; border-color: #ffa500; box-shadow: 0 0 12px rgba(255, 107, 53, 0.5); }
+        .exit[hidden] { display: none; }
+        .label {
+            position: fixed;
+            transform: translate(-50%, -50%);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #ff6b35;
+            text-shadow: 0 0 8px #0a0a0a, 0 0 2px #0a0a0a;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        /* Nova: the 12 signs; picking one turns the globe to it */
+        .signs {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0 1rem;
+            transition: opacity 0.3s;
+        }
+        .signs[hidden] { display: none; }
+        .signs button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(245, 245, 245, 0.7);
+            background: rgba(10, 10, 10, 0.6);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 4px;
+            padding: 0.45rem 0.6rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .signs button .glyph { margin-right: 0.35rem; }
+        .signs button.on {
+            color: #0a0a0a;
+            background: linear-gradient(135deg, #ffa500, #ff6b35);
+            border-color: transparent;
+        }
+        /* A phone: one scrolling row instead of several */
+        @media (max-width: 600px) {
+            .signs {
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
             }
-
-            .logo {
-                max-width: 200px;
-                margin-bottom: 2rem;
-            }
-
-            .cta {
-                padding: 0.875rem 2rem;
-                font-size: 0.9rem;
-            }
-
-            .section {
-                padding: 3rem 1.5rem;
-            }
-
-            .showcase-layout {
-                grid-template-columns: 1fr;
-            }
-
-            .showcase-center {
-                order: -1;
-            }
+            .signs::-webkit-scrollbar { display: none; }
         }
     </style>
 </head>
 <body>
-    <div class="glow"></div>
-    <img src="content/ruin_engine.png" alt="" class="bg-ruin">
-
-    <!-- Hero -->
-    <header class="hero">
-        <img src="pyrothieflogo.png" alt="Pyrothief Projects" class="logo">
-        <h1 class="project-title" id="title">Nova</h1>
-    </header>
-
-    <!-- Games -->
-    <section class="section" id="games" style="padding-bottom: 0.5rem;">
-        <div class="showcase-layout">
-            <div class="showcase-column">
-                <img src="content/PN_play_parallax_cryo.png" alt="Parallax gameplay screenshot — Cryo" class="screenshot-img">
-                <img src="content/PN_play_parallax_facility3.png" alt="Parallax gameplay screenshot — Facility" class="screenshot-img">
-                <img src="content/PN_edit_parallax_editors.png" alt="Parallax editor screenshot" class="screenshot-img">
-                <img src="content/PN_edit_parallax_puzzle.png" alt="Parallax editor screenshot — Puzzle" class="screenshot-img">
-            </div>
-            <div class="showcase-center">
-                <a href="https://www.pyrothief.ca/parallax/" target="_blank" rel="noopener" class="play-now-btn">Dev Build</a>
-                <div class="trailer-placeholder">
-                    <div class="play-icon"></div>
-                    Playreel Coming In The Future
-                </div>
-            </div>
-            <div class="showcase-column">
-                <img src="content/PN_play_redshift2.png" alt="Redshift gameplay screenshot" class="screenshot-img">
-                <img src="content/PN_play_redshift4.png" alt="Redshift gameplay screenshot" class="screenshot-img">
-                <img src="content/PN_edit_redshift1.png" alt="Redshift editor screenshot" class="screenshot-img">
-                <img src="content/PN_edit_redshift3.png" alt="Redshift editor screenshot" class="screenshot-img">
-            </div>
-        </div>
-    </section>
-
-    <!-- Nova Engine / Dogfighter -->
-    <section class="section" style="padding-top: 0.5rem;">
-        <div class="showcase-layout">
-            <div class="showcase-column">
-                <div class="screenshot-placeholder">Coming Later</div>
-                <div class="screenshot-placeholder">Coming Later</div>
-                <div class="screenshot-placeholder">Coming Later</div>
-                <div class="screenshot-placeholder">Coming Later</div>
-            </div>
-            <div class="showcase-center"></div>
-            <div class="showcase-column">
-                <img src="content/PN_edit_hub1.png" alt="Nova hub screen" class="screenshot-img">
-                <img src="content/PN_play_dogfight1.png" alt="Dogfighter gameplay screenshot" class="screenshot-img">
-                <div class="screenshot-placeholder">Coming Soon</div>
-                <div class="screenshot-placeholder">Coming Soon</div>
-            </div>
-        </div>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- License -->
-    <section class="section">
-        <details class="license-details">
-            <summary>License</summary>
-            <div class="license-box">This project is proprietary. All rights reserved by Pyrothiefprojects.
-
-All software, engines, source code, assets, documentation, and tools contained within this project are the exclusive property of Pyrothiefprojects unless otherwise stated.
-
-Unless a separate license is provided for a specific component, engine, or branch, all contents are fully proprietary. You may not use, copy, modify, distribute, or create derivative works without prior written permission.
-
-Specific engines, tools, or components may carry their own license terms. Where an individual license is present, it takes precedence for that component only.
-
-All commercial rights are exclusively reserved by Pyrothiefprojects. For commercial licensing inquiries, contact Pyrothiefprojects directly.
-
-This software is provided "as is" without warranty of any kind.</div>
-            <p class="license-note">Individual component licenses may apply. See the full LICENSE file for complete terms.</p>
-        </details>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="footer-brand">Pyrothiefprojects</div>
-        <div class="footer-bottom">
-            <span class="footer-copyright">&copy; 2026 Pyrothiefprojects. All rights reserved.</span>
-            <a href="https://github.com/Pyrothiefprojects/pyrothiefprojects.github.io" target="_blank" rel="noopener" class="github-link">
-                <svg viewBox="0 0 16 16" aria-hidden="true" style="width:18px;height:18px;fill:currentColor;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-            </a>
-        </div>
-    </footer>
-    <div class="lightbox" id="lightbox">
-        <button class="lightbox-arrow lightbox-prev" id="lb-prev">&#8249;</button>
-        <img src="" alt="">
-        <button class="lightbox-arrow lightbox-next" id="lb-next">&#8250;</button>
+    <canvas id="sphere"></canvas>
+    <div class="dim" id="dim"></div>
+    <main id="main">
+        <img class="wordmark" id="wordmark" src="content/logo/pyrothieftext.png" alt="Pyrothief">
+    </main>
+    <button type="button" class="projects-button" id="lockup" aria-label="Projects" aria-expanded="false" tabindex="-1">
+        <img class="wordmark-sub" src="content/logo/projectstext.png" alt="Projects">
+    </button>
+    <div class="modes" role="group" aria-label="Sphere">
+        <button type="button" data-mode="random">Random</button>
+        <button type="button" data-mode="nova">Nova</button>
+        <button type="button" id="lock">Lock</button>
     </div>
+    <div class="inside-controls" id="insideControls" role="group" aria-label="Inside the sphere" hidden>
+        <button type="button" id="warp">Warp</button>
+        <button type="button" id="drift">Drift</button>
+        <label>Reach <input type="range" id="reachSlider" min="0.3" max="3" step="0.1" value="1"></label>
+    </div>
+    <button type="button" class="exit" id="exit" aria-label="Back out of the sphere" hidden>✕</button>
+    <div class="label" id="label"></div>
+    <nav class="signs" id="signs" aria-label="Zodiac signs" hidden></nav>
+    <nav class="projects-menu" id="projectsMenu" aria-label="Projects" hidden>
+        <button type="button" data-project="nova">Nova</button>
+        <button type="button" data-project="drift">Drift Remote</button>
+        <div class="submenu">
+            <button type="button" data-project="games">DTG Manager</button>
+            <button type="button" data-project="docparser">Document Parser</button>
+            <button type="button" data-project="mrwizard">Mrwizard</button>
+            <button type="button" data-project="scout">Scout</button>
+        </div>
+        <button type="button" data-project="privacy">Privacy</button>
+        <button type="button" data-project="license">License</button>
+    </nav>
+    <article class="card" id="card" aria-live="polite" hidden>
+        <div class="card-head">
+            <h2 class="card-name" id="cardName"></h2>
+            <span class="pill" id="cardStatus"><i></i><span id="cardStatusText"></span></span>
+        </div>
+        <p class="card-tagline" id="cardTagline"></p>
+        <div class="card-text" id="cardText"></div>
+        <p class="card-tech" id="cardTech"></p>
+        <a class="card-link" id="cardLink" hidden></a>
+    </article>
+    <div class="hud" id="hud" aria-live="polite" hidden>
+        <svg class="hud-lines" id="hudLines" aria-hidden="true"></svg>
+        <div class="hud-head" id="hudHead">
+            <div class="hud-name" id="hudName"></div>
+            <div class="hud-tagline" id="hudTagline"></div>
+        </div>
+        <div class="hud-foot" id="hudFoot">
+            <span class="pill"><i></i><span id="hudStatusText"></span></span>
+            <div class="hud-tech" id="hudTech"></div>
+            <a class="hud-link" id="hudLink" target="_blank" rel="noopener" hidden></a>
+        </div>
+    </div>
+    <div class="card-pager" id="cardPager" aria-label="Projects" hidden></div>
+    <div class="ghost" id="ghost"></div>
+    <div class="tour-bar" id="tourBar" hidden>
+        <button type="button" id="tourPlay" aria-label="Pause">❚❚</button>
+        <input type="range" id="tourSlider" min="0" max="9" step="0.05" value="0" aria-label="Tour time">
+        <span class="tour-time" id="tourTime">0.0s</span>
+        <button type="button" data-speed="1" class="on">1×</button>
+        <button type="button" data-speed="2">2×</button>
+        <button type="button" data-speed="4">4×</button>
+        <button type="button" id="tourRestart" aria-label="Restart">↺</button>
+    </div>
+    <div class="jump-fade" id="jumpFade"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Auto-scroll on load
-        window.addEventListener('load', () => {
-            document.getElementById('title').scrollIntoView({ behavior: 'smooth' });
+    (function () {
+        "use strict";
+
+        // Fetch Orbitron now: nothing on the intro uses it (the header is images), so otherwise the browser waits until the
+        // menu first shows, which then draws in a stand-in font and jumps when Orbitron arrives
+        if (document.fonts && document.fonts.load) {
+            ["400", "600", "700"].forEach(function (weight) { document.fonts.load(weight + " 16px Orbitron"); });
+        }
+
+        // Look
+        var RADIUS = 300;
+        var DOT_COUNT = 1000;
+        var SPIKE_COUNT = 520;
+        var DOT_COLOR = new THREE.Color(0xe0e0e0);
+        var GLOW_COLOR = new THREE.Color(0xff6b35);   // Pyrothief orange
+        // The sunrise: the flame's own colours, top to bottom (sampled from the logo): gold at the tip, through orange, to
+        // red at the base. Glowing dots take their colour from it by height, so a glow cascades like the logo does
+        var SUNRISE = [new THREE.Color(0xfd9d0a), new THREE.Color(0xf46f0c), new THREE.Color(0xe75114),
+            new THREE.Color(0xe8271e)];
+        var sunriseColor = new THREE.Color();
+        // p: 0 at the top → 1 at the bottom
+        function sunrise(p) {
+            p = Math.max(0, Math.min(1, p)) * (SUNRISE.length - 1);
+            var at = Math.min(SUNRISE.length - 2, Math.floor(p));
+            return sunriseColor.copy(SUNRISE[at]).lerp(SUNRISE[at + 1], p - at);
+        }
+        // The icons' ice: near-white at the top, through pale and sky blue, to deep blue at the bottom
+        var ICE = [new THREE.Color(0xf2fbff), new THREE.Color(0xb5e2ff), new THREE.Color(0x74b9ff),
+            new THREE.Color(0x3f7fff)];
+        var iceColor = new THREE.Color();
+        // p: 0 at the top → 1 at the bottom
+        function ice(p) {
+            p = Math.max(0, Math.min(1, p)) * (ICE.length - 1);
+            var at = Math.min(ICE.length - 2, Math.floor(p));
+            return iceColor.copy(ICE[at]).lerp(ICE[at + 1], p - at);
+        }
+        // Nova's icon is gold: pale gold at the top through gold to deep amber at the bottom
+        var GOLD = [new THREE.Color(0xffe08a), new THREE.Color(0xffc53d), new THREE.Color(0xf2a20c),
+            new THREE.Color(0xd97b06)];
+        var goldColor = new THREE.Color();
+        // p: 0 at the top → 1 at the bottom
+        function gold(p) {
+            p = Math.max(0, Math.min(1, p)) * (GOLD.length - 1);
+            var at = Math.min(GOLD.length - 2, Math.floor(p));
+            return goldColor.copy(GOLD[at]).lerp(GOLD[at + 1], p - at);
+        }
+        var DOT_SIZE = 3.2;
+        var GLOW_SIZE = 6.5;
+        var STAR_SIZE = 6;
+        var LINE_COLOR = new THREE.Color(0xe0e0e0);
+        var DIM_DOTS = 0.65;    // how much the random dots fade back in Nova
+        var CARD_DIM = 0.72;    // how much the stars fade back while a project's card shows (its icon stays full)
+        var cardDim = 0;        // eased 0 → 1 while a card shows
+
+        // Pointer bulge: dots within this angle of the point under the pointer swell outwards and glow
+        var BULGE_ANGLE = 0.42;    // radians
+        var BULGE_HEIGHT = 70;
+        var BULGE_EASE = 0.14;
+
+        // Warp (inside the sphere): dots near the pointer are pushed aside on screen and light up
+        var WARP_RADIUS = 220;     // px
+        var WARP_STRENGTH = 120;   // px at the pointer
+        var WARP_EASE = 0.16;
+
+        // Spin
+        var SPIN_GAIN = 0.0002;    // with the friction, the globe turns about 0.003 rad per pixel the pointer moves
+        var SPIN_FRICTION = 0.93;
+
+        var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var canvas = document.getElementById("sphere");
+
+        var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+        var globe = new THREE.Group();
+        scene.add(globe);
+
+        // The 12 zodiac constellations as their stick figures: each line a run of [right ascension, declination] in
+        // degrees. From d3-celestial's data/constellations.lines.json (https://github.com/ofrohn/d3-celestial):
+        //
+        //   Copyright (c) 2015, Olaf Frohn
+        //   All rights reserved.
+        //
+        //   Redistribution and use in source and binary forms, with or without modification, are permitted provided
+        //   that the following conditions are met:
+        //   1. Redistributions of source code must retain the above copyright notice, this list of conditions and the
+        //      following disclaimer.
+        //   2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and
+        //      the following disclaimer in the documentation and/or other materials provided with the distribution.
+        //   3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or
+        //      promote products derived from this software without specific prior written permission.
+        //
+        //   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+        //   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+        //   PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+        //   ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+        //   TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+        //   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+        //   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+        //   POSSIBILITY OF SUCH DAMAGE.
+        var ZODIAC = [
+            { name: "Aries", lines: [[[42.5,27.26],[31.79,23.46],[28.66,20.81],[28.38,19.29]]] },
+            { name: "Taurus", lines: [[[84.41,21.14],[68.98,16.51],[67.17,15.87],[64.95,15.63],[65.73,17.54],[67.15,19.18],[81.57,28.61]],[[64.95,15.63],[60.17,12.49],[51.79,9.73],[60.79,5.99]],[[51.79,9.73],[51.2,9.03],[54.22,0.4]]] },
+            { name: "Gemini", lines: [[[93.72,22.51],[95.74,22.51],[100.98,25.13],[107.78,30.25],[113.65,31.89],[116.33,28.03],[113.98,26.9],[110.03,21.98],[106.03,20.57],[99.43,16.4],[101.32,12.9]],[[110.03,21.98],[109.52,16.54]]] },
+            { name: "Cancer", lines: [[[134.62,11.86],[131.17,18.15],[130.82,21.47],[131.67,28.77]],[[131.17,18.15],[124.13,9.19]]] },
+            { name: "Leo", lines: [[[152.09,11.97],[151.83,16.76],[154.99,19.84],[168.53,20.52],[177.26,14.57],[168.56,15.43],[152.09,11.97]],[[154.99,19.84],[154.17,23.42],[148.19,26.01],[146.46,23.77]]] },
+            { name: "Virgo", lines: [[[176.46,6.53],[177.67,1.76],[184.98,-0.67],[190.42,-1.45],[197.49,-5.54],[201.3,-11.16],[214,-6],[220.77,-5.66]],[[195.54,10.96],[193.9,3.4],[190.42,-1.45]],[[197.49,-5.54],[203.67,-0.6],[210.41,1.54],[221.56,1.89]]] },
+            { name: "Libra", lines: [[[226.02,-25.28],[222.72,-16.04],[229.25,-9.38],[233.88,-14.79],[234.26,-28.14],[234.66,-29.78]],[[222.72,-16.04],[233.88,-14.79]]] },
+            { name: "Scorpius", lines: [[[239.71,-26.11],[240.08,-22.62],[241.36,-19.81]],[[240.08,-22.62],[245.3,-25.59],[247.35,-26.43],[248.97,-28.22],[252.54,-34.29],[252.97,-38.05],[253.65,-42.36],[258.04,-43.24],[264.33,-43],[266.9,-40.13],[265.62,-39.03],[263.4,-37.1]]] },
+            { name: "Sagittarius", lines: [[[274.41,-36.76],[276.04,-34.38],[275.25,-29.83],[276.99,-25.42],[273.44,-21.06]],[[290.66,-44.46],[290.97,-40.62],[285.65,-29.88],[281.41,-26.99],[276.99,-25.42]],[[298.82,-41.87],[299.93,-35.28],[298.96,-26.3],[294.18,-24.88],[291.32,-24.51],[288.89,-25.26],[283.82,-26.3],[281.41,-26.99],[275.25,-29.83],[271.45,-30.42],[276.04,-34.38],[285.65,-29.88],[286.74,-27.67],[283.82,-26.3],[286.17,-21.74],[287.44,-21.02],[289.41,-18.95],[290.42,-17.85],[290.43,-15.96]],[[286.17,-21.74],[284.43,-21.11],[283.54,-22.74],[283.82,-26.3]]] },
+            { name: "Capricornus", lines: [[[304.41,-12.51],[305.25,-14.78],[307.22,-17.81],[311.52,-25.27],[312.96,-26.92],[321.67,-22.41],[326.76,-16.13],[325.02,-16.66],[320.56,-16.83],[316.49,-17.23],[304.41,-12.51]]] },
+            { name: "Aquarius", lines: [[[311.92,-9.5],[313.16,-8.98],[322.89,-5.57],[331.45,-0.32],[335.41,-1.39],[337.21,-0.02],[338.84,-0.12],[343.15,-7.58],[349.48,-9.18],[347.36,-21.17]],[[322.89,-5.57],[331.61,-13.87]],[[331.45,-0.32],[334.21,-7.78]],[[337.21,-0.02],[336.32,1.38]],[[350.74,-20.1],[349.48,-9.18],[355.44,-17.82]]] },
+            { name: "Pisces", lines: [[[18.44,24.58],[17.92,30.09],[19.87,27.26],[18.44,24.58],[17.86,21.03],[22.87,15.35],[26.35,9.16],[30.51,2.76],[28.39,3.19],[25.36,5.49],[22.55,6.14],[18.43,7.58],[15.74,7.89],[12.17,7.59],[359.83,6.86],[354.99,5.63],[351.99,6.38],[350.09,5.38],[349.29,3.28],[351.73,1.26],[355.51,1.78],[356.6,3.49],[354.99,5.63]],[[349.29,3.28],[345.97,3.82]]] }
+        ];
+
+        // Their astrology names and symbols, in the same order (\uFE0E asks for the plain symbol, not an emoji)
+        var SIGNS = [
+            { name: "Aries", glyph: "\u2648\uFE0E" }, { name: "Taurus", glyph: "\u2649\uFE0E" },
+            { name: "Gemini", glyph: "\u264A\uFE0E" }, { name: "Cancer", glyph: "\u264B\uFE0E" },
+            { name: "Leo", glyph: "\u264C\uFE0E" }, { name: "Virgo", glyph: "\u264D\uFE0E" },
+            { name: "Libra", glyph: "\u264E\uFE0E" }, { name: "Scorpio", glyph: "\u264F\uFE0E" },
+            { name: "Sagittarius", glyph: "\u2650\uFE0E" }, { name: "Capricorn", glyph: "\u2651\uFE0E" },
+            { name: "Aquarius", glyph: "\u2652\uFE0E" }, { name: "Pisces", glyph: "\u2653\uFE0E" }
+        ];
+
+        // Sky position → a direction on the globe, seen from outside like a star chart: north up, east to the left
+        function skyDir(ra, dec) {
+            var r = THREE.MathUtils.degToRad(ra);
+            var d = THREE.MathUtils.degToRad(dec);
+            return new THREE.Vector3(-Math.sin(r) * Math.cos(d), Math.sin(d), Math.cos(r) * Math.cos(d));
+        }
+
+        // Each constellation's stars (shared where its lines meet), its segments and its middle, for the label
+        var stars = [];            // { dir, constellation }
+        var segments = [];         // [star index, star index]
+        var constellations = [];   // { name, centre, starIndices }
+        ZODIAC.forEach(function (c, ci) {
+            var seen = {};
+            var info = { name: SIGNS[ci].name, glyph: SIGNS[ci].glyph, centre: new THREE.Vector3(), starIndices: [] };
+            c.lines.forEach(function (line) {
+                var prev = -1;
+                line.forEach(function (p) {
+                    var key = p[0] + "," + p[1];
+                    if (seen[key] === undefined) {
+                        seen[key] = stars.length;
+                        stars.push({ dir: skyDir(p[0], p[1]), constellation: ci });
+                        info.starIndices.push(seen[key]);
+                        info.centre.add(stars[seen[key]].dir);
+                    }
+                    if (prev >= 0) segments.push([prev, seen[key]]);
+                    prev = seen[key];
+                });
+            });
+            info.centre.normalize();
+            constellations.push(info);
+        });
+        var STAR_COUNT = stars.length;
+
+        // The Pyrothief flame (pyrothieflogo.png, sampled once on a grid): [across, up] as fractions of its height,
+        // centred, and the logo's colour there. The mask's black is left out, so it shows as a gap
+        var LOGO = [[-0.023,0.474,0xfea10b],[-0.049,0.447,0xfd9c09],[-0.023,0.447,0xfd9b0a],[-0.049,0.421,0xfd9b08],[-0.023,0.421,0xfd9908],[0.004,0.421,0x532b0f],[-0.049,0.394,0xfc9908],[-0.023,0.394,0xfc9608],[0.004,0.394,0xfa9308],[0.083,0.394,0xfe6d0d],[-0.049,0.368,0xfc9707],[-0.023,0.368,0xfb9507],[0.004,0.368,0xfa9008],[0.030,0.368,0xf78b0a],[0.109,0.368,0xfb340f],[-0.049,0.342,0xfb9508],[-0.023,0.342,0xfa9008],[0.004,0.342,0xf98d09],[0.030,0.342,0xf88609],[0.057,0.342,0xf37a09],[-0.049,0.315,0xfc9109],[-0.023,0.315,0xfa8c0a],[0.004,0.315,0xf7860a],[0.030,0.315,0xf68009],[0.057,0.315,0xf4790b],[0.083,0.315,0xf3740c],[-0.128,0.289,0xfe830c],[-0.049,0.289,0xfb890a],[-0.023,0.289,0xf8840a],[0.004,0.289,0xf7800a],[0.030,0.289,0xf57b0b],[0.057,0.289,0xf4760b],[0.083,0.289,0xf5720d],[0.109,0.289,0xf76f0e],[-0.128,0.262,0xfc790c],[-0.023,0.262,0xf87e08],[0.004,0.262,0xf77a0a],[0.030,0.262,0xf5760b],[0.057,0.262,0xf4720d],[0.083,0.262,0xf46e0d],[0.109,0.262,0xf36a0e],[0.136,0.262,0xf46710],[-0.128,0.236,0xf86e08],[-0.023,0.236,0xf97807],[0.004,0.236,0xf7740a],[0.030,0.236,0xf5720c],[0.057,0.236,0xf36d0d],[0.083,0.236,0xf36a0e],[0.109,0.236,0xf2660f],[0.136,0.236,0xf26310],[0.162,0.236,0xf15e12],[-0.075,0.209,0xf5680a],[-0.023,0.209,0xe7680b],[0.004,0.209,0xf5710b],[0.030,0.209,0xf56e0d],[0.057,0.209,0xf36a0e],[0.083,0.209,0xf2670e],[0.109,0.209,0xf1630f],[0.136,0.209,0xf05f10],[0.162,0.209,0xf05911],[0.189,0.209,0xee5415],[-0.075,0.183,0xf56c08],[0.004,0.183,0xf46f0d],[0.030,0.183,0xf36b0e],[0.057,0.183,0xf2680e],[0.083,0.183,0xf1640f],[0.109,0.183,0xf05f10],[0.136,0.183,0xf05b11],[0.162,0.183,0xef5713],[0.189,0.183,0xef5415],[0.215,0.183,0xe74f1d],[-0.075,0.157,0xf36c0f],[0.004,0.157,0xf56b0f],[0.030,0.157,0xf2680f],[0.057,0.157,0xf16510],[0.083,0.157,0xf16110],[0.109,0.157,0xf15c12],[0.136,0.157,0xf05913],[0.162,0.157,0xee5414],[0.189,0.157,0xef5116],[0.215,0.157,0xf04d16],[-0.208,0.130,0xfd990c],[-0.102,0.130,0xf46c0e],[-0.075,0.130,0xf36a0d],[-0.023,0.130,0xf0660f],[0.004,0.130,0xf26810],[0.030,0.130,0xf26511],[0.057,0.130,0xf06112],[0.083,0.130,0xf05e12],[0.109,0.130,0xf05912],[0.136,0.130,0xee5514],[0.162,0.130,0xed5016],[0.189,0.130,0xed4d18],[0.215,0.130,0xee4817],[0.242,0.130,0xc82f1a],[-0.234,0.104,0xfc8a0e],[-0.208,0.104,0xc95f10],[-0.128,0.104,0xf36e0d],[-0.102,0.104,0xf36c0e],[-0.075,0.104,0xf1690d],[-0.049,0.104,0xf06711],[-0.023,0.104,0xf36611],[0.004,0.104,0xf26411],[0.030,0.104,0xf16112],[0.057,0.104,0xf05e13],[0.083,0.104,0xef5913],[0.109,0.104,0xef5414],[0.136,0.104,0xef5115],[0.162,0.104,0xec4c17],[0.189,0.104,0xec4919],[0.215,0.104,0xec4619],[0.242,0.104,0xca301d],[-0.260,0.077,0xc0620e],[-0.234,0.077,0xfb800c],[-0.208,0.077,0xfb870e],[-0.155,0.077,0xf46f0b],[-0.128,0.077,0xf36e0c],[-0.102,0.077,0xf36a0e],[-0.075,0.077,0xf2670e],[-0.049,0.077,0xf26510],[-0.023,0.077,0xf16412],[0.004,0.077,0xf16011],[0.030,0.077,0xf15d12],[0.057,0.077,0xf05913],[0.083,0.077,0xef5514],[0.109,0.077,0xee4f15],[0.136,0.077,0xee4d16],[0.162,0.077,0xed4818],[0.189,0.077,0xed461a],[0.215,0.077,0xeb421a],[0.242,0.077,0xc72c1b],[0.268,0.077,0xc62b1e],[-0.260,0.051,0xf87d09],[-0.234,0.051,0xf87c09],[-0.208,0.051,0xf77809],[-0.155,0.051,0xf46d0c],[-0.128,0.051,0xf46d0d],[-0.102,0.051,0xf3690e],[-0.075,0.051,0xf2660f],[-0.049,0.051,0xf26310],[-0.023,0.051,0xf16112],[0.004,0.051,0xf25e13],[0.030,0.051,0xf05914],[0.057,0.051,0xef5514],[0.083,0.051,0xef5115],[0.109,0.051,0xee4b16],[0.136,0.051,0xed4718],[0.162,0.051,0xed441a],[0.189,0.051,0xed421b],[0.215,0.051,0xeb401b],[0.242,0.051,0xc3281a],[0.268,0.051,0xc0261a],[-0.287,0.025,0xbc5a0e],[-0.260,0.025,0xf77a0a],[-0.234,0.025,0xf6770a],[-0.208,0.025,0xf6740a],[-0.181,0.025,0xf36f0c],[-0.155,0.025,0xf26c0d],[-0.128,0.025,0xf26a0d],[-0.102,0.025,0xf36710],[-0.075,0.025,0xf26411],[-0.049,0.025,0xf16011],[-0.023,0.025,0xf15d12],[0.004,0.025,0xf25913],[0.030,0.025,0xf05515],[0.057,0.025,0xef5015],[0.083,0.025,0xef4c16],[0.109,0.025,0xee4618],[0.136,0.025,0xee441a],[0.162,0.025,0xec401b],[0.189,0.025,0xec3f1c],[0.215,0.025,0xeb3d1d],[0.242,0.025,0xbe251a],[0.268,0.025,0xbd221c],[0.294,0.025,0xbe201c],[-0.287,-0.002,0xf7780f],[-0.260,-0.002,0xf6750b],[-0.234,-0.002,0xf5740b],[-0.208,-0.002,0xf4700b],[-0.181,-0.002,0xf46f0d],[-0.155,-0.002,0xf26b0e],[-0.128,-0.002,0xf16810],[-0.102,-0.002,0xf26511],[-0.075,-0.002,0xf16111],[-0.049,-0.002,0xf15e13],[-0.023,-0.002,0xef5913],[0.004,-0.002,0xf05513],[0.030,-0.002,0xf05115],[0.057,-0.002,0xef4b16],[0.083,-0.002,0xee4619],[0.109,-0.002,0xee4219],[0.136,-0.002,0xee3f1b],[0.162,-0.002,0xec3e1c],[0.189,-0.002,0xeb3e1d],[0.215,-0.002,0xbe261c],[0.242,-0.002,0xbc231c],[0.268,-0.002,0xb8211d],[0.294,-0.002,0xb51f1f],[-0.287,-0.028,0xf7750f],[-0.260,-0.028,0xf6730d],[-0.234,-0.028,0xf56f0d],[-0.208,-0.028,0xf46d0d],[-0.181,-0.028,0xf36b0e],[-0.155,-0.028,0xf3690f],[-0.128,-0.028,0xf26611],[-0.102,-0.028,0xf26312],[-0.075,-0.028,0xf15f12],[-0.049,-0.028,0xf15a12],[-0.023,-0.028,0xf05613],[0.004,-0.028,0xf05114],[0.030,-0.028,0xf04e16],[0.057,-0.028,0xee4818],[0.083,-0.028,0xee431a],[0.109,-0.028,0xec3f1b],[0.136,-0.028,0xec3d1c],[0.162,-0.028,0xeb3c1b],[0.189,-0.028,0xcc2f1a],[0.215,-0.028,0xbd241d],[0.242,-0.028,0xb9211d],[0.268,-0.028,0xb51e1f],[0.294,-0.028,0xaf1e1f],[-0.287,-0.055,0xf7750e],[-0.260,-0.055,0xf6700d],[-0.234,-0.055,0xf66d0f],[-0.208,-0.055,0xf46a0e],[-0.181,-0.055,0xf4680e],[-0.155,-0.055,0xf3660f],[-0.128,-0.055,0xf46411],[-0.102,-0.055,0xf36112],[-0.075,-0.055,0xf15b12],[-0.049,-0.055,0xf15813],[-0.023,-0.055,0xf05214],[0.004,-0.055,0xf04f16],[0.030,-0.055,0xef4a18],[0.057,-0.055,0xef4419],[0.083,-0.055,0xef411c],[0.109,-0.055,0xed3f1c],[0.136,-0.055,0xeb3d1c],[0.162,-0.055,0xd2311a],[0.189,-0.055,0xc2261d],[0.215,-0.055,0xbd221d],[0.242,-0.055,0xb71f1e],[0.268,-0.055,0xb11c1f],[0.294,-0.055,0xab1d20],[-0.287,-0.081,0xf6700e],[-0.260,-0.081,0xf66d0e],[-0.234,-0.081,0xf66a10],[-0.208,-0.081,0xf5670e],[-0.181,-0.081,0xf5660f],[-0.155,-0.081,0xf46510],[-0.128,-0.081,0xf46211],[-0.102,-0.081,0xf35d11],[-0.075,-0.081,0xf15813],[-0.049,-0.081,0xf05413],[-0.023,-0.081,0xef4f15],[0.004,-0.081,0xf04c18],[0.030,-0.081,0xef4719],[0.057,-0.081,0xef431b],[0.083,-0.081,0xee3f1b],[0.109,-0.081,0xec3c1a],[0.136,-0.081,0xc72b1c],[0.162,-0.081,0xc3261d],[0.189,-0.081,0xc0231e],[0.215,-0.081,0xbb1e1e],[0.242,-0.081,0xb31d1f],[0.268,-0.081,0xac1b1f],[0.294,-0.081,0xa51a1f],[-0.313,-0.108,0x603317],[-0.287,-0.108,0xf76e0e],[-0.260,-0.108,0xf76a0d],[-0.208,-0.108,0x974016],[-0.181,-0.108,0xf66513],[-0.155,-0.108,0xf56310],[-0.128,-0.108,0xf55f10],[-0.102,-0.108,0xf35b10],[-0.075,-0.108,0xf35613],[-0.049,-0.108,0xf25215],[-0.023,-0.108,0xf04d17],[0.004,-0.108,0xef4b19],[0.030,-0.108,0xef4719],[0.057,-0.108,0xee4118],[0.083,-0.108,0xc82a1d],[0.109,-0.108,0xc62a1d],[0.136,-0.108,0xc4271c],[0.162,-0.108,0xc2231e],[0.189,-0.108,0xbe201e],[0.268,-0.108,0xa21a1f],[0.294,-0.108,0xa1191f],[-0.287,-0.134,0xf7690d],[-0.260,-0.134,0xf7670e],[-0.128,-0.134,0xdf4313],[-0.102,-0.134,0xd74216],[-0.075,-0.134,0xd73e1a],[-0.049,-0.134,0xd73a1b],[-0.023,-0.134,0xd3381c],[0.004,-0.134,0xcd361d],[0.030,-0.134,0xcb301b],[0.057,-0.134,0xc92b1a],[0.083,-0.134,0xc5291c],[0.109,-0.134,0xc1251c],[0.136,-0.134,0xbe231c],[0.268,-0.134,0x9c1921],[0.294,-0.134,0x9b171f],[-0.287,-0.160,0xf6670f],[-0.260,-0.160,0xf7650f],[0.268,-0.160,0x941620],[0.294,-0.160,0x971520],[-0.287,-0.187,0xf66511],[-0.260,-0.187,0xf56110],[-0.155,-0.187,0xfb6b0c],[0.162,-0.187,0xf5550b],[0.268,-0.187,0x8f1421],[0.294,-0.187,0x8f131f],[-0.287,-0.213,0xf76013],[-0.260,-0.213,0xf25d0f],[-0.234,-0.213,0xf35911],[-0.155,-0.213,0xf8670e],[-0.128,-0.213,0xf6660c],[-0.102,-0.213,0xf3620c],[0.083,-0.213,0xd55617],[0.109,-0.213,0xf35a14],[0.136,-0.213,0xf35913],[0.162,-0.213,0x5d1f12],[0.242,-0.213,0x871423],[0.268,-0.213,0x8a1422],[0.294,-0.213,0x8b1221],[-0.287,-0.240,0xe75514],[-0.260,-0.240,0xf25810],[-0.234,-0.240,0xf15713],[-0.128,-0.240,0x682c14],[-0.102,-0.240,0xef5f0d],[-0.075,-0.240,0xf45c0f],[0.083,-0.240,0xf85d0f],[0.109,-0.240,0xf15610],[0.242,-0.240,0x811422],[0.268,-0.240,0x841322],[-0.260,-0.266,0xf05511],[-0.234,-0.266,0xf25314],[-0.208,-0.266,0xf04f13],[0.215,-0.266,0x781122],[0.242,-0.266,0x7c1323],[0.268,-0.266,0x811322],[-0.260,-0.292,0xef4f13],[-0.234,-0.292,0xf25113],[-0.208,-0.292,0xf04c13],[-0.181,-0.292,0xef4b15],[-0.155,-0.292,0xf44819],[0.189,-0.292,0x6d0f21],[0.215,-0.292,0x710f20],[0.242,-0.292,0x781122],[-0.234,-0.319,0xf25014],[-0.208,-0.319,0xf04b14],[-0.181,-0.319,0xee4715],[-0.155,-0.319,0xec4016],[-0.128,-0.319,0xe63717],[-0.102,-0.319,0xe52f1a],[-0.075,-0.319,0xe32420],[-0.049,-0.319,0xe61a23],[-0.023,-0.319,0xe71a22],[0.215,-0.319,0x700e20],[0.242,-0.319,0x730f1f],[-0.208,-0.345,0xf34614],[-0.181,-0.345,0xef4016],[-0.155,-0.345,0xeb3918],[-0.128,-0.345,0xe9311a],[-0.102,-0.345,0xe8281e],[-0.075,-0.345,0xe51f22],[-0.049,-0.345,0xe61a24],[-0.023,-0.345,0xe61b25],[-0.181,-0.372,0xec3c18],[-0.155,-0.372,0xeb331a],[-0.128,-0.372,0xea291e],[-0.102,-0.372,0xe92121],[-0.075,-0.372,0xe51a25],[-0.049,-0.372,0xe41826],[-0.023,-0.372,0xe41926],[-0.155,-0.398,0xed2c1c],[-0.128,-0.398,0xeb2221],[-0.102,-0.398,0xe91a24],[-0.075,-0.398,0xe41525],[-0.049,-0.398,0xe31528],[-0.023,-0.398,0xe11627],[-0.102,-0.425,0xe81625],[-0.075,-0.425,0xe21125],[-0.049,-0.425,0xe11126],[-0.023,-0.425,0xe01327],[-0.075,-0.451,0xb50e1e],[-0.049,-0.451,0xde1026],[-0.023,-0.451,0xdd1126],[-0.023,-0.477,0xde0c24]];
+        var LOGO_COUNT = LOGO.length;
+        // The random dots first, then the stars, then the flame's own dots (hidden on the globe until it gathers)
+        var POINT_COUNT = DOT_COUNT + STAR_COUNT + LOGO_COUNT;
+        var LOGO_START = DOT_COUNT + STAR_COUNT;
+
+        // Dots: each in a random direction (new on every load), up to a little above the surface
+        var dirs = [];
+        var lift = new Float32Array(POINT_COUNT);       // fixed unevenness
+        var bulge = new Float32Array(POINT_COUNT);      // eased towards the pointer's target
+        var dotPositions = new Float32Array(POINT_COUNT * 3);
+        var dotColors = new Float32Array(POINT_COUNT * 3);
+        var dotSizes = new Float32Array(POINT_COUNT);
+        var dotAlphas = new Float32Array(POINT_COUNT);
+        var warpX = new Float32Array(POINT_COUNT);      // Warp's push on screen, px, eased
+        var warpY = new Float32Array(POINT_COUNT);
+        for (var i = 0; i < DOT_COUNT; i++) {
+            // A random height and a random angle around it: evenly likely anywhere on the sphere, no bunching
+            var y = Math.random() * 2 - 1;
+            var r = Math.sqrt(1 - y * y);
+            var a = Math.random() * Math.PI * 2;
+            dirs.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+            lift[i] = Math.random() * 8;   // 0–8 above the surface (the 0–10 of a 360 sphere, scaled to 300)
+        }
+        for (var st = 0; st < STAR_COUNT; st++) {
+            dirs.push(stars[st].dir);
+            lift[DOT_COUNT + st] = 4;
+        }
+        for (var lg = 0; lg < LOGO_COUNT; lg++) {
+            var ly = Math.random() * 2 - 1;
+            var lr = Math.sqrt(1 - ly * ly);
+            var la = Math.random() * Math.PI * 2;
+            dirs.push(new THREE.Vector3(Math.cos(la) * lr, ly, Math.sin(la) * lr));
+            lift[LOGO_START + lg] = Math.random() * 8;
+        }
+
+        var dotGeometry = new THREE.BufferGeometry();
+        dotGeometry.setAttribute("position", new THREE.BufferAttribute(dotPositions, 3));
+        dotGeometry.setAttribute("aColor", new THREE.BufferAttribute(dotColors, 3));
+        dotGeometry.setAttribute("aSize", new THREE.BufferAttribute(dotSizes, 1));
+        dotGeometry.setAttribute("aAlpha", new THREE.BufferAttribute(dotAlphas, 1));
+
+        // Round, soft-edged dots whose size and colour can change one by one
+        var dotMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                pixelRatio: { value: renderer.getPixelRatio() },
+                scale: { value: 420 },
+                inside: { value: 0 }    // 0 outside the sphere → 1 inside
+            },
+            vertexShader: [
+                "attribute vec3 aColor;",
+                "attribute float aSize;",
+                "attribute float aAlpha;",
+                "uniform float pixelRatio;",
+                "uniform float scale;",
+                "uniform float inside;",
+                "varying vec3 vColor;",
+                "varying float vFade;",
+                "void main() {",
+                "    vColor = aColor;",
+                "    vFade = aAlpha;",
+                "    vec4 mv = modelViewMatrix * vec4(position, 1.0);",
+                "    vec3 n = normalize(normalMatrix * normalize(position));",
+                "    vFade *= mix(0.35 + 0.65 * smoothstep(-0.6, 0.4, n.z), 1.0, inside);",   // far side dimmer (outside)
+                "    gl_PointSize = min(aSize * pixelRatio * (scale / -mv.z), 18.0 * pixelRatio);",
+                "    gl_Position = projectionMatrix * mv;",
+                "}"
+            ].join("\n"),
+            fragmentShader: [
+                "varying vec3 vColor;",
+                "varying float vFade;",
+                "void main() {",
+                "    float d = length(gl_PointCoord - 0.5);",
+                "    if (d > 0.5) discard;",
+                "    gl_FragColor = vec4(vColor, smoothstep(0.5, 0.3, d) * vFade);",
+                "}"
+            ].join("\n"),
+            transparent: true,
+            depthWrite: false
+        });
+        globe.add(new THREE.Points(dotGeometry, dotMaterial));
+
+        // Spikes: short lines straight out from the surface that slowly stretch and shrink
+        var spikes = [];
+        var spikePositions = new Float32Array(SPIKE_COUNT * 6);
+        for (var s = 0; s < SPIKE_COUNT; s++) {
+            var dir = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1).normalize();
+            spikes.push({
+                dir: dir,
+                length: 6 + Math.random() * 26,
+                phase: Math.random() * Math.PI * 2,
+                speed: 0.8 + Math.random() * 1.8,
+                bulge: 0
+            });
+        }
+        var spikeGeometry = new THREE.BufferGeometry();
+        spikeGeometry.setAttribute("position", new THREE.BufferAttribute(spikePositions, 3));
+        globe.add(new THREE.LineSegments(spikeGeometry, new THREE.LineBasicMaterial({
+            color: 0xe0e0e0,
+            transparent: true,
+            opacity: 0.3,
+            depthWrite: false
+        })));
+
+        // Constellation lines between their stars (Nova); the one under the pointer turns orange
+        var linePositions = new Float32Array(segments.length * 6);
+        var lineColors = new Float32Array(segments.length * 6);
+        var lineGeometry = new THREE.BufferGeometry();
+        lineGeometry.setAttribute("position", new THREE.BufferAttribute(linePositions, 3));
+        lineGeometry.setAttribute("color", new THREE.BufferAttribute(lineColors, 3));
+        var lineMaterial = new THREE.LineBasicMaterial({
+            vertexColors: true,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false
+        });
+        globe.add(new THREE.LineSegments(lineGeometry, lineMaterial));
+        var spikeMaterial = globe.children[1].material;
+
+        // Random is the intro screen, so every visit starts there; picking Nova eases the globe into Nova's map (mix 0 → 1)
+        var mode = "random";
+        var mix = 0;
+        var locked = false;
+        try { locked = localStorage.getItem("construction_sphere_locked") === "1"; } catch (e) {}
+        var lockButton = document.getElementById("lock");
+        // Drift (inside): the camera slides after the pointer (see the frame). Its own switch now, apart from Lock, and off
+        // each time you arrive inside, so the camera holds where the way in left it until you turn it on
+        var driftButton = document.getElementById("drift");
+        function toggleLock() {
+            locked = !locked;
+            try { localStorage.setItem("construction_sphere_locked", locked ? "1" : "0"); } catch (e) {}
+            showMode();
+        }
+        lockButton.addEventListener("click", toggleLock);
+        var driftOn = false;
+        driftButton.addEventListener("click", function () {
+            driftOn = !driftOn;
+            showMode();
+        });
+        var warpOn = true;
+        try { warpOn = localStorage.getItem("construction_sphere_warp") !== "0"; } catch (e) {}
+        // The hand controls (Random / Nova and Lock outside; Warp, Drift and Reach inside) are hidden for now. While
+        // they are, the settings are their defaults, not what was saved: unlocked, Warp on (Drift starts off and Reach
+        // at 1 inside anyway), so nothing can be stuck the wrong way with no button to change it
+        var SHOW_TOOLS = false;
+        if (!SHOW_TOOLS) {
+            locked = false;
+            warpOn = true;
+        }
+        var warpButton = document.getElementById("warp");
+        warpButton.addEventListener("click", function () {
+            warpOn = !warpOn;
+            try { localStorage.setItem("construction_sphere_warp", warpOn ? "1" : "0"); } catch (e) {}
+            showMode();
         });
 
-        // Lightbox with cycling
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImg = lightbox.querySelector('img');
-        const allScreenshots = Array.from(document.querySelectorAll('.screenshot-img'));
-        let currentIndex = 0;
+        var modeButtons = document.querySelectorAll(".modes button[data-mode]");
+        // The sign list: picking one turns the globe until that constellation faces you, and keeps it lit
+        var selected = -1;
+        var aim = null;             // { x, y }: the rotation that faces the selected constellation, while turning to it
+        var signList = document.getElementById("signs");
+        var signButtons = constellations.map(function (c, ci) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.innerHTML = '<span class="glyph" aria-hidden="true">' + c.glyph + "</span>" + c.name;
+            b.addEventListener("click", function () { selectSign(ci); });
+            signList.appendChild(b);
+            return b;
+        });
+        function selectSign(ci) {
+            selected = ci;
+            signButtons.forEach(function (b, i) {
+                b.classList.toggle("on", i === ci);
+                b.setAttribute("aria-pressed", i === ci ? "true" : "false");
+            });
+            // Turn about y until the middle is straight ahead left-to-right, then about x to bring it level
+            var d = constellations[ci].centre;
+            var y = Math.atan2(-d.x, d.z);
+            var x = Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z));
+            // The shortest way round from where the globe is now
+            y = globe.rotation.y + Math.atan2(Math.sin(y - globe.rotation.y), Math.cos(y - globe.rotation.y));
+            aim = { x: x, y: y };
+            spinX = 0;
+            spinY = 0;
+        }
 
-        allScreenshots.forEach((img, i) => {
-            img.addEventListener('click', () => {
-                currentIndex = i;
-                lightboxImg.src = img.src;
-                lightboxImg.alt = img.alt;
-                lightbox.classList.add('active');
+        function setOn(b, on) {
+            b.classList.toggle("on", on);
+            b.setAttribute("aria-pressed", on ? "true" : "false");
+        }
+        function showMode() {
+            // Inside the sphere: just Warp and Drift (and ✕); outside: Random / Nova and Lock
+            var isInside = !!inside;
+            signList.hidden = mode !== "nova" || isInside;
+            lockButton.hidden = isInside;
+            document.getElementById("insideControls").hidden = !isInside || !SHOW_TOOLS;   // (looked up here: showMode runs early)
+            document.querySelector(".modes").hidden = !SHOW_TOOLS;
+            // Lock is for both screens and stays as it was: lit while on
+            setOn(lockButton, locked);
+            setOn(driftButton, driftOn);
+            setOn(warpButton, warpOn);
+            canvas.classList.toggle("locked", locked);
+            modeButtons.forEach(function (b) {
+                b.hidden = isInside;
+                setOn(b, b.getAttribute("data-mode") === mode);
+            });
+        }
+        function setMode(m) {
+            mode = m;
+            showMode();
+        }
+        modeButtons.forEach(function (b) {
+            b.addEventListener("click", function () { setMode(b.getAttribute("data-mode")); });
+        });
+        showMode();
+
+        // Shapes in dots on the intro (Random). Each is hidden until the pointer comes near its corner of the ball, where it
+        // always appears however the globe is turned (it faces you); then dots leave the globe and gather into it, and
+        // moving away sends them back. For now there's one:
+        //   The Pyrothief flame, top right: dots of its own in the logo's colours, rising out of the globe as it gathers.
+        var SHAPE_REACH = 40;       // how near (px) the pointer has to come for a shape to gather
+        var pointerPx = { x: -1, y: -1 };
+        var shapes = [];
+
+        // Points given as [across, up] in radians around an anchor direction → places on the sphere, facing you
+        function placeAround(anchor, offsets) {
+            var right = new THREE.Vector3(0, 1, 0).cross(anchor).normalize();
+            var up = anchor.clone().cross(right).normalize();
+            return offsets.map(function (o) {
+                return anchor.clone().addScaledVector(right, o[0]).addScaledVector(up, o[1]).normalize()
+                    .multiplyScalar(RADIUS + 14);
+            });
+        }
+        function inBox(box, x, y, pad) {
+            pad = pad || 0;
+            return box && x >= box.minX - pad && x <= box.maxX + pad && y >= box.minY - pad && y <= box.maxY + pad;
+        }
+
+        // The flame. Clicking it scrolls you in for you, exactly as two-finger scrolling with the pointer there does: the
+        // depth runs to the inside while Drift swings the camera toward where you clicked, so the whole star sphere turns
+        // as you zoom. On the way you go through the flame: its dots blow out past you, and Projects comes up
+        var LOGO_ANCHOR = new THREE.Vector3(0.5, 0.42, 0.76).normalize();
+        var LOGO_HEIGHT = 0.8;      // radians up the sphere
+        var BURST_ZOOM = 1.4;       // s for the scroll in
+        var BURST_START = 0.7;      // s in, it begins to blow apart
+        var BURST_TIME = 1.0;       // s for the dots to blow out and fade
+        var burstFrom = 0;          // the depth when clicked
+        var burstNDC = new THREE.Vector2();   // where it was clicked: Drift follows this through the zoom
+        var logoOffsets = LOGO.map(function (p) { return [p[0] * LOGO_HEIGHT, p[1] * LOGO_HEIGHT]; });
+        var logoShape = {
+            targets: placeAround(LOGO_ANCHOR, logoOffsets),
+            dots: LOGO.map(function (p, k) { return LOGO_START + k; }),
+            colors: LOGO.map(function (p) { return new THREE.Color(p[2]); }),
+            size: 7,
+            onClick: function () { startBurst(); },
+            form: 0, hover: false, box: null,
+            // The burst: held in place while it plays, how far it has blown apart (0 → 1), each dot's own speed
+            forced: false, blow: 0, centre: LOGO_ANCHOR.clone().multiplyScalar(RADIUS + 14),
+            speed: LOGO.map(function () { return 0.6 + Math.random() * 0.8; })
+        };
+        shapes.push(logoShape);
+        var burstStart = -1;        // when the click came (clock seconds), or -1
+        var blowFrom = -1;          // when it starts to blow apart: BURST_START in, or once the flame is full if later
+        function startBurst() {
+            if (burstStart >= 0) return;
+            burstStart = simTime;
+            burstFrom = depth;
+            blowFrom = -1;
+            burstNDC.copy(pointerNDC);
+            // Scrolling, as far as everything else can tell, until it's in
+            scrolling = true;
+            clearTimeout(settleTimer);
+            spinX = 0;
+            spinY = 0;
+        }
+
+        // The projects (inside the sphere, from the Projects menu): what each card says, and its icon, which forms in dots
+        // above the card. Nova is under construction: its icon only (its jump to the Nova page, jumpToNova, is kept for
+        // later)
+        var PROJECTS = {
+            // Under construction: just its icon (a bursting star), no card and no link
+            nova: { name: "Nova", iconOnly: true },
+            drift: {
+                name: "Drift Remote", status: "Beta", kind: "beta",
+                tagline: "Control your Apple devices using your iPhone.",
+                text: "Drift Remote turns your iPhone into a trackpad, keyboard and media remote for your Mac and iPad, " +
+                    "over Bluetooth with no pairing screen. New in this build: see your Mac's screen on your phone " +
+                    "while you drive it.",
+                tech: "iOS",
+                callouts: ["Trackpad, keyboard & Media", "Bluetooth, Wi-Fi",
+                    "Cast screens to your device", "iPhone → Mac & iPad"]
+            },
+            docparser: {
+                name: "Document Parser", status: "Alpha", kind: "alpha",
+                tagline: "Snap a document, get the details, automate.",
+                text: "Photograph or drop in a receipt, invoice or form, and Document Parser pulls out what matters: " +
+                    "the vendor, the date, the totals, kept searchable. It's all read on your Mac itself, so nothing " +
+                    "gets uploaded anywhere.",
+                tech: "macOS",
+                callouts: ["Snap or drop in a document", "Pulls out relevant details", "On-device inference",
+                    "100% local workflow"]
+            },
+            games: {
+                name: "DTG Manager", status: "Beta", kind: "beta",
+                tagline: "Scheduling and floor management.",
+                text: "DTG Manager builds the weekly staff schedule, keeps track of people and their skills, and runs " +
+                    "a live rotation board for the floor. All the data stays on the device.",
+                tech: "macOS · iPadOS",
+                callouts: ["Weekly scheduling", "Staff/patron roster", "Live rotation board",
+                    "Data reporting"]
+            },
+            mrwizard: {
+                name: "Mrwizard", status: "Alpha", kind: "alpha",
+                tagline: "Personal Assistant",
+                text: "Press Option+Space and ask. Mrwizard listens, thinks and answers out loud in a voice cloned from " +
+                    "a short sample of your own, entirely on your Mac, with no internet needed.",
+                tech: "macOS",
+                callouts: ["General assistant", "Voice capable", "Runs local or with a GPT", "Clones your voice"]
+            },
+            scout: {
+                name: "Scout", status: "Alpha", kind: "alpha",
+                tagline: "Live vehicle detection from a drone.",
+                text: "Scout watches a drone's live video on a Mac, boxes and tracks vehicles in real time, and sounds " +
+                    "an alarm when traffic is coming. Built for safer haul roads.",
+                tech: "macOS",
+                callouts: ["Live drone video", "Identifies & tracks vehicles", "Alarm for oncoming traffic", "Follows target vehicle"]
+            }
+        };
+        // Not projects, but in the menu with them: the privacy policy and the license, each with a link to the full text
+        // The privacy policy as it is on its page (Privacy/privacy.html), whole, with its section headings
+        PROJECTS.privacy = {
+            name: "Privacy",
+            tagline: "Drift Remote's privacy policy.",
+            text: [
+                { h: "Overview" },
+                "Drift Remote does not collect, store, or transmit any personal data. This policy describes what the " +
+                    "app does and does not do with information on your device.",
+                { h: "Data Collection" },
+                "Drift Remote does not collect any data. No analytics, no crash reporting, no advertising identifiers, " +
+                    "and no third-party SDKs are included in the app.",
+                { h: "Local Storage" },
+                "The app stores preferences locally on your device using iOS standard storage (UserDefaults). This " +
+                    "includes settings such as haptics preferences and display options. This data never leaves your " +
+                    "device and is not accessible to Pyrothief Projects or any third party.",
+                { h: "Bluetooth" },
+                "Drift Remote uses Bluetooth Low Energy (BLE) to communicate directly with nearby Apple devices. Device " +
+                    "names and identifiers are used only to establish and maintain the connection and are never " +
+                    "transmitted off your device or stored beyond the current session.",
+                { h: "Contact" },
+                "If you have questions about this policy, you can reach Pyrothief Projects via GitHub (link below)."
+            ],
+            tech: "Last updated November 2026",
+            link: { label: "github.com/Pyrothiefprojects", href: "https://github.com/Pyrothiefprojects" }
+        };
+        // The license as it is on the Nova page (nova.html), whole
+        PROJECTS.license = {
+            name: "License",
+            tagline: "All rights reserved.",
+            text: [
+                "This project is proprietary. All rights reserved by Pyrothief Projects.",
+                "All software, engines, source code, assets, documentation, and tools contained within this project " +
+                    "are the exclusive property of Pyrothief Projects unless otherwise stated.",
+                "Unless a separate license is provided for a specific component, engine, or branch, all contents are " +
+                    "fully proprietary. You may not use, copy, modify, distribute, or create derivative works without " +
+                    "prior written permission.",
+                "Specific engines, tools, or components may carry their own license terms. Where an individual " +
+                    "license is present, it takes precedence for that component only.",
+                "All commercial rights are exclusively reserved by Pyrothief Projects. For commercial licensing " +
+                    "inquiries, contact Pyrothief Projects directly.",
+                "This software is provided \"as is\" without warranty of any kind."
+            ],
+            tech: "Individual component licenses may apply"
+        };
+        // The badges: Alpha (yellow) or Beta (green); Privacy and License have none
+        var STATUS_COLORS = { alpha: "#ffcc33", beta: "#5ad17a" };
+
+        // The icons, drawn on a hidden 240 × 240 canvas (no images to load) and sampled into dots like the flame
+        function roundRect(g, x, y, w, h, r) {
+            g.beginPath();
+            g.moveTo(x + r, y);
+            g.arcTo(x + w, y, x + w, y + h, r);
+            g.arcTo(x + w, y + h, x, y + h, r);
+            g.arcTo(x, y + h, x, y, r);
+            g.arcTo(x, y, x + w, y, r);
+            g.closePath();
+        }
+        var ICONS = {
+            nova: function (g) {           // a star bursting: a bright core and rays, long and short
+                g.beginPath(); g.arc(120, 120, 26, 0, Math.PI * 2); g.fill();
+                g.lineWidth = 10;
+                for (var r = 0; r < 12; r++) {
+                    var a = r * Math.PI / 6;
+                    var from = 44;
+                    var to = r % 2 ? 78 : 112;
+                    g.beginPath();
+                    g.moveTo(120 + Math.cos(a) * from, 120 + Math.sin(a) * from);
+                    g.lineTo(120 + Math.cos(a) * to, 120 + Math.sin(a) * to);
+                    g.stroke();
+                }
+            },
+            drift: function (g) {          // an iPhone
+                roundRect(g, 72, 18, 96, 204, 22);
+                g.stroke();
+                g.beginPath(); g.moveTo(106, 42); g.lineTo(134, 42); g.stroke();
+                g.beginPath(); g.arc(120, 194, 9, 0, Math.PI * 2); g.fill();
+            },
+            docparser: function (g) {      // a page with its corner folded, and lines of text
+                g.beginPath();
+                g.moveTo(58, 18); g.lineTo(150, 18); g.lineTo(186, 54); g.lineTo(186, 222); g.lineTo(58, 222);
+                g.closePath();
+                g.stroke();
+                g.beginPath(); g.moveTo(150, 18); g.lineTo(150, 54); g.lineTo(186, 54); g.stroke();
+                g.lineWidth = 10;
+                [[96, 160], [128, 160], [160, 160], [192, 128]].forEach(function (l) {
+                    g.beginPath(); g.moveTo(84, l[0]); g.lineTo(l[1], l[0]); g.stroke();
+                });
+            },
+            games: function (g) {          // a calendar
+                roundRect(g, 30, 44, 180, 172, 16);
+                g.stroke();
+                g.fillRect(30, 44, 180, 34);
+                g.beginPath(); g.moveTo(78, 22); g.lineTo(78, 60); g.moveTo(162, 22); g.lineTo(162, 60); g.stroke();
+                for (var r = 0; r < 3; r++) {
+                    for (var c = 0; c < 4; c++) g.fillRect(52 + c * 38, 100 + r * 36, 20, 20);
+                }
+            },
+            mrwizard: function (g) {       // a voice, as a sound wave
+                g.lineWidth = 16;
+                [52, 104, 160, 208, 160, 104, 52].forEach(function (bar, i) {
+                    var x = 36 + i * 28;
+                    g.beginPath(); g.moveTo(x, 120 - bar / 2); g.lineTo(x, 120 + bar / 2); g.stroke();
+                });
+            },
+            scout: function (g) {          // a quadcopter
+                g.lineWidth = 10;
+                [[62, 62], [178, 62], [62, 178], [178, 178]].forEach(function (r) {
+                    g.beginPath(); g.moveTo(120, 120); g.lineTo(r[0], r[1]); g.stroke();
+                    g.beginPath(); g.arc(r[0], r[1], 36, 0, Math.PI * 2); g.stroke();
+                });
+                g.beginPath(); g.arc(120, 120, 24, 0, Math.PI * 2); g.fill();
+            },
+            privacy: function (g) {        // a padlock
+                g.beginPath(); g.arc(120, 96, 46, Math.PI, 0); g.lineTo(166, 112); g.moveTo(74, 96); g.lineTo(74, 112);
+                g.stroke();
+                roundRect(g, 46, 112, 148, 112, 16);
+                g.stroke();
+                g.beginPath(); g.arc(120, 156, 13, 0, Math.PI * 2); g.fill();
+                g.beginPath(); g.moveTo(120, 160); g.lineTo(120, 192); g.stroke();
+            },
+            license: function (g) {        // ©
+                g.beginPath(); g.arc(120, 120, 98, 0, Math.PI * 2); g.stroke();
+                g.lineWidth = 18;
+                g.beginPath(); g.arc(120, 120, 48, Math.PI * 0.22, Math.PI * 1.78); g.stroke();
+            }
+        };
+        var ICON_POINTS = 260;          // about how many dots each borrows
+        var ICON_DISTANCE = 170;        // how far in front of the camera it forms
+        // [across, up] as fractions of the icon's size, centred, over the drawn strokes (grid steps, fine to coarse,
+        // until the count is close)
+        function sampleIcon(draw) {
+            var c = document.createElement("canvas");
+            c.width = c.height = 240;
+            var g = c.getContext("2d");
+            g.strokeStyle = g.fillStyle = "#fff";
+            g.lineWidth = 14;
+            g.lineCap = g.lineJoin = "round";
+            draw(g);
+            var pixels = g.getImageData(0, 0, 240, 240).data;
+            var points = [];
+            for (var step = 3; step < 24; step++) {
+                var found = [];
+                for (var py = 0; py < 240; py += step) {
+                    for (var px = 0; px < 240; px += step) {
+                        if (pixels[(py * 240 + px) * 4 + 3] > 128) found.push([(px - 120) / 240, (120 - py) / 240]);
+                    }
+                }
+                points = found;
+                if (found.length <= ICON_POINTS) break;
+            }
+            return points;
+        }
+        // Each icon is a shape that forms in front of the camera (its places worked out each frame, wherever the way in
+        // left it). They all borrow the same random dots, so going from one project to the next morphs one icon into the
+        // other; closing the card sends the dots back to the wall
+        var iconShapes = {};
+        Object.keys(ICONS).forEach(function (id) {
+            var offsets = sampleIcon(ICONS[id]);
+            var sh = {
+                inFront: true,
+                offsets: offsets,
+                targets: offsets.map(function () { return new THREE.Vector3(); }),
+                dots: offsets.map(function (o, k) { return k % DOT_COUNT; }),
+                colors: null,
+                size: 2.6,
+                onClick: null,
+                form: 0, hover: false, box: null, forced: false
+            };
+            iconShapes[id] = sh;
+            shapes.push(sh);
+        });
+
+        // Inside the sphere: the flame flies the camera in through the surface, like the site this is modelled on; ✕ or
+        // Escape flies it back out
+        var INSIDE_Z = RADIUS * 0.66;
+        // Drift: inside, the camera slides after the pointer, always aimed at the centre. At the screen's edge it's this
+        // far off-centre, which takes it past the wall: keep pushing and you drift back out of the sphere
+        // (× RADIUS; 1 is the wall at the screen's edge.) Outside and on the way in it's the most there is, 3, so going in
+        // swings the sphere round as far as it can; once you're in it eases to 1, the Reach slider's starting point every
+        // time you go in (the slider changes it from there, for that visit inside)
+        var OUTSIDE_REACH = 3;
+        var INSIDE_REACH = 1;
+        var insideReach = INSIDE_REACH;
+        var driftReach = OUTSIDE_REACH;   // the reach in use, eased between the two
+        var reachSlider = document.getElementById("reachSlider");
+        reachSlider.value = insideReach;
+        reachSlider.addEventListener("input", function () { insideReach = parseFloat(reachSlider.value); });
+        var cameraForward = new THREE.Vector3();
+        var cameraRight = new THREE.Vector3();
+        var cameraUp = new THREE.Vector3();
+        var inside = false;
+        var insideMix = 0;
+        var exitButton = document.getElementById("exit");
+        // The header (PYROTHIEF / PROJECTS): centred outside; as you zoom in it slides to the left margin and becomes the
+        // Projects button (the ✕ is top right)
+        var wordmark = document.getElementById("wordmark");
+        var lockup = document.getElementById("lockup");   // PROJECTS: the menu's button inside
+
+        function setInside(on) {
+            inside = on;
+            exitButton.hidden = !on;
+            if (on) {
+                insideReach = INSIDE_REACH;
+                reachSlider.value = insideReach;
+                driftOn = false;   // arriving inside: Drift off, the camera holds where it got to
+            } else {
+                closeCard();
+                closeMenu();
+            }
+            showMode();
+        }
+        exitButton.addEventListener("click", function () { setInside(false); });
+        // Escape: the menu first (a card is tucked away under it), then the card, then out of the sphere
+        document.addEventListener("keydown", function (e) {
+            // ← → flip through the projects inside (not while typing in something)
+            if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && inside && !/INPUT|TEXTAREA/.test(e.target.tagName)) {
+                flipProject(e.key === "ArrowRight" ? 1 : -1);
+                return;
+            }
+            if (e.key !== "Escape") return;
+            if (menuOpen) closeMenu();
+            else if (activeProject) dismissCard();
+            else if (inside) setInside(false);
+        });
+
+        // The Projects menu: opens under the header, rows sliding in one after another. Nova, Drift Remote, then the projects
+        // it brings together, tabbed over under it (always shown), then Privacy and License
+        var projectsCorner = lockup;   // the header opens the menu
+        var projectsMenu = document.getElementById("projectsMenu");
+        var projectRows = Array.prototype.slice.call(projectsMenu.querySelectorAll("[data-project]"));
+        var menuOpen = false;
+        var activeProject = null;
+        // Plays the rows' slide-in again, one after another
+        function slideIn(rows) {
+            rows.forEach(function (row, i) {
+                row.style.setProperty("--i", i);
+                row.style.animation = "none";
+                void row.offsetWidth;
+                row.style.animation = "";
+            });
+        }
+        var dim = document.getElementById("dim");
+        // The dark layer is for the menu on its own. With a project showing, the background stars are already dimmed in
+        // the drawing (leaving its icon at full brightness), so the layer stays off rather than dimming the icon too
+        function updateDim() { dim.classList.toggle("on", menuOpen && !activeProject); }
+        // A phone (upright or on its side) has no room for the menu and a project at once: opening the menu tucks the card
+        // and the HUD away and sends the icon's dots back to the wall; closing it brings them back. An iPad or desktop
+        // shows both
+        // An iPhone on its side: too short for the whole menu at once, or for the menu beside a project
+        function isShortLandscape() { return window.innerWidth > window.innerHeight && window.innerHeight <= 500; }
+        // No room for the menu and a project together: an iPhone, upright or on its side
+        function isPhone() { return window.innerWidth <= 600 || isShortLandscape(); }
+        function openMenu() {
+            menuOpen = true;
+            updateDim();
+            if (isPhone()) {
+                card.classList.add("tucked");
+                hud.classList.add("tucked");
+                Object.keys(iconShapes).forEach(function (key) { iconShapes[key].forced = false; });
+            }
+            projectsMenu.hidden = false;
+            projectsCorner.classList.add("open");
+            projectsCorner.setAttribute("aria-expanded", "true");
+            // Every row slides in, top to bottom, in one go
+            slideIn(Array.prototype.slice.call(projectsMenu.querySelectorAll("button")));
+        }
+        function closeMenu() {
+            menuOpen = false;
+            updateDim();
+            card.classList.remove("tucked");
+            hud.classList.remove("tucked");
+            if (activeProject) iconShapes[activeProject].forced = true;
+            projectsMenu.hidden = true;
+            projectsCorner.classList.remove("open");
+            projectsCorner.setAttribute("aria-expanded", "false");
+        }
+        projectsCorner.addEventListener("click", function () { if (menuOpen) closeMenu(); else openMenu(); });
+        projectRows.forEach(function (row) {
+            row.addEventListener("click", function () { pickProject(row.getAttribute("data-project")); });
+        });
+
+        // A project: its card rises in and its icon gathers above it; another one swaps the card and morphs the icon
+        var card = document.getElementById("card");
+        var cardTimer = null;
+        // dir: +1 / -1 when flipped through like a codex (the card slides out that way and the next comes in from the
+        // other side); 0 from the menu (the card just swaps)
+        function pickProject(id, dir) {
+            dir = dir || 0;
+            // The one already showing: nothing to change (on a phone, close the menu to bring its card back)
+            if (id === activeProject) { if (isPhone()) closeMenu(); return; }
+            activeProject = id;
+            updateDim();
+            showPager(id);
+            projectRows.forEach(function (row) { row.classList.toggle("on", row.getAttribute("data-project") === id); });
+            Object.keys(iconShapes).forEach(function (key) { iconShapes[key].forced = key === id; });
+            if (isPhone()) closeMenu();   // a phone: the menu closes on a pick, and the card comes up
+            var p = PROJECTS[id];
+            if (p.iconOnly || p.callouts) {
+                // Just the icon, or the HUD around it: any card showing slides away the way it was going
+                if (p.callouts) showHud(p); else hideHud();
+                clearTimeout(cardTimer);
+                card.style.setProperty("--dx", (-dir * 70) + "px");
+                card.classList.remove("shown");
+                cardTimer = setTimeout(function () {
+                    var now = PROJECTS[activeProject];
+                    if (now && (now.iconOnly || now.callouts)) card.hidden = true;
+                }, 360);
+                return;
+            }
+            hideHud();   // a card (Privacy, License)
+            function fill() {
+                document.getElementById("cardName").textContent = p.name;
+                document.getElementById("cardStatus").hidden = !p.status;
+                document.getElementById("cardStatusText").textContent = p.status || "";
+                document.getElementById("cardTagline").textContent = p.tagline;
+                // One paragraph, or several (the License), with headings ({ h: … }) between them (Privacy)
+                var textBox = document.getElementById("cardText");
+                textBox.textContent = "";
+                [].concat(p.text).forEach(function (para) {
+                    var el = document.createElement(para.h ? "h3" : "p");
+                    el.textContent = para.h || para;
+                    textBox.appendChild(el);
+                });
+                textBox.scrollTop = 0;
+                document.getElementById("cardTech").textContent = p.tech;
+                var link = document.getElementById("cardLink");
+                link.hidden = !p.link;
+                if (p.link) {
+                    link.textContent = p.link.label + " →";
+                    link.href = p.link.href;
+                    // The policy is on this site; the license on GitHub, in a new tab
+                    if (/^https?:/.test(p.link.href)) { link.target = "_blank"; link.rel = "noopener"; }
+                    else { link.removeAttribute("target"); link.removeAttribute("rel"); }
+                }
+                if (p.kind) card.style.setProperty("--status", STATUS_COLORS[p.kind]);
+                card.hidden = false;
+                // Start on the side it comes in from, without animating there, then glide in
+                card.classList.add("still");
+                card.style.setProperty("--dx", (dir * 70) + "px");
+                void card.offsetWidth;
+                card.classList.remove("still");
+                card.style.setProperty("--dx", "0px");
+                card.classList.add("shown");
+            }
+            clearTimeout(cardTimer);
+            if (card.classList.contains("shown")) {
+                card.style.setProperty("--dx", (-dir * 70) + "px");   // out the way it's going, then back with the new one
+                card.classList.remove("shown");
+                cardTimer = setTimeout(fill, 180);
+            } else {
+                fill();
+            }
+        }
+
+        // The codex: the projects in the menu's order, flipped through by swiping the stars or the card, a trackpad's
+        // sideways swipe, or ← →; the dots on the card show where you are
+        var CODEX = ["nova", "drift", "games", "docparser", "mrwizard", "scout"];
+        // step: +1 down the list, -1 up it. from: the side the next one comes in from (+1 the right, -1 the left), so a
+        // swipe carries the card along with the finger; the keys default to it following the step
+        function flipProject(step, from) {
+            if (from === undefined) from = step;
+            var at = CODEX.indexOf(activeProject);
+            at = at < 0 ? (step > 0 ? 0 : CODEX.length - 1) : (at + step + CODEX.length) % CODEX.length;
+            spinY += -from * 0.03;   // the stars turn the way the swipe went
+            pickProject(CODEX[at], from);
+        }
+        var pager = document.getElementById("cardPager");
+        var pagerDots = CODEX.map(function (id, i) {
+            var dot = document.createElement("button");
+            dot.type = "button";
+            dot.setAttribute("aria-label", PROJECTS[id].name);
+            dot.addEventListener("click", function () {
+                var from = CODEX.indexOf(activeProject);
+                pickProject(id, i > from ? 1 : -1);
+            });
+            pager.appendChild(dot);
+            return dot;
+        });
+        // Privacy and License aren't in the codex: no dots on their cards
+        function showPager(id) {
+            pager.hidden = CODEX.indexOf(id) < 0;
+            pagerDots.forEach(function (dot, i) { dot.classList.toggle("on", CODEX[i] === id); });
+        }
+
+        // A swipe inside the sphere (a finger, or a quick mouse flick): mostly sideways, far enough and quick enough.
+        // Not on the menu
+        var swipeFrom = null;
+        window.addEventListener("pointerdown", function (e) {
+            swipeFrom = inside && !projectsMenu.contains(e.target) ? { x: e.clientX, y: e.clientY, at: Date.now() } : null;
+        });
+        window.addEventListener("pointerup", function (e) {
+            if (!swipeFrom || !inside) return;
+            var dx = e.clientX - swipeFrom.x;
+            var dy = e.clientY - swipeFrom.y;
+            var quick = Date.now() - swipeFrom.at < 700;
+            swipeFrom = null;
+            if (quick && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                if (dx > 0) flipProject(1, -1);   // swiped right: down the list
+                else flipProject(-1, 1);          // swiped left: up it
+            }
+        });
+
+        // A trackpad's sideways two-finger swipe: one flip per swipe (it waits for the swipe to finish before the next)
+        var sidewaysSum = 0;
+        var sidewaysDone = false;
+        var sidewaysTimer = null;
+        function sidewaysSwipe(dx) {
+            clearTimeout(sidewaysTimer);
+            sidewaysTimer = setTimeout(function () { sidewaysSum = 0; sidewaysDone = false; }, 250);
+            if (sidewaysDone) return;
+            sidewaysSum += dx;
+            if (Math.abs(sidewaysSum) > 80) {
+                sidewaysDone = true;
+                if (sidewaysSum < 0) flipProject(1, -1);   // fingers moved right: down the list
+                else flipProject(-1, 1);
+            }
+        }
+        function closeCard() {
+            activeProject = null;
+            updateDim();
+            hideHud();
+            pager.hidden = true;
+            projectRows.forEach(function (row) { row.classList.remove("on"); });
+            Object.keys(iconShapes).forEach(function (key) { iconShapes[key].forced = false; });
+            card.classList.remove("shown");
+            clearTimeout(cardTimer);
+            cardTimer = setTimeout(function () { if (!activeProject) card.hidden = true; }, 360);
+        }
+        // The HUD: four leader lines (each with a dot where it leaves the icon) and four labels, made once and reused
+        var hud = document.getElementById("hud");
+        var hudLines = document.getElementById("hudLines");
+        var hudHead = document.getElementById("hudHead");
+        var hudFoot = document.getElementById("hudFoot");
+        var SVG_NS = "http://www.w3.org/2000/svg";
+        var hudLabels = [];
+        var hudPaths = [];
+        var hudDots = [];
+        for (var hn = 0; hn < 4; hn++) {
+            var hudLabel = document.createElement("div");
+            hudLabel.className = "hud-label";
+            hud.appendChild(hudLabel);
+            hudLabels.push(hudLabel);
+            var hudPath = document.createElementNS(SVG_NS, "path");
+            hudLines.appendChild(hudPath);
+            hudPaths.push(hudPath);
+            var hudDot = document.createElementNS(SVG_NS, "circle");
+            hudLines.appendChild(hudDot);
+            hudDots.push(hudDot);
+        }
+        var hudProject = null;      // the project the HUD shows, or null
+        var hudStart = 0;           // when it was put up: the lines draw and the labels type from here
+        var hudTimer = null;
+        function showHud(p) {
+            hudProject = p;
+            hudStart = simTime;
+            document.getElementById("hudName").textContent = p.name;
+            document.getElementById("hudTagline").textContent = p.tagline;
+            document.getElementById("hudStatusText").textContent = p.status;
+            document.getElementById("hudTech").textContent = p.tech;
+            var hudLink = document.getElementById("hudLink");
+            hudLink.hidden = !p.link;
+            if (p.link) {
+                hudLink.textContent = p.link.label + " →";
+                hudLink.href = p.link.href;
+            }
+            hud.style.setProperty("--status", STATUS_COLORS[p.kind]);
+            hudLabels.forEach(function (el, i) {
+                el.textContent = "";
+                el.dataset.shown = "0";
+                el.hidden = !p.callouts[i];
+            });
+            clearTimeout(hudTimer);
+            hud.hidden = false;
+            void hud.offsetWidth;
+            hud.classList.add("shown");
+        }
+        function hideHud() {
+            hudProject = null;
+            hud.classList.remove("shown");
+            clearTimeout(hudTimer);
+            hudTimer = setTimeout(function () { if (!hudProject) hud.hidden = true; }, 300);
+        }
+        // Lays the HUD out around the icon (its middle cx, cy and half-width r on screen), dt seconds after it went up.
+        // Desktop: lines out at four angles, an elbow, then level to the label. Phone: the labels listed under it
+        var HUD_ANGLES = [-150, 150, -30, 30];   // up-left, down-left, up-right, down-right (screen y points down)
+        function layoutHud(cx, cy, r, dt) {
+            var narrow = window.innerWidth <= 600;
+            hudHead.style.left = cx + "px";
+            hudHead.style.top = (cy - r - 14) + "px";
+            hudFoot.style.left = cx + "px";
+            hudFoot.style.top = (cy + r + 14) + "px";
+            var listTop = cy + r + 14 + hudFoot.offsetHeight + 18;
+            hudLabels.forEach(function (el, i) {
+                var text = hudProject.callouts[i] || "";
+                var path = hudPaths[i];
+                var dotEl = hudDots[i];
+                // The line draws, then its label types in, each a little after the one before
+                var drawn = Math.max(0, Math.min(1, (dt - 0.15 - i * 0.12) / 0.35));
+                var typed = Math.max(0, Math.min(text.length, Math.floor((dt - 0.45 - i * 0.12) * 40)));
+                if (el.dataset.shown !== String(typed)) {
+                    el.textContent = text.slice(0, typed);
+                    el.dataset.shown = String(typed);
+                }
+                if (!text || narrow) {
+                    path.setAttribute("d", "");
+                    dotEl.setAttribute("r", "0");
+                    el.classList.toggle("listed", narrow);
+                    el.style.left = "24px";
+                    el.style.top = (listTop + i * 28) + "px";
+                    el.style.transform = "none";
+                    el.style.textAlign = "left";
+                    return;
+                }
+                el.classList.remove("listed");
+                var a = HUD_ANGLES[i] * Math.PI / 180;
+                var cos = Math.cos(a);
+                var sin = Math.sin(a);
+                var side = cos < 0 ? -1 : 1;
+                var ax = cx + cos * r * 1.05, ay = cy + sin * r * 1.05;   // where it leaves the icon
+                var ex = ax + cos * r * 0.35, ey = ay + sin * r * 0.35;   // the elbow
+                var lx = ex + side * r * 0.55, ly = ey;                   // level, to the label
+                var length = Math.sqrt((ex - ax) * (ex - ax) + (ey - ay) * (ey - ay)) + Math.abs(lx - ex);
+                path.setAttribute("d", "M" + ax + " " + ay + " L" + ex + " " + ey + " L" + lx + " " + ly);
+                path.style.strokeDasharray = length;
+                path.style.strokeDashoffset = length * (1 - drawn);
+                dotEl.setAttribute("cx", ax);
+                dotEl.setAttribute("cy", ay);
+                dotEl.setAttribute("r", drawn > 0 ? "2.5" : "0");
+                el.style.left = (lx + side * 8) + "px";
+                el.style.top = ly + "px";
+                el.style.transform = side < 0 ? "translate(-100%, -50%)" : "translate(0, -50%)";
+                el.style.textAlign = side < 0 ? "right" : "left";
+            });
+        }
+
+        // Closing a card by hand (Escape, a tap on the stars) brings the menu back, to pick the next; flipping
+        // through the codex, and leaving the sphere, don't
+        function dismissCard() {
+            closeCard();
+            if (inside && !menuOpen) openMenu();
+        }
+
+        // A tap (not a drag) inside the sphere, away from the menu and the card: closes the menu if it's open (bringing a
+        // tucked card back); otherwise a tap on the stars closes the card
+        var downAt = null;
+        document.addEventListener("pointerdown", function (e) { downAt = { x: e.clientX, y: e.clientY }; }, true);
+        document.addEventListener("click", function (e) {
+            if (!inside) return;
+            var tap = !downAt || Math.abs(e.clientX - downAt.x) + Math.abs(e.clientY - downAt.y) < 8;
+            var t = e.target;
+            if (!tap || projectsMenu.contains(t) || projectsCorner.contains(t) || card.contains(t) || hud.contains(t)) return;
+            if (menuOpen) closeMenu();
+            else if (t === canvas && activeProject) dismissCard();
+        });
+
+        // Nova: a jump. Every star streaks past you as the page goes dark, then the Nova page
+        var jumpStart = -1;
+        var jumpFade = document.getElementById("jumpFade");
+        function jumpToNova() {
+            if (jumpStart >= 0) return;
+            closeCard();
+            closeMenu();
+            jumpStart = simTime;
+            jumpFade.classList.add("on");
+            setTimeout(function () { location.href = "nova.html"; }, reducedMotion ? 300 : 800);
+        }
+        // Coming back with the browser's Back button can restore this page as it was: dark and mid-jump
+        window.addEventListener("pageshow", function (e) {
+            if (!e.persisted) return;
+            jumpStart = -1;
+            jumpFade.classList.remove("on");
+        });
+
+        // Scrolling (a trackpad's two fingers, or a mouse wheel) flies you in and out by hand, like the site this is
+        // modelled on: down goes in, up comes out. When the scrolling stops, it settles the rest of the way to whichever
+        // end is nearer
+        var depth = 0;              // 0 outside → 1 inside: where the camera is between the two
+        var scrolling = false;
+        var settleTimer = null;
+        var SCROLL_RANGE = 1.2;     // window heights of scrolling for the whole way
+        window.addEventListener("wheel", function (e) {
+            var textBox = document.getElementById("cardText");
+            if (textBox.contains(e.target) && textBox.scrollHeight > textBox.clientHeight + 1) return;   // its own scroll
+            var menuBox = document.getElementById("projectsMenu");
+            if (menuBox.contains(e.target) && menuBox.scrollHeight > menuBox.clientHeight + 1) return;   // the menu's own scroll
+            e.preventDefault();
+            if (e.ctrlKey) return;   // a trackpad pinch, not a scroll
+            if (burstStart >= 0) return;   // the flame's scroll in is playing
+            if (inside && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                sidewaysSwipe(e.deltaMode === 1 ? e.deltaX * 16 : e.deltaX);   // flips the codex, doesn't zoom
+                return;
+            }
+            var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;   // lines → px
+            depth = Math.max(0, Math.min(1, depth + dy / (window.innerHeight * SCROLL_RANGE)));
+            scrolling = true;
+            clearTimeout(settleTimer);
+            // Long enough that a trackpad's coasting doesn't count as having stopped
+            settleTimer = setTimeout(function () {
+                scrolling = false;
+                var goIn = depth >= 0.5;
+                if (goIn !== inside) setInside(goIn);
+            }, 300);
+        }, { passive: false });
+
+        canvas.addEventListener("click", function (e) {
+            if (mode !== "random" || inside) return;
+            shapes.forEach(function (sh) {
+                if (sh.onClick && sh.form > 0.5 && inBox(sh.box, e.clientX, e.clientY)) sh.onClick();
             });
         });
+        // A phone: drag a finger toward the flame's corner (it gathers as the finger comes near, as a pointer does), and
+        // lift it there to go in, the same way a click does on a desktop (Drift swings toward where the finger was)
+        canvas.addEventListener("pointerup", function (e) {
+            if (e.pointerType !== "touch" || mode !== "random" || inside) return;
+            if (logoShape.form > 0.5 && inBox(logoShape.box, e.clientX, e.clientY, SHAPE_REACH)) startBurst();
+        });
+        var label = document.getElementById("label");
 
-        document.getElementById('lb-prev').addEventListener('click', (e) => {
-            e.stopPropagation();
-            currentIndex = (currentIndex - 1 + allScreenshots.length) % allScreenshots.length;
-            lightboxImg.src = allScreenshots[currentIndex].src;
-            lightboxImg.alt = allScreenshots[currentIndex].alt;
+        // Pointer: where its ray meets the sphere, in the globe's own (rotating) coordinates
+        var raycaster = new THREE.Raycaster();
+        var pointerNDC = new THREE.Vector2();
+        var pointerOver = false;
+        var hitDir = new THREE.Vector3();
+        var hasHit = false;
+        var hitSphere = new THREE.Sphere(new THREE.Vector3(), RADIUS);
+        var hitPoint = new THREE.Vector3();
+
+        function updateHit() {
+            hasHit = false;
+            if (!pointerOver) return;
+            raycaster.setFromCamera(pointerNDC, camera);
+            if (raycaster.ray.intersectSphere(hitSphere, hitPoint)) {
+                hitDir.copy(globe.worldToLocal(hitPoint)).normalize();
+                hasHit = true;
+            }
+        }
+
+        // 0 outside the bulge, rising smoothly to 1 at the point under the pointer
+        var cosBulge = Math.cos(BULGE_ANGLE);
+        function bulgeWeight(d) {
+            if (!hasHit) return 0;
+            var c = d.dot(hitDir);
+            if (c <= cosBulge) return 0;
+            var t = (c - cosBulge) / (1 - cosBulge);
+            return t * t * (3 - 2 * t);
+        }
+
+        // Spin: moving the pointer (or a finger) over the page turns the globe with it; when it stops, the globe coasts
+        // to a stop and stays where it is. Locked (either screen), pointing and turning are separate: with a mouse, hover
+        // points and click-and-drag turns; on a touchscreen, one finger points and two fingers turn
+        var spinX = 0;
+        var spinY = 0;
+        var lastX = null;
+        var lastY = null;
+        var pressed = false;
+        var fingers = {};         // touch pointer id → its latest { x, y }
+        var lastMid = null;       // the two fingers' midpoint at the last move, for a two-finger turn
+
+        function fingerCount() { return Object.keys(fingers).length; }
+        function isLocked() { return locked; }
+        function turn(dx, dy) {
+            if (burstStart >= 0) return;   // hands off while the flame's burst plays
+            aim = null;   // a hand on the globe takes over from a sign's turn
+            spinY += dx * SPIN_GAIN;
+            spinX += dy * SPIN_GAIN;
+        }
+        function pointAt(x, y) {
+            pointerOver = true;
+            pointerPx.x = x;
+            pointerPx.y = y;
+            pointerNDC.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
+        }
+
+        canvas.addEventListener("pointerdown", function (e) {
+            pressed = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            if (e.pointerType === "touch") {
+                fingers[e.pointerId] = { x: e.clientX, y: e.clientY };
+                lastMid = null;
+            }
+            canvas.setPointerCapture(e.pointerId);
+            canvas.classList.add("dragging");
+        });
+        // Pointer moves are followed over the whole page, not just the canvas, so pointing, Drift and Warp carry on over the
+        // password page and the buttons; only the canvas turns the globe, though
+        window.addEventListener("pointermove", function (e) {
+            if (tourActive) return;   // the tour's ghost is pointing
+            var onCanvas = e.target === canvas;   // (a pressed pointer is captured by the canvas, so counts)
+            if (e.pointerType === "touch" && !onCanvas) return;   // a finger on the password box or a button: typing, not pointing
+            if (e.pointerType === "touch" && isLocked()) {
+                fingers[e.pointerId] = { x: e.clientX, y: e.clientY };
+                var ids = Object.keys(fingers);
+                if (ids.length >= 2) {
+                    // Two fingers: turn by how far their midpoint moves; nothing is pointed at meanwhile
+                    var a = fingers[ids[0]];
+                    var b = fingers[ids[1]];
+                    var mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+                    if (lastMid) turn(mid.x - lastMid.x, mid.y - lastMid.y);
+                    lastMid = mid;
+                    pointerOver = false;
+                } else {
+                    // One finger: points, like hover
+                    lastMid = null;
+                    pointAt(e.clientX, e.clientY);
+                }
+                return;
+            }
+            pointAt(e.clientX, e.clientY);
+            // Hover turns the globe outside, unlocked; inside, Drift moves the camera instead, so only a press turns it
+            if (onCanvas && ((!isLocked() && !inside) || pressed) && lastX !== null) turn(e.clientX - lastX, e.clientY - lastY);
+            lastX = e.clientX;
+            lastY = e.clientY;
+        });
+        function pointerGone() {
+            pointerOver = false;
+            pressed = false;
+            canvas.classList.remove("dragging");
+            lastX = null;   // so the next pointer doesn't jump the globe from where this one left
+            lastY = null;
+            lastMid = null;
+        }
+        // A finger lifting: once none are left there's nothing to point with. A mouse is still there — it's only gone once
+        // it leaves the page (moving onto the password page or a button isn't leaving)
+        function pointerEnded(e) {
+            if (e.pointerType === "touch") {
+                delete fingers[e.pointerId];
+                lastMid = null;
+                if (fingerCount() === 0) pointerGone();
+                return;
+            }
+            if (e.type === "pointerup") {
+                pressed = false;
+                canvas.classList.remove("dragging");
+            } else if (e.type === "pointercancel") {
+                pointerGone();
+            }
+        }
+        canvas.addEventListener("pointerup", pointerEnded);
+        canvas.addEventListener("pointercancel", pointerEnded);
+        canvas.addEventListener("pointerleave", pointerEnded);
+        document.documentElement.addEventListener("pointerleave", function (e) {
+            if (e.pointerType !== "touch") pointerGone();
         });
 
-        document.getElementById('lb-next').addEventListener('click', (e) => {
-            e.stopPropagation();
-            currentIndex = (currentIndex + 1) % allScreenshots.length;
-            lightboxImg.src = allScreenshots[currentIndex].src;
-            lightboxImg.alt = allScreenshots[currentIndex].alt;
-        });
+        // Fit the sphere (with room for its spikes) inside the window, upright or sideways
+        var restZ = 1000;
+        function resize() {
+            var w = window.innerWidth;
+            var h = window.innerHeight;
+            renderer.setSize(w, h);
+            camera.aspect = w / h;
+            var half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+            var needed = RADIUS * 1.45;
+            restZ = Math.max(needed / half, needed / (half * camera.aspect));
+            camera.updateProjectionMatrix();
+        }
+        window.addEventListener("resize", resize);
+        resize();
 
-        lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox) lightbox.classList.remove('active');
-        });
+        // Intro: fly in from far away
+        camera.position.z = reducedMotion ? restZ : restZ * 4;
 
-        document.addEventListener('keydown', (e) => {
-            if (!lightbox.classList.contains('active')) return;
-            if (e.key === 'ArrowLeft') document.getElementById('lb-prev').click();
-            if (e.key === 'ArrowRight') document.getElementById('lb-next').click();
-            if (e.key === 'Escape') lightbox.classList.remove('active');
+        // The page's own clock (seconds): it runs with real time, but the tour's bar can pause it, run it faster, or play
+        // it through to a moment unseen. Everything that animates goes by it
+        var simTime = 0;
+        var shapeScratch = new THREE.Vector3();
+        var iconRaise = 0.16;   // where the icon sits: up, as a share of the view's height (eased)
+        var iconShift = 0;      // and right, as a share of its width
+        var hudDrop = 0;        // and down (px), to centre the whole HUD and keep its name below the PROJECTS row
+        var hudDropWanted = 0;
+        var shapeScratch2 = new THREE.Vector3();
+        var scratch = new THREE.Vector3();
+        var target = new THREE.Vector3();
+        var globeInverse = new THREE.Matrix4();
+        // One step of everything, at the page's time t
+        function simulate(t) {
+            tourStep(t);
+
+            // In or out: scrolling sets the depth directly; otherwise it eases to the end it's heading for
+            if (!scrolling) depth += ((inside ? 1 : 0) - depth) * (reducedMotion ? 1 : 0.06);
+            var depthZ = restZ + (INSIDE_Z - restZ) * depth;
+            camera.position.z += (depthZ - camera.position.z) * (t < 2.5 ? 0.05 : 0.2);   // the slow fly-in first
+            // Drift: off-centre after the pointer with Drift on, growing with the depth, so it builds up as you come in
+            // (rather than jumping across when you arrive) and fades out as you leave; back to the middle otherwise
+            var bursting = burstStart >= 0;
+            var driftAt = bursting ? burstNDC : pointerNDC;   // through the flame's scroll in, where it was clicked
+            driftReach += ((inside && !bursting ? insideReach : OUTSIDE_REACH) - driftReach) * 0.03;
+            // Outside and on the way in, Lock decides; inside, the Drift switch does
+            var drifting = inside && !bursting ? driftOn && pointerOver : !locked && (pointerOver || bursting);
+            var drift = drifting ? driftReach * RADIUS * depth : 0;
+            // Inside with Drift off the camera just holds (not back to the middle, which would undo the turn on the way in)
+            if (!(inside && !bursting && !driftOn)) {
+                camera.position.x += (driftAt.x * drift - camera.position.x) * 0.05;
+                camera.position.y += (driftAt.y * drift - camera.position.y) * 0.05;
+            }
+            camera.lookAt(0, 0, 0);
+            camera.updateMatrixWorld();
+            cameraRight.setFromMatrixColumn(camera.matrixWorld, 0);
+            cameraUp.setFromMatrixColumn(camera.matrixWorld, 1);
+            camera.getWorldDirection(cameraForward);
+            insideMix = depth;
+            cardDim += ((activeProject ? 1 : 0) - cardDim) * 0.08;
+            var starsBright = 1 - CARD_DIM * cardDim;   // the icon's dots are put back to full in the shapes, below
+            // PROJECTS slides sideways with the zoom, staying on its row under the wordmark: from under its right edge to the
+            // left margin, growing a little about its own middle (not on a phone, where there's less room), and is the
+            // menu's button once you're nearly in. The wordmark stays centred and fades out as PROJECTS moves over (and
+            // back in as it returns)
+            var cornerFade = Math.max(0, Math.min(1, (depth - 0.45) / 0.5));
+            cornerFade = cornerFade * cornerFade * (3 - 2 * cornerFade);
+            var slid = Math.max(0, Math.min(1, (depth - 0.1) / 0.75));
+            slid = slid * slid * (3 - 2 * slid);
+            var wm = wordmark.getBoundingClientRect();
+            var pw = lockup.offsetWidth;
+            var ph = lockup.offsetHeight;
+            var grown = window.innerWidth <= 600 ? 1 : 1.35;
+            var under = { x: wm.right - pw, y: wm.bottom + (window.innerWidth <= 600 ? 4 : 6) };
+            wordmark.style.opacity = 1 - slid;
+            // On the intro PROJECTS appears with the flame: hidden until the flame gathers, fading with it; on the way in it
+            // stays (and fades in anyway when you scroll in without the flame)
+            lockup.style.opacity = Math.max(logoShape.form, slid);
+            var scaleNow = 1 + (grown - 1) * slid;
+            lockup.style.transform = "translate(" + (under.x + (16 - under.x) * slid) + "px, " +
+                (under.y + ph * (1 - scaleNow) / 2) + "px) scale(" + scaleNow + ")";
+            // The codex's dots sit under PROJECTS while a project is up — not while the menu is open there
+            var dotsShown = CODEX.indexOf(activeProject) >= 0 && !menuOpen;
+            if (pager.hidden === dotsShown) pager.hidden = !dotsShown;
+            if (dotsShown) {
+                var projectsBox = lockup.getBoundingClientRect();
+                pager.style.left = projectsBox.left + "px";
+                pager.style.top = (projectsBox.bottom + 10) + "px";
+            }
+            var lockupLive = cornerFade > 0.8;
+            if (lockup.classList.contains("live") !== lockupLive) {
+                lockup.classList.toggle("live", lockupLive);
+                lockup.tabIndex = lockupLive ? 0 : -1;
+                // Arriving, the menu rolls out as PROJECTS reaches its place (not over a project that's showing);
+                // heading back out, it rolls away
+                if (lockupLive && !menuOpen && !activeProject && !isShortLandscape()) openMenu();
+                else if (!lockupLive && menuOpen) closeMenu();
+            }
+            dotMaterial.uniforms.inside.value = insideMix;
+
+            // Always slowing: pointer moves keep feeding it, and it coasts to a stop
+            spinX *= SPIN_FRICTION;
+            spinY *= SPIN_FRICTION;
+            if (aim) {
+                globe.rotation.x += (aim.x - globe.rotation.x) * 0.08;
+                globe.rotation.y += (aim.y - globe.rotation.y) * 0.08;
+                if (Math.abs(aim.x - globe.rotation.x) + Math.abs(aim.y - globe.rotation.y) < 0.0005) aim = null;
+            } else {
+                globe.rotation.y += spinY;
+                globe.rotation.x = Math.max(-1.2, Math.min(1.2, globe.rotation.x + spinX));
+            }
+            globe.updateMatrixWorld();
+            updateHit();
+
+            mix += ((mode === "nova" ? 1 : 0) - mix) * 0.08;
+
+            // The constellation under the pointer: the one whose middle is nearest, within reach
+            var hovered = -1;
+            if (hasHit && mix > 0.5) {
+                var best = Math.cos(0.45);
+                for (var c = 0; c < constellations.length; c++) {
+                    var near = constellations[c].centre.dot(hitDir);
+                    if (near > best) { best = near; hovered = c; }
+                }
+            }
+
+            var gm = globe.matrixWorld.elements;   // a dot's height as seen: its direction turned with the globe
+            for (var i = 0; i < POINT_COUNT; i++) {
+                var isStar = i >= DOT_COUNT && i < LOGO_START;
+                var w = bulgeWeight(dirs[i]) * (1 - insideMix);   // inside, Warp takes over from the bulge
+                if (isStar) {
+                    var sc = stars[i - DOT_COUNT].constellation;
+                    if (sc === hovered || (sc === selected && mix > 0.5)) w = Math.max(w, 0.8);
+                }
+                bulge[i] += (w - bulge[i]) * BULGE_EASE;
+                var b = bulge[i];
+                var radius = RADIUS + lift[i] + b * BULGE_HEIGHT;
+                dotPositions[i * 3] = dirs[i].x * radius;
+                dotPositions[i * 3 + 1] = dirs[i].y * radius;
+                dotPositions[i * 3 + 2] = dirs[i].z * radius;
+                if (b > 0.001) {
+                    var glowC = sunrise((1 - (gm[1] * dirs[i].x + gm[5] * dirs[i].y + gm[9] * dirs[i].z)) / 2);
+                    dotColors[i * 3] = DOT_COLOR.r + (glowC.r - DOT_COLOR.r) * b;
+                    dotColors[i * 3 + 1] = DOT_COLOR.g + (glowC.g - DOT_COLOR.g) * b;
+                    dotColors[i * 3 + 2] = DOT_COLOR.b + (glowC.b - DOT_COLOR.b) * b;
+                } else {
+                    dotColors[i * 3] = DOT_COLOR.r;
+                    dotColors[i * 3 + 1] = DOT_COLOR.g;
+                    dotColors[i * 3 + 2] = DOT_COLOR.b;
+                }
+                if (isStar) {
+                    dotSizes[i] = (STAR_SIZE + (GLOW_SIZE * 1.3 - STAR_SIZE) * b) * mix;
+                    dotAlphas[i] = mix * starsBright;
+                } else if (i >= LOGO_START) {
+                    dotSizes[i] = DOT_SIZE;
+                    dotAlphas[i] = 0;   // shown only as the flame gathers (below)
+                } else {
+                    dotSizes[i] = DOT_SIZE + (GLOW_SIZE - DOT_SIZE) * b;
+                    dotAlphas[i] = (1 - DIM_DOTS * mix) * starsBright;
+                }
+            }
+            var toGlobe = globeInverse.copy(globe.matrixWorld).invert();
+
+            // Warp, inside: each dot near the pointer on screen is pushed straight away from it, more the nearer it is,
+            // and lights up; with Warp off (or no pointer) they ease back
+            if (insideMix > 0.01) {
+                var warping = warpOn && pointerOver;
+                var unitsPerPxAt1 = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / window.innerHeight;
+                for (var wi = 0; wi < POINT_COUNT; wi++) {
+                    var world = scratch.set(dotPositions[wi * 3], dotPositions[wi * 3 + 1], dotPositions[wi * 3 + 2])
+                        .applyMatrix4(globe.matrixWorld);
+                    var ahead = target.copy(world).sub(camera.position).dot(cameraForward);   // distance ahead of the camera
+                    var pushX = 0;
+                    var pushY = 0;
+                    if (warping && ahead > 1) {
+                        var onScreen = target.copy(world).project(camera);
+                        var dx = (onScreen.x + 1) / 2 * window.innerWidth - pointerPx.x;
+                        var dy = (1 - onScreen.y) / 2 * window.innerHeight - pointerPx.y;
+                        var dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < WARP_RADIUS && dist > 0.001) {
+                            var force = 1 - dist / WARP_RADIUS;
+                            force *= force;
+                            pushX = dx / dist * WARP_STRENGTH * force;
+                            pushY = dy / dist * WARP_STRENGTH * force;
+                        }
+                    }
+                    warpX[wi] += (pushX - warpX[wi]) * WARP_EASE;
+                    warpY[wi] += (pushY - warpY[wi]) * WARP_EASE;
+                    if (ahead <= 1) continue;
+                    var units = unitsPerPxAt1 * ahead * insideMix;
+                    world.addScaledVector(cameraRight, warpX[wi] * units).addScaledVector(cameraUp, -warpY[wi] * units);
+                    var warpC = sunrise((1 - world.y / RADIUS) / 2);
+                    world.applyMatrix4(toGlobe);
+                    dotPositions[wi * 3] = world.x;
+                    dotPositions[wi * 3 + 1] = world.y;
+                    dotPositions[wi * 3 + 2] = world.z;
+                    var lit = Math.min(1, Math.sqrt(warpX[wi] * warpX[wi] + warpY[wi] * warpY[wi]) / WARP_STRENGTH * 1.25) * insideMix;
+                    dotColors[wi * 3] += (warpC.r - dotColors[wi * 3]) * lit;
+                    dotColors[wi * 3 + 1] += (warpC.g - dotColors[wi * 3 + 1]) * lit;
+                    dotColors[wi * 3 + 2] += (warpC.b - dotColors[wi * 3 + 2]) * lit;
+                    dotSizes[wi] *= 1 + 0.3 * lit;
+                }
+            }
+
+            // The flame's burst: scroll the depth in (eased, as a smooth two-finger scroll), blowing the flame apart on the way
+            if (burstStart >= 0) {
+                var bt = t - burstStart;
+                var zoomed = Math.min(1, bt / BURST_ZOOM);
+                zoomed = zoomed * zoomed * (3 - 2 * zoomed);
+                depth = burstFrom + (1 - burstFrom) * zoomed;
+                logoShape.forced = true;
+                // Clicked before the flame had finished gathering: it finishes as you zoom (faster, below), and only
+                // blows apart once it's full, so it never breaks up half-made
+                // (at most 0.8 s later than usual, whatever happens)
+                if (blowFrom < 0 && bt >= BURST_START && (logoShape.form > 0.97 || bt > BURST_START + 0.8)) blowFrom = bt;
+                logoShape.blow = blowFrom < 0 ? 0 : Math.min(1, (bt - blowFrom) / BURST_TIME);
+                if (bt >= BURST_ZOOM && blowFrom >= 0 && bt >= blowFrom + BURST_TIME) {
+                    // In: settle as a scroll would, and the flame goes back to hiding in its corner
+                    burstStart = -1;
+                    scrolling = false;
+                    setInside(true);
+                    logoShape.forced = false;
+                    logoShape.blow = 0;
+                    logoShape.form = 0;
+                }
+            }
+
+            // Shapes: their dots move from their places on the globe into the shape in front of you, once the intro has settled
+            var anyHover = false;
+            // The icons' places: in front of the camera, a third of the view high (narrower on a phone), above the card
+            var iconViewH = 2 * ICON_DISTANCE * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+            var iconSize = Math.min(iconViewH * 0.3, iconViewH * camera.aspect * 0.55);
+            // Above the card for a card; centred for the HUD (higher on a phone, for the list under it); and on a desktop
+            // with the menu open beside the HUD, nudged right to clear it. Eased, so a change glides
+            var phoneLike = camera.aspect < 0.8;
+            iconRaise += ((hudProject ? 0 : (phoneLike ? 0.2 : 0.16)) - iconRaise) * 0.1;
+            // Moved down (px; up if negative) so the whole HUD is centred on the screen, and clear of the PROJECTS row;
+            // measured below
+            hudDrop += ((hudProject ? hudDropWanted : 0) - hudDrop) * 0.2;
+            iconShift += ((hudProject && menuOpen && !phoneLike ? 0.12 : 0) - iconShift) * 0.1;
+            var iconCentre = new THREE.Vector3().copy(camera.position)
+                .addScaledVector(cameraForward, ICON_DISTANCE)
+                .addScaledVector(cameraUp, iconViewH * iconRaise - hudDrop * iconViewH / window.innerHeight)
+                .addScaledVector(cameraRight, iconViewH * camera.aspect * iconShift);
+            shapes.forEach(function (sh) {
+                if (sh.inFront) {
+                    for (var ik = 0; ik < sh.offsets.length; ik++) {
+                        sh.targets[ik].copy(iconCentre)
+                            .addScaledVector(cameraRight, sh.offsets[ik][0] * iconSize)
+                            .addScaledVector(cameraUp, sh.offsets[ik][1] * iconSize);
+                    }
+                }
+                // An icon forms only for its project; the others gather when the pointer comes near (on the intro)
+                var near = sh.forced || (!sh.inFront && mode === "random" && !inside && pointerOver &&
+                    (reducedMotion || t > 1.2) && inBox(sh.box, pointerPx.x, pointerPx.y, SHAPE_REACH));
+                // Gathering eases in; once clicked (forced, playing the burst) it finishes about twice as fast
+                sh.form += ((near ? 1 : 0) - sh.form) * (reducedMotion ? 1 : (sh === logoShape && burstStart >= 0 ? 0.15 : 0.07));
+                sh.hover = !sh.forced && !!sh.onClick && near && sh.form > 0.8 && inBox(sh.box, pointerPx.x, pointerPx.y);
+                var blow = sh.blow || 0;
+                var blowEase = blow * blow;   // slow to start, then flying
+                if (sh.hover) anyHover = true;
+                var form = sh.form;
+                var box = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
+                for (var k = 0; k < sh.targets.length; k++) {
+                    var di = sh.dots[k];
+                    if (form > 0.001) {
+                        // Its place, fixed in front of you, in the globe's turning coordinates this frame
+                        var wt = target.copy(sh.targets[k]);
+                        if (blow > 0) {
+                            // Blown out from the middle of the flame and towards you, each dot at its own speed
+                            var out = shapeScratch.copy(wt).sub(sh.centre);
+                            var spread = sh.speed[k] * blowEase;
+                            var toCamera = shapeScratch2.copy(camera.position).sub(sh.centre).normalize();
+                            wt.addScaledVector(out, spread * 3).addScaledVector(toCamera, spread * RADIUS * 2.2);
+                        }
+                        wt.applyMatrix4(toGlobe);
+                        dotPositions[di * 3] += (wt.x - dotPositions[di * 3]) * form;
+                        dotPositions[di * 3 + 1] += (wt.y - dotPositions[di * 3 + 1]) * form;
+                        dotPositions[di * 3 + 2] += (wt.z - dotPositions[di * 3 + 2]) * form;
+                        // Pointed at: a white shape turns orange; one in its own colours (the flame) keeps them and just grows.
+                        // An icon is ice blue, near-white at the top to deep blue at the bottom (Nova's is gold), a slow wave
+                        // cascading down it
+                        var wave = sh.inFront ? 0.5 - sh.offsets[k][1] + 0.12 * Math.sin(t * 1.6 + sh.offsets[k][1] * 7) : 0;
+                        var wc = sh.colors ? sh.colors[k] : sh.inFront
+                            ? (sh === iconShapes.nova ? gold(wave) : ice(wave))
+                            : (sh.hover ? GLOW_COLOR : DOT_COLOR);
+                        dotColors[di * 3] += (wc.r - dotColors[di * 3]) * form;
+                        dotColors[di * 3 + 1] += (wc.g - dotColors[di * 3 + 1]) * form;
+                        dotColors[di * 3 + 2] += (wc.b - dotColors[di * 3 + 2]) * form;
+                        // An icon's dots shimmer, each a little out of step with the next
+                        var sizeTo = (sh.hover ? sh.size * 1.4 : sh.size) * (sh.inFront ? 1 + 0.22 * Math.sin(t * 2.4 + k * 0.6) : 1);
+                        dotSizes[di] += (sizeTo - dotSizes[di]) * form;
+                        dotAlphas[di] += (1 - dotAlphas[di]) * form;
+                        if (blow > 0) {
+                            dotAlphas[di] *= 1 - blow;
+                            dotSizes[di] *= 1 + blowEase * 2;
+                        }
+                    }
+                    // Its area on screen, padded a little for fingers
+                    scratch.copy(sh.targets[k]).project(camera);
+                    var sx = (scratch.x + 1) / 2 * window.innerWidth;
+                    var sy = (1 - scratch.y) / 2 * window.innerHeight;
+                    if (sx < box.minX) box.minX = sx;
+                    if (sx > box.maxX) box.maxX = sx;
+                    if (sy < box.minY) box.minY = sy;
+                    if (sy > box.maxY) box.maxY = sy;
+                }
+                box.minX -= 12; box.maxX += 12; box.minY -= 12; box.maxY += 12;
+                sh.box = box;
+            });
+            canvas.style.cursor = anyHover && mode === "random" ? "pointer" : "";
+
+            // The HUD, laid out around where the icon is on screen
+            if (hudProject && !hud.hidden && !fastForwarding) {
+                var hudAt = scratch.copy(iconCentre).project(camera);
+                var hudX = (hudAt.x + 1) / 2 * window.innerWidth;
+                var hudY = (1 - hudAt.y) / 2 * window.innerHeight;
+                var hudEdge = scratch.copy(iconCentre).addScaledVector(cameraRight, iconSize * 0.5).project(camera);
+                layoutHud(hudX, hudY, Math.abs((hudEdge.x + 1) / 2 * window.innerWidth - hudX), t - hudStart);
+                // Centre the whole HUD on the screen — from the top of the name to the bottom of the lowest thing (the
+                // foot, or a label) — rather than the icon; but never let the name reach the PROJECTS row
+                var headTop = hudHead.getBoundingClientRect().top;
+                var hudBottom = hudFoot.getBoundingClientRect().bottom;
+                hudLabels.forEach(function (el) {
+                    if (!el.hidden) hudBottom = Math.max(hudBottom, el.getBoundingClientRect().bottom);
+                });
+                var toCentre = window.innerHeight / 2 - (headTop + hudBottom) / 2;
+                // (clear of the codex's dots too, now they sit under PROJECTS)
+                var rowBottom = lockup.getBoundingClientRect().bottom;
+                if (!pager.hidden) rowBottom = Math.max(rowBottom, pager.getBoundingClientRect().bottom);
+                var toClear = rowBottom + 16 - headTop;
+                hudDropWanted = hudDrop + Math.max(toCentre, toClear);
+            }
+
+            // Nova's jump: every star rushes out from the middle of the view and past you, faster and faster
+            if (jumpStart >= 0 && !reducedMotion) {
+                var jumped = Math.min(1, (t - jumpStart) / 0.8);
+                jumped *= jumped;
+                for (var ji = 0; ji < POINT_COUNT; ji++) {
+                    var jw = scratch.set(dotPositions[ji * 3], dotPositions[ji * 3 + 1], dotPositions[ji * 3 + 2])
+                        .applyMatrix4(globe.matrixWorld);
+                    var jAhead = target.copy(jw).sub(camera.position).dot(cameraForward);
+                    var sideways = shapeScratch.copy(jw).sub(camera.position).addScaledVector(cameraForward, -jAhead);
+                    jw.addScaledVector(sideways, jumped * 2.5).addScaledVector(cameraForward, -jumped * RADIUS * 3);
+                    jw.applyMatrix4(toGlobe);
+                    dotPositions[ji * 3] = jw.x;
+                    dotPositions[ji * 3 + 1] = jw.y;
+                    dotPositions[ji * 3 + 2] = jw.z;
+                    dotSizes[ji] *= 1 + jumped * 3;
+                }
+            }
+            dotGeometry.attributes.position.needsUpdate = true;
+            dotGeometry.attributes.aColor.needsUpdate = true;
+            dotGeometry.attributes.aSize.needsUpdate = true;
+            dotGeometry.attributes.aAlpha.needsUpdate = true;
+
+            // Lines follow their stars (bulge included)
+            for (var g = 0; g < segments.length; g++) {
+                var gc = stars[segments[g][0]].constellation;
+                var lit = gc === hovered || (gc === selected && mix > 0.5) ? 1 : 0;
+                for (var end = 0; end < 2; end++) {
+                    var pi = (DOT_COUNT + segments[g][end]) * 3;
+                    var li = g * 6 + end * 3;
+                    linePositions[li] = dotPositions[pi];
+                    linePositions[li + 1] = dotPositions[pi + 1];
+                    linePositions[li + 2] = dotPositions[pi + 2];
+                    lineColors[li] = LINE_COLOR.r + (GLOW_COLOR.r - LINE_COLOR.r) * lit;
+                    lineColors[li + 1] = LINE_COLOR.g + (GLOW_COLOR.g - LINE_COLOR.g) * lit;
+                    lineColors[li + 2] = LINE_COLOR.b + (GLOW_COLOR.b - LINE_COLOR.b) * lit;
+                }
+            }
+            lineGeometry.attributes.position.needsUpdate = true;
+            lineGeometry.attributes.color.needsUpdate = true;
+            lineMaterial.opacity = 0.55 * mix;
+            spikeMaterial.opacity = 0.3 * (1 - 0.6 * mix) * starsBright;
+
+            // The name of the hovered constellation (else the selected one), just outside its middle
+            var named = hovered >= 0 ? hovered : (mix > 0.5 ? selected : -1);
+            if (named >= 0) {
+                var at = constellations[named].centre.clone().multiplyScalar(RADIUS + BULGE_HEIGHT + 30);
+                globe.localToWorld(at).project(camera);
+                label.textContent = constellations[named].name;
+                label.style.left = ((at.x + 1) / 2 * window.innerWidth) + "px";
+                label.style.top = ((1 - at.y) / 2 * window.innerHeight) + "px";
+                label.style.opacity = "1";
+            } else {
+                label.style.opacity = "0";
+            }
+
+            for (var s = 0; s < SPIKE_COUNT; s++) {
+                var sp = spikes[s];
+                sp.bulge += (bulgeWeight(sp.dir) - sp.bulge) * BULGE_EASE;
+                var base = RADIUS + sp.bulge * BULGE_HEIGHT;
+                var breathe = reducedMotion ? 1 : 0.55 + 0.45 * Math.sin(t * sp.speed + sp.phase);
+                var tip = base + sp.length * breathe;
+                spikePositions[s * 6] = sp.dir.x * base;
+                spikePositions[s * 6 + 1] = sp.dir.y * base;
+                spikePositions[s * 6 + 2] = sp.dir.z * base;
+                spikePositions[s * 6 + 3] = sp.dir.x * tip;
+                spikePositions[s * 6 + 4] = sp.dir.y * tip;
+                spikePositions[s * 6 + 5] = sp.dir.z * tip;
+            }
+            spikeGeometry.attributes.position.needsUpdate = true;
+
+        }
+
+        // ---------------- The tour: a link like construction.html#drift plays the way there by itself ----------------
+        // From the home screen a ghost cursor glides to the flame (it gathers), clicks it (the swing, the zoom, the burst),
+        // then clicks the project in the menu — every animation as a visitor would see it. A click, touch, scroll or key
+        // stops it and hands over. With "&tool" (construction.html#drift&tool) a player bar shows: play / pause, a slider
+        // over the whole run (letting go plays the page through to that moment, unseen, then carries on), speed, restart
+        var TOUR_SLUGS = {
+            nova: "nova", drift: "drift", "drift-remote": "drift", dtg: "games", "dtg-manager": "games",
+            docparser: "docparser", "document-parser": "docparser", mrwizard: "mrwizard", scout: "scout",
+            privacy: "privacy", license: "license"
+        };
+        var TOUR_LENGTH = 9;     // seconds the bar's slider covers
+        var tourHash = {};
+        location.hash.replace(/^#/, "").split("&").forEach(function (part) {
+            var pair = part.split("=");
+            if (pair[0]) tourHash[decodeURIComponent(pair[0]).toLowerCase()] = pair.length > 1 ? decodeURIComponent(pair[1]) : true;
         });
+        var tourSlug = null;
+        Object.keys(tourHash).forEach(function (key) { if (TOUR_SLUGS[key]) tourSlug = key; });
+        var tourTool = !!tourHash.tool;
+        if (tourTool && !tourSlug) tourSlug = "drift";
+        var tourTarget = tourSlug ? TOUR_SLUGS[tourSlug] : null;
+        var tourActive = !!tourTarget;
+        var tour = { clicked: false, arrivedAt: -1, picked: false, pickAt: -1, fromX: 0, fromY: 0 };
+        var ghost = document.getElementById("ghost");
+        function ease(a) {
+            a = Math.max(0, Math.min(1, a));
+            return a * a * (3 - 2 * a);
+        }
+        // The ghost to a point on screen; it points there too, as a pointer would (the flame gathers, Warp parts the dots)
+        function ghostTo(x, y, alpha) {
+            ghost.style.transform = "translate(" + x + "px, " + y + "px)";
+            ghost.style.opacity = alpha;
+            pointAt(x, y);
+        }
+        function ghostClick() {
+            ghost.classList.remove("click");
+            void ghost.offsetWidth;
+            ghost.classList.add("click");
+        }
+        function tourStep(t) {
+            if (!tourActive) return;
+            var w = window.innerWidth;
+            var h = window.innerHeight;
+            if (t < 1.4) { ghost.style.opacity = 0; return; }   // the intro plays first
+            if (!tour.clicked) {
+                // In from below to the flame (it gathers as the ghost comes near), a pause, then the click
+                var flameAt = scratch.copy(logoShape.centre).project(camera);
+                var fx = (flameAt.x + 1) / 2 * w;
+                var fy = (1 - flameAt.y) / 2 * h;
+                var glide = ease((t - 1.4) / 1.0);
+                // (from the bottom-left corner, so it sweeps up and across the sphere)
+                ghostTo(-20 + (fx + 20) * glide, h + 20 + (fy - h - 20) * glide, Math.min(1, (t - 1.4) / 0.3));
+                if (t >= 3.2) {
+                    tour.clicked = true;
+                    tour.fromX = fx;
+                    tour.fromY = fy;
+                    ghostClick();
+                    startBurst();
+                }
+                return;
+            }
+            if (tour.arrivedAt < 0) {
+                // Riding the zoom where it clicked, dimmed, until you're in
+                ghostTo(tour.fromX, tour.fromY, 0.55);
+                if (inside && burstStart < 0) tour.arrivedAt = t;
+                return;
+            }
+            if (!tour.picked) {
+                // Over to the project's row in the menu (opening it if it didn't roll out by itself), then the click
+                if (!menuOpen) openMenu();
+                var row = projectsMenu.querySelector('[data-project="' + tourTarget + '"]');
+                var rowBox = row.getBoundingClientRect();
+                var rx = rowBox.left + Math.min(rowBox.width * 0.5, 60);
+                var ry = rowBox.top + rowBox.height / 2;
+                var go = ease((t - tour.arrivedAt - 0.5) / 0.8);
+                ghostTo(tour.fromX + (rx - tour.fromX) * go, tour.fromY + (ry - tour.fromY) * go,
+                    0.55 + 0.45 * Math.min(1, (t - tour.arrivedAt) / 0.5));
+                if (t >= tour.arrivedAt + 1.45) {
+                    tour.picked = true;
+                    tour.pickAt = t;
+                    ghostClick();
+                    pickProject(tourTarget);
+                }
+                return;
+            }
+            // There: the ghost fades away and the tour hands over
+            var left = 1 - Math.min(1, (t - tour.pickAt - 0.6) / 0.8);
+            ghost.style.opacity = left;
+            if (left <= 0) endTour();
+        }
+        function endTour() {
+            if (!tourActive) return;
+            tourActive = false;
+            ghost.style.opacity = 0;
+            pointerGone();
+        }
+        // A click, touch, scroll or key (not on the bar) stops the tour where it is
+        var tourBar = document.getElementById("tourBar");
+        function interruptTour(e) {
+            if (tourActive && !tourBar.contains(e.target)) endTour();
+        }
+        window.addEventListener("pointerdown", interruptTour, true);
+        window.addEventListener("wheel", interruptTour, true);
+        window.addEventListener("keydown", interruptTour, true);
+
+        // The bar
+        var playing = true;
+        var speed = 1;
+        var fastForwarding = false;   // playing through to a moment, unseen (layout work skipped until the last step)
+        var tourSlider = document.getElementById("tourSlider");
+        var tourTime = document.getElementById("tourTime");
+        var tourPlay = document.getElementById("tourPlay");
+        var dragging = false;
+        tourSlider.max = TOUR_LENGTH;
+        function showPlaying() {
+            tourPlay.textContent = playing ? "❚❚" : "▶";
+            tourPlay.setAttribute("aria-label", playing ? "Pause" : "Play");
+        }
+        // To a moment: reload with it in the link, and play through to it on the way in
+        function seek(to) {
+            var parts = [tourSlug, "tool"];
+            if (to > 0) parts.push("t=" + to.toFixed(2));
+            if (!playing) parts.push("paused");
+            location.hash = parts.join("&");
+            location.reload();
+        }
+        if (tourTool) {
+            tourBar.hidden = false;
+            tourPlay.addEventListener("click", function () { playing = !playing; showPlaying(); });
+            tourSlider.addEventListener("input", function () {
+                dragging = true;
+                tourTime.textContent = parseFloat(tourSlider.value).toFixed(1) + "s";
+            });
+            tourSlider.addEventListener("change", function () { seek(parseFloat(tourSlider.value)); });
+            tourBar.querySelectorAll("[data-speed]").forEach(function (b) {
+                b.addEventListener("click", function () {
+                    speed = parseInt(b.getAttribute("data-speed"), 10);
+                    tourBar.querySelectorAll("[data-speed]").forEach(function (o) { o.classList.toggle("on", o === b); });
+                });
+            });
+            document.getElementById("tourRestart").addEventListener("click", function () { seek(0); });
+        }
+
+        // The loop: the page's clock moves on with real time (by the bar's speed; not while paused), one step of everything
+        // per moved-on frame, then a picture
+        var lastReal = performance.now();
+        function frame() {
+            var nowReal = performance.now();
+            var realStep = Math.min(0.1, (nowReal - lastReal) / 1000);
+            lastReal = nowReal;
+            if (playing) {
+                for (var n = 0; n < speed; n++) {
+                    simTime += realStep;
+                    simulate(simTime);
+                }
+            }
+            if (tourTool && !dragging) {
+                tourSlider.value = Math.min(TOUR_LENGTH, simTime);
+                tourTime.textContent = simTime.toFixed(1) + "s";
+            }
+            renderer.render(scene, camera);
+            requestAnimationFrame(frame);
+        }
+        // A link with "t=…" (the bar's slider): play the page through to that moment first, unseen
+        var seekTo = parseFloat(tourHash.t) || 0;
+        if (seekTo > 0) {
+            fastForwarding = true;
+            var ffSteps = Math.round(seekTo * 60);
+            for (var ff = 0; ff < ffSteps; ff++) {
+                if (ff === ffSteps - 1) fastForwarding = false;   // the last step lays everything out
+                simTime += 1 / 60;
+                simulate(simTime);
+            }
+            fastForwarding = false;
+        }
+        if (tourHash.paused) playing = false;
+        showPlaying();
+        requestAnimationFrame(frame);
+    })();
     </script>
 </body>
 </html>
