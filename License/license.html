@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License — Pyrothief Projects</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a0a;
+            background: radial-gradient(ellipse at center top, #1a0f08 0%, #0a0a0a 60%);
+            font-family: 'Orbitron', system-ui, sans-serif;
+            letter-spacing: 0.15em;
+            color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .glow {
+            position: fixed;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(255, 107, 53, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 5rem 2rem 3rem;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .logo {
+            display: block;
+            max-width: 200px;
+            width: 100%;
+            height: auto;
+            margin: 0 auto 2.5rem auto;
+            filter: drop-shadow(0 0 40px rgba(255, 107, 53, 0.3));
+        }
+
+        .page-title {
+            font-size: clamp(1.6rem, 5vw, 2.8rem);
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffa500 0%, #ff6b35 50%, #cc4400 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #5a4a40;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .content {
+            width: 100%;
+            max-width: 800px;
+            padding: 3rem 2rem 5rem;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #ff6b35;
+            margin: 2.5rem 0 1rem;
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        .body-text {
+            color: #c0b0a0;
+            font-size: 0.85rem;
+            line-height: 1.9;
+            letter-spacing: 0.05em;
+        }
+
+        .body-text p {
+            margin-bottom: 0.8rem;
+        }
+
+        .divider {
+            width: 100%;
+            max-width: 800px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.3), transparent);
+        }
+
+        footer {
+            width: 100%;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 107, 53, 0.1);
+            margin-top: auto;
+        }
+
+        .footer-brand {
+            color: #5a4a40;
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .footer-copyright {
+            color: #3a2a20;
+            font-size: 0.7rem;
+            margin-top: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #5a4a40;
+            text-decoration: none;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .back-link:hover {
+            color: #ff6b35;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 3.5rem 1.5rem 2rem;
+            }
+
+            .content {
+                padding: 2rem 1.5rem 4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="glow"></div>
+
+    <header class="hero">
+        <a href="/"><img src="/content/logo/pyrothieflogo.png" alt="Pyrothief Projects" class="logo"></a>
+        <h1 class="page-title">License</h1>
+        <a href="/" class="back-link">&#8592; Back</a>
+    </header>
+
+    <div class="divider"></div>
+
+    <main class="content">
+
+        <div class="body-text">
+            <p>These projects are proprietary.</p>
+            <p>All software, engines, source code, assets, documentation, and tools contained within these projects are the exclusive property of Pyrothief Projects unless otherwise stated.</p>
+            <p>Unless a separate license is provided for a specific project, component, or engine, all contents are fully proprietary. You may not use, copy, modify, distribute, or create derivative works without prior written permission.</p>
+            <p>Specific projects, engines, tools, or components may carry their own license terms. Where an individual license is present, it takes precedence for that project or component only.</p>
+            <p>All commercial rights are exclusively reserved by Pyrothief Projects. For commercial licensing inquiries, contact Pyrothief Projects directly.</p>
+            <p>These projects are provided "as is" without warranty of any kind.</p>
+        </div>
+
+        <h2 class="section-title">Individual component licenses may apply</h2>
+
+        <h2 class="section-title">Last Updated</h2>
+        <div class="body-text">
+            <p>November 2026</p>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="footer-brand">Pyrothiefprojects</div>
+        <div class="footer-copyright">&copy; 2026 Pyrothiefprojects.</div>
+    </footer>
+</body>
+</html>

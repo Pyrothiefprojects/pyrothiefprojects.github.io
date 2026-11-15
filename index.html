@@ -213,6 +213,7 @@
             background: var(--status, #ff6b35);
             box-shadow: 0 0 8px var(--status, #ff6b35);
         }
+        .card-tagline:empty { display: none; }   /* (License's: none) */
         .card-tagline {
             font-family: 'Orbitron', sans-serif;
             font-size: 0.78rem;
@@ -778,19 +779,19 @@
         // The license, whole (as it was on the old Nova page)
         PROJECTS.license = {
             name: "License",
-            tagline: "All rights reserved.",
+            tagline: "",
             text: [
-                "This project is proprietary. All rights reserved by Pyrothief Projects.",
-                "All software, engines, source code, assets, documentation, and tools contained within this project " +
+                "These projects are proprietary.",
+                "All software, engines, source code, assets, documentation, and tools contained within these projects " +
                     "are the exclusive property of Pyrothief Projects unless otherwise stated.",
-                "Unless a separate license is provided for a specific component, engine, or branch, all contents are " +
+                "Unless a separate license is provided for a specific project, component, or engine, all contents are " +
                     "fully proprietary. You may not use, copy, modify, distribute, or create derivative works without " +
                     "prior written permission.",
-                "Specific engines, tools, or components may carry their own license terms. Where an individual " +
-                    "license is present, it takes precedence for that component only.",
+                "Specific projects, engines, tools, or components may carry their own license terms. Where an individual " +
+                    "license is present, it takes precedence for that project or component only.",
                 "All commercial rights are exclusively reserved by Pyrothief Projects. For commercial licensing " +
                     "inquiries, contact Pyrothief Projects directly.",
-                "This software is provided \"as is\" without warranty of any kind."
+                "These projects are provided \"as is\" without warranty of any kind."
             ],
             tech: "Individual component licenses may apply"
         };
