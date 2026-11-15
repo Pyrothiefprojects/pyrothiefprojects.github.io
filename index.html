@@ -433,7 +433,7 @@
             font-family: 'Orbitron', sans-serif;
             font-size: 1rem;
             color: #ff6b35;
-            background: rgba(10, 10, 10, 0.35);   /* an orange ring with an orange ✕ */
+            background: rgba(10, 10, 10, 0.35);   /* an orange ring with an orange back arrow */
             border: 1.5px solid #ff6b35;
             border-radius: 50%;
             cursor: pointer;
@@ -461,7 +461,7 @@
     <button type="button" class="projects-button" id="lockup" aria-label="Projects" aria-expanded="false" tabindex="-1">
         <img class="wordmark-sub" src="content/logo/projectstext.png" alt="Projects">
     </button>
-    <button type="button" class="exit" id="exit" aria-label="Back out of the sphere" hidden>✕</button>
+    <button type="button" class="exit" id="exit" aria-label="Back out of the sphere" hidden>&#8592;</button>
     <nav class="projects-menu" id="projectsMenu" aria-label="Projects" hidden>
         <button type="button" data-project="nova">Nova</button>
         <button type="button" data-project="drift">Drift Remote</button>
@@ -1514,6 +1514,10 @@
                 pager.style.left = projectsBox.left + "px";
                 pager.style.top = (projectsBox.bottom + 10) + "px";
             }
+            // The ✕ (back out of the sphere): inside, but not while a project's card or HUD is up — a tap on the stars
+            // closes that, back to the menu
+            var exitShown = inside && !activeProject;
+            if (exitButton.hidden === exitShown) exitButton.hidden = !exitShown;
             var lockupLive = cornerFade > 0.8;
             if (lockup.classList.contains("live") !== lockupLive) {
                 lockup.classList.toggle("live", lockupLive);
@@ -1693,6 +1697,9 @@
                         var sizeTo = (sh.hover ? sh.size * 1.4 : sh.size) * (sh.inFront ? 1 + 0.22 * Math.sin(t * 2.4 + k * 0.6) : 1);
                         dotSizes[di] += (sizeTo - dotSizes[di]) * form;
                         dotAlphas[di] += (1 - dotAlphas[di]) * form;
+                        // (the tutorial's backdrop: the project's icon unseen — the tutorial's own phone over it — its stars
+                        // fading in again as they go back to the sphere, not jumping there)
+                        if (backdrop && sh.inFront) dotAlphas[di] *= 1 - form;
                         if (blow > 0) {
                             dotAlphas[di] *= 1 - blow;
                             dotSizes[di] *= 1 + blowEase * 2;
@@ -1795,7 +1802,7 @@
             party.last = t;
             // On, full blast, while the tour waits; fading out over its last 0.4 s, before the pointer sets off across the
             // sphere for the flame (at 1.4 s of the tour's time), and gone from then on
-            party.level = tourHeld ? 1 : Math.max(0, Math.min(1, (1.4 - (t - tourWait)) / 0.4));
+            party.level = tourHeld || tourHash.arrive ? 1 : Math.max(0, Math.min(1, (1.4 - (t - tourWait)) / 0.4));   // (#arrive: the home screen at the end — on, full, while the song plays)
             party.b = party.beat * party.level;
             party.lo = party.loud * party.level;
             party.ba = party.bass * party.level;
@@ -2074,7 +2081,6 @@
             if (backdropDots) pager.hidden = false;
             if (now) document.documentElement.classList.add("backdrop-faded");   // (from the start: no header to carry over)
             if (menuOpen) closeMenu();
-            Object.keys(iconShapes).forEach(function (key) { iconShapes[key].form = 0; });   // (its icon gone at once: the tutorial's over it)
             depth = 1;
             if (!inside) setInside(true);
             if (now) { backdropSnap = true; cardDim = 1; }   // (from the start: in, and as dim as at Splash's end, at once)

@@ -56,6 +56,7 @@ body {
     transition: opacity 0.3s ease;
 }
 .hud.shown { opacity: 1; }
+.hud.snap { transition: none; }   /* (Splash's end: there at once, as the home page's HUD goes — no gap) */
 .hud-lines {
     position: absolute;
     inset: 0;

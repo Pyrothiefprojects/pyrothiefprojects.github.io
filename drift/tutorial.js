@@ -137,6 +137,10 @@ var PARTS = [
         begin: function () {
             showAll();
             retractFrom = clock;
+            if (cameFrom === "Splash") {   // (the HUD there at once, as the home page's goes: no gap between them)
+                hud.classList.add("snap");
+                setTimeout(function () { hud.classList.remove("snap"); }, 150);
+            }
         },
         // (the home page's header and dots, carried on from Splash: faded out as the HUD draws back)
         step: function (t) { if (t > 0.05) backdropFade(); }
@@ -493,12 +497,15 @@ function splash(on, held) {   // (its tour waiting as long as Splash's first pau
     if (splashHeld) {   // (held: kept, not loaded again — Splash's start tells its tour to go)
         if (!on) return;
         splashHeld = false;
+        splashFrame.classList.add("behind");   // (behind now, as the run begins: the same picture, nothing moving yet)
         splashFrame.contentWindow.postMessage({ drift: "go", wait: wait }, "*");
         return;
     }
     if (!on) return backdrop();   // (anything else: the stars behind it)
+    // (behind the picture from the start, so there's nothing to re-layer as Splash ends — but for visitors, held, in
+    // front till they click, the sphere theirs to play with)
     splashFrame.classList.add("on");
-    splashFrame.classList.remove("behind");
+    splashFrame.classList.toggle("behind", !held);
     splashFrame.src = "index.html?splash=" + Date.now() + "#drift&splash" + (held ? "&hold" : wait ? "&wait=" + wait : "");
     frameIs = "tour";
 }
@@ -731,6 +738,7 @@ function playPart(i, all, from) {   // (from: the part it follows, if it's not t
     partFrom = clock;
     PARTS[i].begin();
     partButtons.forEach(function (b, n) { b.classList.toggle("on", n === i); });
+    dialog.step();   // (its lines at its very start — a hold there — taken up now, before the clock moves a frame on)
 }
 function stepParts() {
     if (playing < 0) return dialog.step();   // (anything still showing, going)
