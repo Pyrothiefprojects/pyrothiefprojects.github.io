@@ -228,11 +228,28 @@
         window.addEventListener("resize", resize);
         resize();
 
+        // ---------------- Your pointer: the stars round it pushed aside on the screen (as Skew does inside the home page's
+        // sphere) — and, with the tutorial's Mouse party on, lit up full party: all colours, flaring with the beat and the
+        // loudness. The tutorial hands it down (userPoint), or it's this frame's own, when it takes the mouse ----------------
+        var MOUSE_RADIUS = 220, MOUSE_PUSH = 120, MOUSE_EASE = 0.16;   // (px, px, eased)
+        var userPx = { x: -1, y: -1, on: false };
+        // …all the tools in it, with Mouse party: Pulse (the area swelling, pushing harder, on the beat), Skew (a ring out from
+        // your pointer each beat), Spin kick (swirled round it, one way then the other), Spike (lifted off the sphere with the
+        // bass), Glow and Flare (brighter on the beat, bigger with the loudness) — the stars their own colour
+        var MOUSE_RING_LIFE = 0.8, MOUSE_RING_SPEED = 500, MOUSE_RING_WIDTH = 28, MOUSE_SWIRL = 90;   // (s, px/s, px, px)
+        var mouseRings = [], mouseKick = 0;
+        var mouseX = new Float32Array(DOT_COUNT), mouseY = new Float32Array(DOT_COUNT);   // (each star's push, px, eased)
+        var mouseWorld = new THREE.Vector3(), mouseScreen = new THREE.Vector3(), mouseInverse = new THREE.Matrix4();
+        window.userPoint = function (x, y) { userPx.x = x; userPx.y = y; userPx.on = true; };
+        window.userLeave = function () { userPx.on = false; };
+        canvas.addEventListener("pointermove", function (e) { window.userPoint(e.clientX, e.clientY); });
+        canvas.addEventListener("pointerleave", function () { window.userLeave(); });
+
         // ---------------- The beat: the tutorial's song, as it hears it ----------------
         // `beat` jumps to a beat's strength and fades; `loud` and `bassLevel`, eased — each beat the tutorial hears (show.music:
         // how many so far, the last one's strength), and how loud and how much bass just now. None (on its own, or the song
         // not playing): calm
-        var beat = 0, loud = 0, bassLevel = 0, beatSide = 1, spinGlow = 0, heardBeats = -1;
+        var beat = 0, loud = 0, bassLevel = 0, beatSide = 1, spinGlow = 0, heardBeats = -1, mouseParty = false;
         // Skew's ripples: each beat, a ring of stars pushed aside and lit, spreading from a point on the sphere's near side
         // across it (in the sphere's own terms: where from, when, how strong)
         var SKEW_LIFE = 1.2, SKEW_SPEED = 2.6, SKEW_WIDTH = 0.2, SKEW_PUSH = 40;
@@ -240,6 +257,11 @@
         function onBeat(strength) {
             beat = Math.max(beat, strength);
             beatSide = -beatSide;
+            mouseKick = strength * beatSide;
+            if (mouseParty && userPx.on) {   // (a ring out from where your pointer is)
+                mouseRings.push({ x: userPx.x, y: userPx.y, born: simTime, strength: strength });
+                if (mouseRings.length > 4) mouseRings.shift();
+            }
             if (act.spin) spinGlow = Math.max(spinGlow, strength);   // (Colour, joined to Spin kick: bands round it)
             if (act.spin && !reducedMotion) spinY += 0.006 * strength * beatSide;   // (a push one way, then the other)
             if (act.skew && !reducedMotion) {
@@ -253,6 +275,7 @@
             beat *= Math.exp(-dt * 6);
             var music = null;
             try { music = !alone && window.parent.show && window.parent.show.music ? window.parent.show.music() : null; } catch (err) {}
+            mouseParty = !!(music && music.mouse);
             if (!music || !music.playing) {
                 if (music) heardBeats = music.beats;
                 loud *= Math.exp(-dt * 3);
@@ -318,7 +341,11 @@
             var pulse = act.pulse ? beat : 0, flare = act.flare ? beat : 0, colour = act.colour ? beat : 0;
             var spiky = act.spike ? bassLevel : 0;
             spinGlow *= Math.exp(-dt * 3);
+            mouseKick *= Math.exp(-dt * 4);
             ripples = ripples.filter(function (r) { return simTime - r.born < SKEW_LIFE; });
+            mouseRings = mouseRings.filter(function (r) { return simTime - r.born < MOUSE_RING_LIFE; });
+            var mOn = mouseParty, mBeat = mOn ? beat : 0, mLoud = mOn ? loud : 0, mBass = mOn ? bassLevel : 0, mKick = mOn ? mouseKick : 0;
+            var mReach = MOUSE_RADIUS * (1 + 0.35 * mBeat), mPush = MOUSE_PUSH * (1 + 0.8 * mBeat);   // (Pulse)
             // How far it's built: 0 → 1 over BUILD_TIME — flying apart, thrown wide (as far again as a third), then settling
             var k = builtAt === null ? 0 : reducedMotion ? 1 : (simTime - builtAt) / BUILD_TIME;
             var e = fromPicture ? ease(k / 0.45) : ease(k / 0.3);
@@ -332,6 +359,8 @@
             globe.scale.set(swell, swell, swell);
             globe.updateMatrixWorld();
             updateHit();
+            mouseInverse.copy(globe.matrixWorld).invert();
+            var unitsPerPx = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / window.innerHeight;
 
             for (var i = 0; i < DOT_COUNT; i++) {
                 bulge[i] += (bulgeWeight(dirs[i]) - bulge[i]) * BULGE_EASE;
@@ -379,6 +408,48 @@
                     size = fromSize[i] + (size - fromSize[i]) * e;
                     alpha = fromAlpha[i] + (alpha - fromAlpha[i]) * e;
                 } else if (!fromPicture) alpha *= e;   // (whole: fading in, or nothing yet)
+                // your pointer's area: pushed aside on the screen — lit the sunrise, or (Mouse party) all the tools
+                mouseWorld.set(px, py, pz).applyMatrix4(globe.matrixWorld);
+                var ahead = camera.position.z - mouseWorld.z, pushX = 0, pushY = 0, near = 0, ring = 0;
+                if (ahead > 1 && builtAt !== null && (userPx.on || (mOn && mouseRings.length))) {
+                    mouseScreen.copy(mouseWorld).project(camera);
+                    var msx = (mouseScreen.x + 1) / 2 * window.innerWidth, msy = (1 - mouseScreen.y) / 2 * window.innerHeight;
+                    var mx = msx - userPx.x, my = msy - userPx.y, md = Math.sqrt(mx * mx + my * my);
+                    if (userPx.on && md < mReach && md > 0.001) {
+                        near = (1 - md / mReach) * (1 - md / mReach);
+                        pushX = mx / md * mPush * near - my / md * mKick * MOUSE_SWIRL * near;   // (pushed out; swirled: Spin kick)
+                        pushY = my / md * mPush * near + mx / md * mKick * MOUSE_SWIRL * near;
+                    }
+                    for (var mw = 0; mw < mouseRings.length; mw++) {   // (Skew: each beat's ring, shoving the stars it passes)
+                        var rg = mouseRings[mw], rage = simTime - rg.born, rx = msx - rg.x, ry = msy - rg.y, rd = Math.sqrt(rx * rx + ry * ry) || 1;
+                        var roff = (rd - rage * MOUSE_RING_SPEED) / MOUSE_RING_WIDTH;
+                        if (roff > 3 || roff < -3) continue;
+                        var rw = Math.exp(-roff * roff) * (1 - rage / MOUSE_RING_LIFE) * rg.strength;
+                        pushX += rx / rd * 45 * rw;
+                        pushY += ry / rd * 45 * rw;
+                        ring = Math.max(ring, rw);
+                    }
+                }
+                mouseX[i] += (pushX - mouseX[i]) * MOUSE_EASE;
+                mouseY[i] += (pushY - mouseY[i]) * MOUSE_EASE;
+                var lit = Math.max(Math.min(1, Math.sqrt(mouseX[i] * mouseX[i] + mouseY[i] * mouseY[i]) / MOUSE_PUSH * 1.25), ring);
+                if (lit > 0.002 && ahead > 1) {
+                    mouseWorld.x += mouseX[i] * unitsPerPx * ahead;
+                    mouseWorld.y -= mouseY[i] * unitsPerPx * ahead;
+                    mouseWorld.applyMatrix4(mouseInverse);
+                    if (mBass > 0) mouseWorld.multiplyScalar(1 + 0.25 * mBass * near);   // (Spike: lifted off the sphere with the bass)
+                    px = mouseWorld.x;
+                    py = mouseWorld.y;
+                    pz = mouseWorld.z;
+                    if (!mOn) {   // (the sunrise, as Skew lights them — Mouse party leaves them their own colour)
+                        var mc = sunrise((1 - mouseWorld.y / RADIUS) / 2);
+                        cr += (mc.r - cr) * lit;
+                        cg += (mc.g - cg) * lit;
+                        cb += (mc.b - cb) * lit;
+                    }
+                    size *= 1 + lit * (mOn ? 0.8 + 1.5 * mBeat + mLoud + 0.6 * mBass : 0.3);   // (Flare)
+                    alpha = Math.min(1, alpha + lit * (mOn ? 0.6 : 0.3));
+                }
                 dotPositions[i * 3] = px;
                 dotPositions[i * 3 + 1] = py;
                 dotPositions[i * 3 + 2] = pz;

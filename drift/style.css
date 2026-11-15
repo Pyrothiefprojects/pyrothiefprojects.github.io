@@ -271,6 +271,9 @@ body {
     opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.4s ease;
 }
 .splash.on { opacity: 1; visibility: visible; }
+/* The stars behind everything (the home page inside its sphere — the same engine, the same stars): under the picture */
+.splash.behind { z-index: -1; }
+.splash.on.behind { opacity: 1; }   /* (as they are inside the sphere on the home page: lower it to dim them) */
 
 /* The dialog: each scene's lines, typed in at their places in the picture (white Orbitron, as the HUD's labels) */
 .dialog-layer { position: fixed; inset: 0; pointer-events: none; z-index: 1; }

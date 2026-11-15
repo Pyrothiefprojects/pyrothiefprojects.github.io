@@ -6,7 +6,8 @@
     "spin": false,
     "colour": false,
     "skew": false,
-    "spike": false
+    "spike": false,
+    "mouse": true
   },
   "scenes": [],
   "ranges": {},
@@ -28,13 +29,13 @@
     ],
     "Home": [
       {
-        "text": "You are here.",
+        "text": "You are here",
         "pause": 1
       }
     ],
     "Settings": [
       {
-        "text": "These are settings you can use to change the look, feel and behavior of your remote.",
+        "text": "These are settings you can use to change the look, feel and behaviour of Drift Remote",
         "pause": 5
       }
     ],
@@ -92,14 +93,14 @@
       },
       {
         "text": "You now control that device",
-        "pause": 0.5
+        "pause": 1
       },
       {
         "text": "You can use many devices at once",
         "pause": 1.5
       },
       {
-        "text": "Switch  seamlessly",
+        "text": "Switch seamlessly",
         "pause": 0
       },
       {
@@ -139,7 +140,7 @@
         "pause": 3
       },
       {
-        "text": "On a MacBook: System Settings \u203a General \u203a Sharing \u203a Screen Sharing.",
+        "text": "On a MacBook: System Settings \u203a General \u203a Sharing \u203a Screen Sharing",
         "pause": 5
       },
       {
@@ -147,7 +148,7 @@
         "pause": 1.5
       },
       {
-        "text": "You're now sharing your screen to your remote!",
+        "text": "You're now sharing the screen to your remote!",
         "pause": 3,
         "moving": true
       }
@@ -166,19 +167,19 @@
     ],
     "Shared media": [
       {
-        "text": "The remote's display is also a trackpad, control it alongside other features.",
+        "text": "Drift Remote's display is also a trackpad: control it alongside other features",
         "pause": 3.5
       }
     ],
     "Landscape": [
       {
-        "text": "Rotate your remote for a landscaped experience",
+        "text": "Rotate Drift Remote for a landscape experience",
         "pause": 0
       }
     ],
     "Disconnect": [
       {
-        "text": "Disconnect from devices anytime.",
+        "text": "Disconnect from devices anytime",
         "pause": 1
       }
     ]

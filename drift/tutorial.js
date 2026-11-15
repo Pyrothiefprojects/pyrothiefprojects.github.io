@@ -388,7 +388,11 @@ var PARTS = [
             { at: 0.3, where: "trackpad", pause: 2, until: X_GHOSTS_FROM, text: "Disconnect from devices anytime from the connect screen" }
         ],
         begin: function () { walkDone(); rcScreen = "off"; offFrom = clock; sphere(); },
-        step: function (t) { if (t >= X_BURST_FROM && !sphereFrom) catchStars = true; }
+        step: function (t) {
+            if (t < X_BURST_FROM || sphereFrom) return;
+            catchStars = true;
+            splashFrame.classList.remove("on");   // (the stars behind fading, as these build the sphere)
+        }
     },
     {
         // Just the devices' icons, no HUD: each gathers into its place in a row from across the screen, one after
@@ -480,6 +484,7 @@ function walkDone() {
 // anything else
 var splashFrame = document.getElementById("splash");
 var splashHeld = false;   // (the visitors' link: the home page already up, its tour held till Splash starts it)
+var frameIs = null;       // what's in it: "tour" (Splash's), "backdrop" (the stars, behind everything), or null
 function splash(on, held) {   // (its tour waiting as long as Splash's first pause, on the sphere, before the flame's clicked)
     var wait = PARTS[0].dialog[0].pause;
     if (splashHeld) {   // (held: kept, not loaded again — Splash's start tells its tour to go)
@@ -488,10 +493,30 @@ function splash(on, held) {   // (its tour waiting as long as Splash's first pau
         splashFrame.contentWindow.postMessage({ drift: "go", wait: wait }, "*");
         return;
     }
-    splashFrame.classList.toggle("on", on);
-    if (on) splashFrame.src = "index.html?splash=" + Date.now() + "#drift&splash" + (held ? "&hold" : wait ? "&wait=" + wait : "");
-    else if (splashFrame.getAttribute("src") !== "about:blank") splashFrame.src = "about:blank";
+    if (!on) return backdrop();   // (anything else: the stars behind it)
+    splashFrame.classList.add("on");
+    splashFrame.classList.remove("behind");
+    splashFrame.src = "index.html?splash=" + Date.now() + "#drift&splash" + (held ? "&hold" : wait ? "&wait=" + wait : "");
+    frameIs = "tour";
 }
+// The stars behind everything else: the home page inside its sphere and nothing more of it (index.html#backdrop) — or, as
+// Splash ends, its own page, there already, told to become that (so the stars go on just as they were). Dimmed, behind
+// the picture; the pointer handed down to it, so the stars part round it as they do inside on the home page
+function backdrop() {
+    if (splashHeld) return;
+    if (frameIs === "tour") { try { splashFrame.contentWindow.becomeBackdrop(); } catch (err) {} }
+    else if (frameIs !== "backdrop") splashFrame.src = "index.html?backdrop=" + Date.now() + "#backdrop";
+    frameIs = "backdrop";
+    splashFrame.classList.add("on", "behind");
+}
+function handDown(e) {   // (your pointer, to the spheres in the frames: Splash's, the stars behind, Disconnect's)
+    [splashFrame, sphereFrame].forEach(function (frame) {
+        if (!frame.classList.contains("on")) return;
+        try { if (e) frame.contentWindow.userPoint(e.clientX, e.clientY); else frame.contentWindow.userLeave(); } catch (err) {}
+    });
+}
+document.addEventListener("pointermove", handDown);
+document.documentElement.addEventListener("pointerleave", function () { handDown(null); });
 var splashArrived = false;   // (the home page has said its HUD's settled in the middle: Splash done)
 window.addEventListener("message", function (e) {
     if (e.source === splashFrame.contentWindow && e.data && e.data.drift === "splash-done") splashArrived = true;
@@ -502,15 +527,20 @@ window.addEventListener("message", function (e) {
 // start just there, as they looked, and fly apart to build it
 var sphereFrom = null;      // (read by sphere.html, from its frame)
 var catchStars = false;     // (the burst's moment: the next frame's stars to be caught)
+var sphereFrame = document.getElementById("sphereFrame");
 function sphere() {
     sphereFrom = null;
     catchStars = false;
-    splashFrame.classList.add("on");
-    splashFrame.src = "drift/sphere.html?" + Date.now();
+    sphereFrame.classList.add("on");
+    sphereFrame.src = "drift/sphere.html?" + Date.now();
 }
 // The whole Drift Remote HUD, as the intro starts: the iPhone gathered, the HUD drawn, no row
 function showAll() {
     splash(false);
+    if (sphereFrame.classList.contains("on")) {   // (Disconnect's sphere gone)
+        sphereFrame.classList.remove("on");
+        sphereFrame.src = "about:blank";
+    }
     sphereFrom = null;   // (the picture drawn again)
     catchStars = false;
     SHAPES.iphone.gatherFrom = -100;
@@ -562,9 +592,30 @@ function nextPart(i) {
     for (var n = i + 1; n < PARTS.length; n++) if (!PARTS[n].staging && !PARTS[n].wip) return n;
     return -1;
 }
-document.getElementById("play").addEventListener("click", startRun);
+// ▶ Play: as a visitor starts it — the menus away, the home page's sphere up, its tour held (to play with), and a click on
+// it begins the run with Music; the menus back once it's done (Escape: stopped, or not begun after all)
+var asVisitor = false;
+document.getElementById("play").addEventListener("click", function (e) {
+    e.stopPropagation();   // (not this click: the next one, on the sphere)
+    playing = -1;
+    playAll = false;
+    partButtons.forEach(function (b) { b.classList.remove("on"); });
+    tutorial.classList.remove("away");
+    showAll();
+    blank = true;
+    asVisitor = true;
+    document.body.classList.add("visiting");
+    splash(true, true);
+    splashHeld = true;
+});
+function unvisit() {   // (▶ Play's visitor's run over: the menus back, the stars behind again)
+    if (!asVisitor) return;
+    asVisitor = false;
+    document.body.classList.remove("visiting");
+    splashHeld = false;
+}
 function visit() {   // (the visitors' click: on the page, or on a sphere in the frame)
-    if (!visiting || document.body.classList.contains("watching")) return;
+    if (!(visiting || asVisitor) || document.body.classList.contains("watching")) return;
     musicButton.setAttribute("aria-pressed", "true");
     startRun();
 }
@@ -584,6 +635,7 @@ function watching(on) {
     document.body.classList.toggle("watching", on);
     show.along(on && musicButton.getAttribute("aria-pressed") === "true");
     show.watch(on);
+    if (!on) unvisit();
 }
 // The link for visitors (drift.html#watch): the home page's sphere, as Splash starts, its tour held — to play with, as on
 // the home page (the frame takes the mouse till then) — and a click on it (so the browser lets the song play: the sphere
@@ -591,14 +643,19 @@ function watching(on) {
 // in the same frame. No menus, no editor, no player; nothing stops it (Space pauses). At the end it's on the sphere,
 // to play with too: a click, and it's from the start again
 var visiting = location.hash === "#watch";
+if (!visiting) backdrop();   // (the stars there from the start)
 if (visiting) {
     document.body.classList.add("visiting");
     splash(true, true);
     splashHeld = true;
-    document.addEventListener("click", visit);   // (a click: what browsers count as leave to play the song)
 }
+document.addEventListener("click", visit);   // (a click: what browsers count as leave to play the song)
 function stopWatching(e) {
     if (visiting) return;   // (the visitors' link: nothing stops it)
+    if (asVisitor) {   // (▶ Play's, as a visitor's: only Escape stops it — or, not begun yet, puts it all back)
+        if (e.type !== "keydown" || e.key !== "Escape") return;
+        if (!document.body.classList.contains("watching")) { unvisit(); showAll(); return; }
+    }
     if (!document.body.classList.contains("watching") || (e.type === "keydown" && e.key !== "Escape")) return;
     if (e.type === "pointerdown" && e.target.closest && e.target.closest("#player")) return;   // (its player: to pause it)
     playing = -1;
@@ -606,6 +663,7 @@ function stopWatching(e) {
     partButtons.forEach(function (b) { b.classList.remove("on"); });
     tutorial.classList.remove("away");
     watching(false);
+    if (frameIs === "tour") backdrop();   // (stopped in Splash: its page the stars behind again)
 }
 document.addEventListener("pointerdown", stopWatching, true);
 document.addEventListener("keydown", stopWatching, true);

@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drift Remote — Pyrothief Projects</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="drift/style.css?v=5">
+    <link rel="stylesheet" href="drift/style.css?v=10">
 </head>
 <body>
     <canvas id="dots" aria-hidden="true"></canvas>
-    <iframe class="splash" id="splash" src="about:blank" title="The home page, as Splash plays it; Pyrosphere, as Disconnect ends" tabindex="-1" aria-hidden="true"></iframe>
+    <iframe class="splash" id="splash" src="about:blank" title="The home page: Splash, then the stars behind everything" tabindex="-1" aria-hidden="true"></iframe>
+    <iframe class="splash" id="sphereFrame" src="about:blank" title="The sphere, as Disconnect ends" tabindex="-1" aria-hidden="true"></iframe>
     <div class="scroller" id="scroller"><div id="spacer"></div></div>
     <div class="dialog-layer" id="dialog" aria-live="polite"></div>
     <div class="hud" id="hud" aria-live="polite">
@@ -82,12 +83,12 @@
 
     <!-- In this order: each uses what the ones before it set up. ?v=: bumped with each push, so a browser fetches them all
          afresh together (the site's cache keeps each for hours) -->
-    <script src="drift/icons.js?v=5"></script>
-    <script src="drift/hud.js?v=5"></script>
-    <script src="drift/tutorial.js?v=5"></script>
-    <script src="drift/scenes.js?v=5"></script>
-    <script src="drift/show.js?v=5"></script>
-    <script src="drift/dialog.js?v=5"></script>
-    <script src="drift/main.js?v=5"></script>
+    <script src="drift/icons.js?v=10"></script>
+    <script src="drift/hud.js?v=10"></script>
+    <script src="drift/tutorial.js?v=10"></script>
+    <script src="drift/scenes.js?v=10"></script>
+    <script src="drift/show.js?v=10"></script>
+    <script src="drift/dialog.js?v=10"></script>
+    <script src="drift/main.js?v=10"></script>
 </body>
 </html>

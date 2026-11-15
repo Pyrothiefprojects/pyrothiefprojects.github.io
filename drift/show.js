@@ -6,7 +6,8 @@
 // transform (the whole picture's swell and twist), dot (each star's look), along (▶ Play with Music), duration (the
 // song's length), cue / span / mark (#edit's Dialog: the song put at a line's moment, its segment played, marked),
 // watch (▶ Play watched: the player small, to pause it), capture (every star drawn, caught: Disconnect's end), and music
-// (the beats heard so far, the last one's strength, how loud and how much bass just now: for the spheres in the frame),
+// (the beats heard so far, the last one's strength, how loud and how much bass just now, and whether Mouse party's on:
+// for the spheres in the frame),
 // and whenPlaying (once the song's really playing: a run with Music starting with it)
 
 var show = (function () {
@@ -210,10 +211,11 @@ var show = (function () {
         { key: "spin", name: "Spin kick", colour: "#7bdff2" }, // the picture twisting a little, one way then the other
         { key: "colour", name: "Glow", colour: "#ff6b6b" },    // the stars flashing the sunrise on the beat
         { key: "skew", name: "Skew", colour: "#b388ff" },      // each beat a ring rippling out, pushing the stars aside
-        { key: "spike", name: "Spike", colour: "#5ad17a" }     // rays out from the stars with the bass
+        { key: "spike", name: "Spike", colour: "#5ad17a" },    // rays out from the stars with the bass
+        { key: "mouse", name: "Mouse party", colour: "#ffffff" }   // the spheres' stars round your pointer, pushed aside: full party
     ];
-    var reacts = {};   // each effect's button: on or off — all off till the show's file (set in #edit) says
-    EFFECTS.forEach(function (e) { reacts[e.key] = false; });
+    var reacts = {};   // each effect's button: on or off — all off (but Mouse party, on) till the show's file (set in #edit) says
+    EFFECTS.forEach(function (e) { reacts[e.key] = e.key === "mouse"; });
     var reactsBox = document.getElementById("showReacts"), buttons = {}, linking = false;
     EFFECTS.forEach(function (e) {
         var b = document.createElement("button");
@@ -525,7 +527,7 @@ var show = (function () {
         if (d.colours) colours = d.colours;
         if (d.dialog || d.pauses) dialog.load(d.dialog || d.pauses);   // (the dialog's lines: their words, pauses, places)
         if (d.on) EFFECTS.forEach(function (e) {   // (each effect on or off, as #edit saved it)
-            reacts[e.key] = !!d.on[e.key];
+            if (e.key in d.on) reacts[e.key] = !!d.on[e.key];   // (one the file doesn't know of: as it was)
             buttons[e.key].setAttribute("aria-pressed", reacts[e.key] ? "true" : "false");
         });
         drawLanes();
@@ -665,6 +667,6 @@ var show = (function () {
 
     return { frame: frame, transform: transform, dot: dot, paused: paused, along: along,
         duration: function () { return song.duration; }, cue: cue, span: span, mark: mark, watch: watch, capture: capture,
-        music: function () { return { beats: beatCount, strength: beatStrength, loud: loud, bass: bass, playing: !song.paused }; },
+        music: function () { return { beats: beatCount, strength: beatStrength, loud: loud, bass: bass, playing: !song.paused, mouse: !!act.mouse }; },
         whenPlaying: whenPlaying };
 })();

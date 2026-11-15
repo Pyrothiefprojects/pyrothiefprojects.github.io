@@ -440,6 +440,8 @@
         }
         .exit:hover { color: #ffa500; border-color: #ffa500; box-shadow: 0 0 12px rgba(255, 107, 53, 0.5); }
         .exit[hidden] { display: none; }
+        /* The Drift Remote tutorial's backdrop (#backdrop, or told so as its Splash ends): the stars alone, nothing else */
+        html.backdrop body > :not(#sphere) { visibility: hidden !important; }
     </style>
 </head>
 <body>
@@ -1453,6 +1455,7 @@
             // In or out: scrolling sets the depth directly; otherwise it eases to the end it's heading for
             if (!scrolling) depth += ((inside ? 1 : 0) - depth) * (reducedMotion ? 1 : 0.06);
             var depthZ = restZ + (INSIDE_Z - restZ) * depth;
+            if (backdropSnap) { camera.position.z = depthZ; backdropSnap = false; }   // (the tutorial's backdrop, from the start: in already)
             camera.position.z += (depthZ - camera.position.z) * (t < 2.5 ? 0.05 : 0.2);   // the slow fly-in first
             // The swing: off-centre after the pointer, growing with the depth, so it builds up as you come in (rather than
             // jumping across when you arrive) and fades out as you leave; back to the middle otherwise
@@ -1473,7 +1476,7 @@
             cameraUp.setFromMatrixColumn(camera.matrixWorld, 1);
             camera.getWorldDirection(cameraForward);
             insideMix = depth;
-            cardDim += ((activeProject ? 1 : 0) - cardDim) * 0.08;
+            cardDim += ((activeProject || backdrop ? 1 : 0) - cardDim) * 0.08;   // (the tutorial's backdrop: as dim as with its HUD up)
             var starsBright = 1 - CARD_DIM * cardDim;   // the icon's dots are put back to full in the shapes, below
             // PROJECTS slides sideways with the zoom, staying on its row under the wordmark: from under its right edge to the
             // left margin, growing a little about its own middle (not on a phone, where there's less room), and is the
@@ -1509,7 +1512,7 @@
                 lockup.tabIndex = lockupLive ? 0 : -1;
                 // Arriving, the menu rolls out as PROJECTS reaches its place (not over a project that's showing);
                 // heading back out, it rolls away
-                if (lockupLive && !menuOpen && !activeProject && !isShortLandscape()) openMenu();
+                if (lockupLive && !menuOpen && !activeProject && !isShortLandscape() && !backdrop) openMenu();
                 else if (!lockupLive && menuOpen) closeMenu();
             }
             dotMaterial.uniforms.inside.value = insideMix;
@@ -1760,7 +1763,23 @@
         // it's heard, the last one's strength, how loud, how much bass). Anywhere else, none of it: the home page as it is
         var partyOn = false;
         var party = { beat: 0, loud: 0, bass: 0, side: 1, spinGlow: 0, heard: -1, last: -1, ripples: [],
-            level: 1, b: 0, lo: 0, ba: 0, sg: 0 };   // (level: how far it's on; b, lo, ba, sg: the beat and the rest, as felt)
+            level: 1, b: 0, lo: 0, ba: 0, sg: 0, mouse: false, kick: 0 };   // (level: how far it's on; b, lo, ba, sg: the beat and the
+                                                                    // rest, as felt; mouse: the tutorial's Mouse party on)
+        // Your pointer (the tutorial hands it down, or this frame's own, when it takes the mouse): the stars round it pushed
+        // aside on the screen, as inside here (Skew) — and, with Mouse party on, lit up full party: all colours, flaring with
+        // the beat and the loudness. Its own, apart from the tour's pointer (the ghost)
+        var MOUSE_RADIUS = 220, MOUSE_PUSH = 120, MOUSE_EASE = 0.16;   // (px, px, eased: as Skew's)
+        var userPx = { x: -1, y: -1, on: false };
+        // …all the tools in it, with Mouse party: Pulse (the area swelling, pushing harder, on the beat), Skew (a ring out from
+        // your pointer each beat), Spin kick (swirled round it, one way then the other), Spike (lifted off the sphere with the
+        // bass), Glow and Flare (brighter on the beat, bigger with the loudness) — the stars their own colour
+        var MOUSE_RING_LIFE = 0.8, MOUSE_RING_SPEED = 500, MOUSE_RING_WIDTH = 28, MOUSE_SWIRL = 90;   // (s, px/s, px, px)
+        var mouseRings = [];
+        var mouseX = new Float32Array(DOT_COUNT), mouseY = new Float32Array(DOT_COUNT);   // (each star's push, px, eased)
+        var partyInverse = new THREE.Matrix4(), partyWorld = new THREE.Vector3(), partyScreen = new THREE.Vector3();
+        window.userPoint = function (x, y) { userPx.x = x; userPx.y = y; userPx.on = true; };
+        window.userLeave = function () { userPx.on = false; };
+        window.addEventListener("pointermove", function (e) { if (partyOn) window.userPoint(e.clientX, e.clientY); });
         var PARTY_SKEW_LIFE = 1.2, PARTY_SKEW_SPEED = 2.6, PARTY_SKEW_WIDTH = 0.2, PARTY_SKEW_PUSH = 40;
         var partyPaint = new THREE.Color(), partyNear = new THREE.Vector3(), partyTurn = new THREE.Quaternion();
         function partyStep(t) {   // (each frame: the beat, as the tutorial hears it)
@@ -1775,9 +1794,11 @@
             party.sg = party.spinGlow * party.level;
             party.beat *= Math.exp(-dt * 6);
             party.spinGlow *= Math.exp(-dt * 3);
+            party.kick *= Math.exp(-dt * 4);
             party.ripples = party.ripples.filter(function (r) { return t - r.born < PARTY_SKEW_LIFE; });
             var music = null;
             try { music = window.parent.show && window.parent.show.music ? window.parent.show.music() : null; } catch (err) {}
+            party.mouse = !!(music && music.mouse);
             if (!music || !music.playing) {
                 if (music) party.heard = music.beats;
                 party.loud *= Math.exp(-dt * 3);
@@ -1787,12 +1808,16 @@
             if (party.heard < 0) party.heard = music.beats;   // (from now on)
             if (music.beats > party.heard) {
                 party.heard = music.beats;
-                if (party.level <= 0) return;   // (the party over)
                 var strength = music.strength;
-                party.beat = Math.max(party.beat, strength);
+                party.beat = Math.max(party.beat, strength);   // (always heard: your pointer's area parties on after the rest)
                 party.side = -party.side;
                 party.spinGlow = Math.max(party.spinGlow, strength);
-                if (!reducedMotion) {
+                party.kick = strength * party.side;
+                if (party.mouse && userPx.on) {   // (a ring out from where your pointer is)
+                    mouseRings.push({ x: userPx.x, y: userPx.y, born: t, strength: strength });
+                    if (mouseRings.length > 4) mouseRings.shift();
+                }
+                if (party.level > 0 && !reducedMotion) {   // (the sphere's own party, while it's on)
                     spinY += 0.006 * strength * party.side;
                     partyTurn.copy(globe.quaternion).invert();
                     partyNear.set((Math.random() - 0.5) * 1.2, (Math.random() - 0.5) * 1.2, 1).normalize().applyQuaternion(partyTurn);
@@ -1835,6 +1860,56 @@
                 dotSizes[i] *= (1 + party.b * (0.6 + party.lo) + party.lo * 0.4) * (1 + 0.3 * pushed);
                 dotAlphas[i] = Math.min(1, dotAlphas[i] * (1 + 0.15 * party.b + party.lo * 0.3));
             }
+            partyMouse(t);
+        }
+        function partyMouse(t) {   // (your pointer's area: pushed aside, and with Mouse party on, all the tools)
+            partyInverse.copy(globe.matrixWorld).invert();
+            var unitsPerPx = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / window.innerHeight;
+            var on = party.mouse, beat = on ? party.beat : 0, loud = on ? party.loud : 0, bass = on ? party.bass : 0, kick = on ? party.kick : 0;
+            var reach = MOUSE_RADIUS * (1 + 0.35 * beat), push = MOUSE_PUSH * (1 + 0.8 * beat);   // (Pulse)
+            mouseRings = mouseRings.filter(function (r) { return t - r.born < MOUSE_RING_LIFE; });
+            for (var i = 0; i < DOT_COUNT; i++) {
+                partyWorld.set(dotPositions[i * 3], dotPositions[i * 3 + 1], dotPositions[i * 3 + 2]).applyMatrix4(globe.matrixWorld);
+                var ahead = partyScreen.copy(partyWorld).sub(camera.position).dot(cameraForward), pushX = 0, pushY = 0, near = 0, ring = 0;
+                if (ahead > 1 && (userPx.on || (on && mouseRings.length))) {
+                    partyScreen.copy(partyWorld).project(camera);
+                    var sx = (partyScreen.x + 1) / 2 * window.innerWidth, sy = (1 - partyScreen.y) / 2 * window.innerHeight;
+                    var dx = sx - userPx.x, dy = sy - userPx.y, dist = Math.sqrt(dx * dx + dy * dy);
+                    if (userPx.on && dist < reach && dist > 0.001) {
+                        near = (1 - dist / reach) * (1 - dist / reach);
+                        pushX = dx / dist * push * near - dy / dist * kick * MOUSE_SWIRL * near;   // (pushed out; swirled: Spin kick)
+                        pushY = dy / dist * push * near + dx / dist * kick * MOUSE_SWIRL * near;
+                    }
+                    for (var w = 0; w < mouseRings.length; w++) {   // (Skew: each beat's ring, shoving the stars it passes)
+                        var rg = mouseRings[w], age = t - rg.born, rx = sx - rg.x, ry = sy - rg.y, rd = Math.sqrt(rx * rx + ry * ry) || 1;
+                        var off = (rd - age * MOUSE_RING_SPEED) / MOUSE_RING_WIDTH;
+                        if (off > 3 || off < -3) continue;
+                        var weight = Math.exp(-off * off) * (1 - age / MOUSE_RING_LIFE) * rg.strength;
+                        pushX += rx / rd * 45 * weight;
+                        pushY += ry / rd * 45 * weight;
+                        ring = Math.max(ring, weight);
+                    }
+                }
+                mouseX[i] += (pushX - mouseX[i]) * MOUSE_EASE;
+                mouseY[i] += (pushY - mouseY[i]) * MOUSE_EASE;
+                var lit = Math.max(Math.min(1, Math.sqrt(mouseX[i] * mouseX[i] + mouseY[i] * mouseY[i]) / MOUSE_PUSH * 1.25), ring);
+                if (lit < 0.002 || ahead <= 1) continue;
+                var units = unitsPerPx * ahead;
+                partyWorld.addScaledVector(cameraRight, mouseX[i] * units).addScaledVector(cameraUp, -mouseY[i] * units).applyMatrix4(partyInverse);
+                if (bass > 0) partyWorld.multiplyScalar(1 + 0.25 * bass * near);   // (Spike: lifted off the sphere with the bass)
+                dotPositions[i * 3] = partyWorld.x;
+                dotPositions[i * 3 + 1] = partyWorld.y;
+                dotPositions[i * 3 + 2] = partyWorld.z;
+                // lit: the sunrise, as Skew lights them — or, Mouse party, left their own colour (just bigger and brighter)
+                if (!on) {
+                    var c = sunrise((1 - partyWorld.y / RADIUS) / 2);
+                    dotColors[i * 3] += (c.r - dotColors[i * 3]) * lit;
+                    dotColors[i * 3 + 1] += (c.g - dotColors[i * 3 + 1]) * lit;
+                    dotColors[i * 3 + 2] += (c.b - dotColors[i * 3 + 2]) * lit;
+                }
+                dotSizes[i] *= 1 + lit * (on ? 0.8 + 1.5 * beat + loud + 0.6 * bass : 0.3);   // (Flare)
+                dotAlphas[i] = Math.min(1, dotAlphas[i] + lit * (on ? 0.6 : 0.3));
+            }
         }
 
         // ---------------- The tour: a link like pyrothief.ca/#drift plays the way there by itself ----------------
@@ -1855,7 +1930,7 @@
         var tourTarget = tourSlug ? TOUR_SLUGS[tourSlug] : null;
         var tourWait = Math.max(0, parseFloat(tourHash.wait) || 0);   // (&wait=2: s on the sphere first — the tutorial's Splash)
         var splashTold = false;    // (#drift&splash: the tutorial told the HUD's settled in the middle)
-        partyOn = !!tourHash.splash && window.parent !== window;   // (the tutorial's Splash: the sphere to its song, full blast)
+        partyOn = (!!tourHash.splash || !!tourHash.backdrop) && window.parent !== window;   // (the tutorial's: to its song)
         // (#drift&splash&hold: the tutorial's link for visitors — on the sphere till they click it, then the tutorial says go,
         // and the tour plays from then, as if the page had just opened; `wait` with it: s on the sphere first, as &wait)
         var tourHeld = !!tourHash.hold;
@@ -1970,10 +2045,30 @@
             try { if (window.parent.visit) window.parent.visit(); } catch (err) {}
         }, true);
         window.addEventListener("wheel", function (e) {
-            if (!tourHeld) return;
+            if (!tourHeld && !backdrop) return;
             e.preventDefault();
             e.stopImmediatePropagation();
         }, { capture: true, passive: false });
+
+        // ---------------- The Drift Remote tutorial's backdrop (#backdrop, or told so as its Splash ends) ----------------
+        // Inside the sphere, its stars all round (as dim as at Splash's end, with Drift Remote's HUD up), and nothing else of
+        // the page — no header, menu, card, HUD or project's icon: the tutorial's own picture drawn over it. The pointer it
+        // hands down (userPoint, with the party's, above) pushes the stars aside around it, as here inside (Skew)
+        var backdrop = false, backdropSnap = false;
+        function becomeBackdrop(now) {   // (now: from the start, straight in; else from Splash's end, already in)
+            if (backdrop) return;
+            backdrop = true;
+            document.documentElement.classList.add("backdrop");
+            if (tourActive) endTour();
+            closeCard();
+            if (menuOpen) closeMenu();
+            Object.keys(iconShapes).forEach(function (key) { iconShapes[key].form = 0; });   // (its icon gone at once: the tutorial's over it)
+            depth = 1;
+            if (!inside) setInside(true);
+            if (now) { backdropSnap = true; cardDim = 1; }   // (from the start: in, and as dim as at Splash's end, at once)
+        }
+        window.becomeBackdrop = function () { becomeBackdrop(false); };
+        if (tourHash.backdrop) becomeBackdrop(true);
         window.addEventListener("pointerdown", interruptTour, true);
         window.addEventListener("wheel", interruptTour, true);
         window.addEventListener("keydown", interruptTour, true);
