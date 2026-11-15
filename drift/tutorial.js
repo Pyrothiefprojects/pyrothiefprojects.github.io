@@ -586,7 +586,7 @@ if (visiting) {
     document.body.classList.add("visiting");
     splash(true, true);
     splashHeld = true;
-    document.addEventListener("pointerdown", function () {
+    document.addEventListener("click", function () {   // (a click: what browsers count as leave to play the song)
         if (document.body.classList.contains("watching")) return;
         musicButton.setAttribute("aria-pressed", "true");
         watching(true);
