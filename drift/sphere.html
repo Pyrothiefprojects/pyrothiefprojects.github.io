@@ -207,6 +207,9 @@
             if (e.pointerType === "touch" || e.type !== "pointerup") { pointerOver = false; lastX = lastY = null; }
         }
         canvas.addEventListener("pointerup", pointerEnded);
+        // (the tutorial's visitors, at the end: a click on it, and the run's from the start again — called straight up, in
+        // the click itself, so the browser lets the song play)
+        canvas.addEventListener("click", function () { try { if (!alone && window.parent.visit) window.parent.visit(); } catch (err) {} });
         canvas.addEventListener("pointercancel", pointerEnded);
         canvas.addEventListener("pointerleave", pointerEnded);
 

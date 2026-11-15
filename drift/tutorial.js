@@ -562,10 +562,18 @@ function nextPart(i) {
     for (var n = i + 1; n < PARTS.length; n++) if (!PARTS[n].staging && !PARTS[n].wip) return n;
     return -1;
 }
-document.getElementById("play").addEventListener("click", function () {
+document.getElementById("play").addEventListener("click", startRun);
+function visit() {   // (the visitors' click: on the page, or on a sphere in the frame)
+    if (!visiting || document.body.classList.contains("watching")) return;
+    musicButton.setAttribute("aria-pressed", "true");
+    startRun();
+}
+function startRun() {   // (▶ Play, and the visitors' click: with Music, once the song's really playing, so they start together)
     watching(true);
-    playPart(nextPart(-1), true);
-});
+    var go = function () { if (document.body.classList.contains("watching") && playing < 0) playPart(nextPart(-1), true); };
+    if (musicButton.getAttribute("aria-pressed") === "true") show.whenPlaying(go);
+    else go();
+}
 // ▶ Play watched as it is: the menu out of the way till it's done, the show's player small (to pause it) — with the song
 // from the start, if Music's on (off each visit). A click (but on the player) or Escape stops it
 var musicButton = document.getElementById("withMusic");
@@ -577,21 +585,17 @@ function watching(on) {
     show.along(on && musicButton.getAttribute("aria-pressed") === "true");
     show.watch(on);
 }
-// The link for visitors (drift.html#watch): the home page's sphere, as Splash starts, its tour held — a click on it (so the
-// browser lets the song play) begins the whole run with Music, as ▶ Play has it, the tour going on from that moment in
-// the same frame. No menus, no editor, no player; nothing stops it (Space pauses). At the end it's on the sphere: a click,
-// and it's from the start again
+// The link for visitors (drift.html#watch): the home page's sphere, as Splash starts, its tour held — to play with, as on
+// the home page (the frame takes the mouse till then) — and a click on it (so the browser lets the song play: the sphere
+// calls visit, in the click itself) begins the whole run with Music, as ▶ Play has it, the tour going on from that moment
+// in the same frame. No menus, no editor, no player; nothing stops it (Space pauses). At the end it's on the sphere,
+// to play with too: a click, and it's from the start again
 var visiting = location.hash === "#watch";
 if (visiting) {
     document.body.classList.add("visiting");
     splash(true, true);
     splashHeld = true;
-    document.addEventListener("click", function () {   // (a click: what browsers count as leave to play the song)
-        if (document.body.classList.contains("watching")) return;
-        musicButton.setAttribute("aria-pressed", "true");
-        watching(true);
-        playPart(nextPart(-1), true);
-    });
+    document.addEventListener("click", visit);   // (a click: what browsers count as leave to play the song)
 }
 function stopWatching(e) {
     if (visiting) return;   // (the visitors' link: nothing stops it)

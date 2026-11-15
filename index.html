@@ -711,7 +711,7 @@
         var burstStart = -1;        // when the click came (clock seconds), or -1
         var blowFrom = -1;          // when it starts to blow apart: BURST_START in, or once the flame is full if later
         function startBurst() {
-            if (burstStart >= 0) return;
+            if (burstStart >= 0 || tourHeld) return;   // (held for the tutorial's visitors: their click begins it, not this)
             burstStart = simTime;
             burstFrom = depth;
             blowFrom = -1;
@@ -1728,7 +1728,7 @@
             dotGeometry.attributes.aSize.needsUpdate = true;
             dotGeometry.attributes.aAlpha.needsUpdate = true;
 
-            spikeMaterial.opacity = (partyOn ? Math.min(1, 0.3 + 0.35 * party.beat + 0.5 * party.bass) : 0.3) * starsBright;
+            spikeMaterial.opacity = (partyOn ? Math.min(1, 0.3 + 0.35 * party.b + 0.5 * party.ba) : 0.3) * starsBright;
 
             for (var s = 0; s < SPIKE_COUNT; s++) {
                 var sp = spikes[s];
@@ -1737,9 +1737,9 @@
                 var breathe = reducedMotion ? 1 : 0.55 + 0.45 * Math.sin(t * sp.speed + sp.phase);
                 var tip = base + sp.length * breathe;
                 if (partyOn) {   // (Pulse: swelling, the spikes shooting out; Spike: long with the bass, each its own way)
-                    base *= 1 + 0.07 * party.beat;
-                    tip = base + sp.length * breathe * (1 + 1.2 * party.beat) * (1 + 2.5 * party.bass) +
-                        party.bass * 40 * (0.5 + 0.5 * Math.sin(sp.phase * 3));
+                    base *= 1 + 0.07 * party.b;
+                    tip = base + sp.length * breathe * (1 + 1.2 * party.b) * (1 + 2.5 * party.ba) +
+                        party.ba * 40 * (0.5 + 0.5 * Math.sin(sp.phase * 3));
                 }
                 spikePositions[s * 6] = sp.dir.x * base;
                 spikePositions[s * 6 + 1] = sp.dir.y * base;
@@ -1759,12 +1759,20 @@
         // bass) — every glow in all colours, moving round the wheel. The beat's the tutorial's (its show.music: the beats
         // it's heard, the last one's strength, how loud, how much bass). Anywhere else, none of it: the home page as it is
         var partyOn = false;
-        var party = { beat: 0, loud: 0, bass: 0, side: 1, spinGlow: 0, heard: -1, last: -1, ripples: [] };
+        var party = { beat: 0, loud: 0, bass: 0, side: 1, spinGlow: 0, heard: -1, last: -1, ripples: [],
+            level: 1, b: 0, lo: 0, ba: 0, sg: 0 };   // (level: how far it's on; b, lo, ba, sg: the beat and the rest, as felt)
         var PARTY_SKEW_LIFE = 1.2, PARTY_SKEW_SPEED = 2.6, PARTY_SKEW_WIDTH = 0.2, PARTY_SKEW_PUSH = 40;
         var partyPaint = new THREE.Color(), partyNear = new THREE.Vector3(), partyTurn = new THREE.Quaternion();
         function partyStep(t) {   // (each frame: the beat, as the tutorial hears it)
             var dt = party.last < 0 ? 0 : Math.max(0, Math.min(0.1, t - party.last));
             party.last = t;
+            // On, full blast, while the tour waits; fading out over its last 0.4 s, before the pointer sets off across the
+            // sphere for the flame (at 1.4 s of the tour's time), and gone from then on
+            party.level = tourHeld ? 1 : Math.max(0, Math.min(1, (1.4 - (t - tourWait)) / 0.4));
+            party.b = party.beat * party.level;
+            party.lo = party.loud * party.level;
+            party.ba = party.bass * party.level;
+            party.sg = party.spinGlow * party.level;
             party.beat *= Math.exp(-dt * 6);
             party.spinGlow *= Math.exp(-dt * 3);
             party.ripples = party.ripples.filter(function (r) { return t - r.born < PARTY_SKEW_LIFE; });
@@ -1779,6 +1787,7 @@
             if (party.heard < 0) party.heard = music.beats;   // (from now on)
             if (music.beats > party.heard) {
                 party.heard = music.beats;
+                if (party.level <= 0) return;   // (the party over)
                 var strength = music.strength;
                 party.beat = Math.max(party.beat, strength);
                 party.side = -party.side;
@@ -1795,7 +1804,7 @@
             party.bass += (music.bass - party.bass) * Math.min(1, dt * 12);
         }
         function partyStars(t) {   // (after the sphere's own step: its stars swelled, pushed, lit and grown, the flame's left be)
-            var swell = 1 + 0.07 * party.beat;
+            var swell = 1 + 0.07 * party.b;
             for (var i = 0; i < DOT_COUNT; i++) {
                 var d = dirs[i], px = dotPositions[i * 3] * swell, py = dotPositions[i * 3 + 1] * swell, pz = dotPositions[i * 3 + 2] * swell;
                 var pushed = 0;
@@ -1803,7 +1812,7 @@
                     var rp = party.ripples[w], age = t - rp.born, dot = d.dot(rp.from);
                     var off = (Math.acos(Math.max(-1, Math.min(1, dot))) - age * PARTY_SKEW_SPEED) / PARTY_SKEW_WIDTH;
                     if (off > 3 || off < -3) continue;
-                    var weight = Math.exp(-off * off) * (1 - age / PARTY_SKEW_LIFE) * rp.strength;
+                    var weight = Math.exp(-off * off) * (1 - age / PARTY_SKEW_LIFE) * rp.strength * party.level;
                     var tx = d.x - rp.from.x * dot, ty = d.y - rp.from.y * dot, tz = d.z - rp.from.z * dot, tl = Math.hypot(tx, ty, tz) || 1;
                     px += tx / tl * PARTY_SKEW_PUSH * weight;
                     py += ty / tl * PARTY_SKEW_PUSH * weight;
@@ -1814,17 +1823,17 @@
                 dotPositions[i * 3 + 1] = py;
                 dotPositions[i * 3 + 2] = pz;
                 // the strongest glow here — Skew's ring, Glow's flash, Pulse, Flare, Spin kick's bands — in all colours
-                var glow = Math.max(pushed, party.beat * (0.35 + 0.65 * ((i * 0.618) % 1)), party.beat * 0.8,
-                    party.beat * (0.45 + 0.55 * ((i * 0.37) % 1)),
-                    party.spinGlow * Math.max(0, Math.sin(Math.atan2(d.z, d.x) * 3 - party.side * t * 4)));
+                var glow = Math.max(pushed, party.b * (0.35 + 0.65 * ((i * 0.618) % 1)), party.b * 0.8,
+                    party.b * (0.45 + 0.55 * ((i * 0.37) % 1)),
+                    party.sg * Math.max(0, Math.sin(Math.atan2(d.z, d.x) * 3 - party.side * t * 4)));
                 if (glow > 0.001) {
                     var c = partyPaint.setHSL((i * 0.618 + t * 0.12) % 1, 0.85, 0.6);
                     dotColors[i * 3] += (c.r - dotColors[i * 3]) * glow;
                     dotColors[i * 3 + 1] += (c.g - dotColors[i * 3 + 1]) * glow;
                     dotColors[i * 3 + 2] += (c.b - dotColors[i * 3 + 2]) * glow;
                 }
-                dotSizes[i] *= (1 + party.beat * (0.6 + party.loud) + party.loud * 0.4) * (1 + 0.3 * pushed);
-                dotAlphas[i] = Math.min(1, dotAlphas[i] * (1 + 0.15 * party.beat + party.loud * 0.3));
+                dotSizes[i] *= (1 + party.b * (0.6 + party.lo) + party.lo * 0.4) * (1 + 0.3 * pushed);
+                dotAlphas[i] = Math.min(1, dotAlphas[i] * (1 + 0.15 * party.b + party.lo * 0.3));
             }
         }
 
@@ -1952,8 +1961,19 @@
         }
         // A click, touch, scroll or key stops the tour where it is
         function interruptTour() {
-            if (tourActive) endTour();
+            if (tourActive && !tourHeld) endTour();   // (held: the visitors' sphere to play with, the tour still to come)
         }
+        // The tutorial's visitors, held: the sphere to play with as here; a click begins the tutorial's run (called straight
+        // up, in the click itself, so the browser lets its song play); no scrolling in meanwhile
+        window.addEventListener("click", function () {
+            if (!tourHeld || window.parent === window) return;
+            try { if (window.parent.visit) window.parent.visit(); } catch (err) {}
+        }, true);
+        window.addEventListener("wheel", function (e) {
+            if (!tourHeld) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }, { capture: true, passive: false });
         window.addEventListener("pointerdown", interruptTour, true);
         window.addEventListener("wheel", interruptTour, true);
         window.addEventListener("keydown", interruptTour, true);

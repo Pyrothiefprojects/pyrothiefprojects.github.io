@@ -6,7 +6,8 @@
 // transform (the whole picture's swell and twist), dot (each star's look), along (▶ Play with Music), duration (the
 // song's length), cue / span / mark (#edit's Dialog: the song put at a line's moment, its segment played, marked),
 // watch (▶ Play watched: the player small, to pause it), capture (every star drawn, caught: Disconnect's end), and music
-// (the beats heard so far, the last one's strength, how loud and how much bass just now: for the spheres in the frame)
+// (the beats heard so far, the last one's strength, how loud and how much bass just now: for the spheres in the frame),
+// and whenPlaying (once the song's really playing: a run with Music starting with it)
 
 var show = (function () {
     var SONG = "drift/Drift_tutorial.mp4";
@@ -19,6 +20,26 @@ var show = (function () {
     // ---------------- The player ----------------
     var song = new Audio(SONG);
     song.preload = "auto";
+    // …and all of it in memory as soon as the page opens, played from there (so it never stalls part way, waiting on the
+    // network: the first visit's stutter) — taken up only if it's not been played yet
+    if (window.fetch && window.URL && URL.createObjectURL) {
+        fetch(SONG).then(function (r) { return r.ok ? r.blob() : null; }).then(function (blob) {
+            if (blob && song.paused && song.currentTime === 0) song.src = URL.createObjectURL(blob);
+        }).catch(function () {});
+    }
+    // Once the song's really playing (or 4 s on, if it can't), fn — so a run with Music starts with the music, not before it
+    function whenPlaying(fn) {
+        var done = false;
+        function go() {
+            if (done) return;
+            done = true;
+            song.removeEventListener("playing", go);
+            fn();
+        }
+        if (!song.paused && song.currentTime > 0.05) return go();
+        song.addEventListener("playing", go);
+        setTimeout(go, 4000);
+    }
     var playButton = document.getElementById("songPlay"), seek = document.getElementById("songSeek");
     var timeLabel = document.getElementById("songTime"), note = document.getElementById("showNote");
     var seeking = false, started = false;   // (started: the song's been played — the show has the clock)
@@ -644,5 +665,6 @@ var show = (function () {
 
     return { frame: frame, transform: transform, dot: dot, paused: paused, along: along,
         duration: function () { return song.duration; }, cue: cue, span: span, mark: mark, watch: watch, capture: capture,
-        music: function () { return { beats: beatCount, strength: beatStrength, loud: loud, bass: bass, playing: !song.paused }; } };
+        music: function () { return { beats: beatCount, strength: beatStrength, loud: loud, bass: bass, playing: !song.paused }; },
+        whenPlaying: whenPlaying };
 })();

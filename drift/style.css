@@ -262,6 +262,7 @@ body {
    the end) */
 .visiting .tutorial, .visiting .dialogmenu, .visiting .player { display: none; }
 .visiting:not(.watching) { cursor: pointer; }
+.visiting:not(.watching) .splash { pointer-events: auto; }   /* (till it begins, and at the end: the sphere to play with) */
 .visiting .hud-link { pointer-events: none; }   /* (clicks are for the sphere here: not the HUD's beta link, opening TestFlight) */
 
 /* Splash: the home page over the dots (under the HUD and the menus), only while Splash shows it */
