@@ -441,7 +441,14 @@
         .exit:hover { color: #ffa500; border-color: #ffa500; box-shadow: 0 0 12px rgba(255, 107, 53, 0.5); }
         .exit[hidden] { display: none; }
         /* The Drift Remote tutorial's backdrop (#backdrop, or told so as its Splash ends): the stars alone, nothing else */
-        html.backdrop body > :not(#sphere) { visibility: hidden !important; }
+        html.backdrop body > :not(#sphere) { pointer-events: none !important; }
+        html.backdrop body > :not(#sphere):not(#main):not(#lockup):not(#cardPager),
+        html.backdrop.backdrop-faded #main, html.backdrop.backdrop-faded #lockup, html.backdrop.backdrop-faded #cardPager {
+            opacity: 0 !important; transition: opacity 1.1s ease !important;
+        }   /* (the header, PYROTHIEF and PROJECTS, and the dots under it: carried on into the tutorial's Intro, faded there) */
+        html.backdrop .hud { visibility: hidden !important; }   /* (the HUD at once: the tutorial's own takes over just there) */
+        /* In the tutorial (its Splash, its backdrop): no ✕ to back out of the sphere */
+        html.in-tutorial .exit { display: none !important; }
     </style>
 </head>
 <body>
@@ -2060,7 +2067,10 @@
             backdrop = true;
             document.documentElement.classList.add("backdrop");
             if (tourActive) endTour();
+            var dotsShowing = !pager.hidden;
             closeCard();
+            if (dotsShowing) pager.hidden = false;   // (the dots under PROJECTS kept, till the tutorial fades them: backdropFade)
+            if (now) document.documentElement.classList.add("backdrop-faded");   // (from the start: no header to carry over)
             if (menuOpen) closeMenu();
             Object.keys(iconShapes).forEach(function (key) { iconShapes[key].form = 0; });   // (its icon gone at once: the tutorial's over it)
             depth = 1;
@@ -2068,6 +2078,13 @@
             if (now) { backdropSnap = true; cardDim = 1; }   // (from the start: in, and as dim as at Splash's end, at once)
         }
         window.becomeBackdrop = function () { becomeBackdrop(false); };
+        // The header and the dots, carried on from Splash, faded out (as the tutorial's Intro draws its HUD back), then put away
+        window.backdropFade = function () {
+            if (!backdrop || document.documentElement.classList.contains("backdrop-faded")) return;
+            document.documentElement.classList.add("backdrop-faded");
+            setTimeout(function () { pager.hidden = true; }, 1200);
+        };
+        if (tourHash.splash || tourHash.backdrop) document.documentElement.classList.add("in-tutorial");
         if (tourHash.backdrop) becomeBackdrop(true);
         // (#arrive: the tutorial's visitors' end — this home screen, there at rest, no flying in, faded in over its sphere)
         if (tourHash.arrive) backdropSnap = true;

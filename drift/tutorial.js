@@ -137,7 +137,9 @@ var PARTS = [
         begin: function () {
             showAll();
             retractFrom = clock;
-        }
+        },
+        // (the home page's header and dots, carried on from Splash: faded out as the HUD draws back)
+        step: function (t) { if (t > 0.05) backdropFade(); }
     },
     {
         // Home (being built): from the intro's end — the iPhone moves down and shrinks into a small iPhone icon at
@@ -509,6 +511,9 @@ function backdrop() {
     else if (frameIs !== "backdrop") splashFrame.src = "index.html?backdrop=" + Date.now() + "#backdrop";
     frameIs = "backdrop";
     splashFrame.classList.add("on", "behind");
+}
+function backdropFade() {   // (the home page's header and dots, carried on from Splash, faded out: Intro's draw-back)
+    if (frameIs === "backdrop") try { splashFrame.contentWindow.backdropFade(); } catch (err) {}
 }
 function handDown(e) {   // (your pointer, to the spheres in the frames: Splash's, the stars behind, Disconnect's)
     [splashFrame, sphereFrame].forEach(function (frame) {
