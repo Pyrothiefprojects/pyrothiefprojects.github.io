@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pyrosphere — Pyrothief Projects</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            background: #0a0a0a;
+            color: #f5f5f5;
+            font-family: 'Orbitron', system-ui, sans-serif;
+            letter-spacing: 0.08em;
+        }
+        #sphere { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+        #sphere.dragging { cursor: grabbing; }
+
+        /* Back to the tutorial, top left */
+        .back {
+            position: fixed; top: 16px; left: 16px;
+            color: #9a8a80; text-decoration: none; font-size: 0.72rem; text-transform: uppercase;
+            transition: color 0.2s ease;
+        }
+        .back:hover { color: #ff6b35; }
+
+        /* The player along the bottom: play, where it's got to (drag to move), the time; the reactions beside it */
+        .player {
+            position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+            width: min(640px, calc(100% - 32px));
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+            padding: 12px 16px;
+            background: rgba(20, 14, 10, 0.55);
+            border: 1px solid rgba(255, 107, 53, 0.18);
+            border-radius: 14px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .play {
+            flex: none; width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid rgba(255, 107, 53, 0.5); background: transparent; color: #ff6b35;
+            font-size: 1rem; cursor: pointer;
+        }
+        .play:hover { background: rgba(255, 107, 53, 0.12); }
+        .play:disabled { opacity: 0.3; cursor: default; background: transparent; }   /* (loading: until the sphere's whole) */
+        .track { flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+        .track .name { font-size: 0.66rem; color: #c0b0a0; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track .line { display: flex; align-items: center; gap: 10px; }
+        .seek { flex: 1; accent-color: #ff6b35; min-width: 0; }
+        .time { font-size: 0.62rem; color: #9a8a80; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .reacts { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+        .react {
+            font: inherit; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 6px 12px; border-radius: 999px; cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.18); background: transparent; color: #9a8a80;
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+        .react[aria-pressed="true"] { color: #ffb070; border-color: rgba(255, 107, 53, 0.6); background: rgba(255, 107, 53, 0.12); }
+        .react.live { margin-left: auto; }   /* (how the beat's found, not a reaction: set apart) */
+        /* The timeline's lanes: under the bar, one a line for each effect with ranges — where in the song it runs */
+        .lanes { display: flex; flex-direction: column; gap: 3px; }
+        .lanes:empty { display: none; }
+        .lane { position: relative; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.05); }
+        .lane span { position: absolute; top: 0; bottom: 0; border-radius: 3px; opacity: 0.85; }
+        .editing .lane { height: 9px; cursor: pointer; }
+        .editing .lane span:hover { opacity: 1; outline: 1px solid #fff; }
+        .react .swatch { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+        /* Editing (#edit): which effect, its flags at the playhead, undo, save */
+        .editor { flex: 1 1 100%; display: none; flex-wrap: wrap; align-items: center; gap: 8px; }
+        .editing .editor { display: flex; }
+        .editor select, .editor button {
+            font: inherit; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase;
+            padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255, 107, 53, 0.4);
+            background: rgba(255, 107, 53, 0.08); color: #ffb070; cursor: pointer;
+        }
+        .editor .save { margin-left: auto; }
+        /* Colour: the tool, its hint, the lines to the effects it's joined to, their chips, the wheel */
+        .react .wheel {
+            display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 0;
+            background: conic-gradient(hsl(0,85%,60%),hsl(60,85%,60%),hsl(120,85%,60%),hsl(180,85%,60%),hsl(240,85%,60%),hsl(300,85%,60%),hsl(360,85%,60%));
+        }
+        .react .chip { display: none; width: 11px; height: 11px; border-radius: 50%; margin-left: 7px; vertical-align: -1px;
+            border: 1px solid rgba(255, 255, 255, 0.6); cursor: pointer; }
+        .react .chip:hover { transform: scale(1.25); }
+        .links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+        .links path { fill: none; stroke-width: 1.5; stroke-dasharray: 3 3; opacity: 0.8; }
+        .hint {
+            position: absolute; transform: translateY(-100%); white-space: nowrap; pointer-events: none; z-index: 2;
+            font-size: 0.6rem; letter-spacing: 0.06em; padding: 6px 10px; border-radius: 8px;
+            background: rgba(20, 14, 10, 0.92); border: 1px solid rgba(255, 255, 255, 0.2); color: #f5f5f5;
+        }
+        .hint[hidden], .pop[hidden] { display: none; }
+        .pop {
+            position: absolute; z-index: 3; width: 196px; padding: 12px; border-radius: 12px;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            background: rgba(20, 14, 10, 0.95); border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+        .pop .wheel {
+            position: relative; width: 132px; height: 132px; border-radius: 50%; cursor: crosshair;
+            background: conic-gradient(hsl(0,90%,55%),hsl(60,90%,55%),hsl(120,90%,55%),hsl(180,90%,55%),hsl(240,90%,55%),hsl(300,90%,55%),hsl(360,90%,55%));
+        }
+        .pop .all {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%;
+            font: inherit; font-size: 0.5rem; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+            border: 2px solid #0a0a0a; background: #141010; color: #f5f5f5;
+        }
+        .pop .palettes { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+        .pop .pal { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.4); cursor: pointer; }
+        .pop .unjoin { font: inherit; font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer;
+            background: transparent; border: none; color: #9a8a80; }
+        .pop .unjoin:hover { color: #ff6b35; }
+        .note { flex: 1 1 100%; font-size: 0.6rem; color: #6a5a50; }
+        .note:empty { display: none; }
+    </style>
+</head>
+<body>
+    <canvas id="sphere" aria-label="A sphere of stars: hover or drag to spin it, scroll or pinch to fly in and out"></canvas>
+    <a class="back" href="../drift.html">&#8592; Drift</a>
+
+    <div class="player" id="player">
+        <button type="button" class="play" id="play" aria-label="Loading" disabled>&#9654;</button>
+        <div class="track">
+            <div class="name" id="name">Drift tutorial</div>
+            <div class="line">
+                <input type="range" class="seek" id="seek" min="0" max="1000" value="0" aria-label="Where the song's got to">
+                <span class="time" id="time">0:00 / 0:00</span>
+            </div>
+            <div class="lanes" id="lanes" aria-label="Where in the song each effect runs"></div>
+        </div>
+        <div class="reacts" id="reacts" role="group" aria-label="What the sphere does to the music">
+            <button type="button" class="react live" id="live" aria-pressed="false" title="Find the beat as it plays, instead of ahead">Live</button>
+        </div>
+        <div class="editor" id="editor" role="group" aria-label="Setting where each effect runs">
+            <select id="editWhich" aria-label="Which effect"></select>
+            <button type="button" id="flagStart">&#9656; Start flag</button>
+            <button type="button" id="flagEnd">&#9666; End flag</button>
+            <button type="button" id="flagUndo">Undo</button>
+            <button type="button" class="save" id="flagSave">Save</button>
+        </div>
+        <div class="note" id="note"></div>
+        <svg class="links" id="links" aria-hidden="true"></svg>
+        <div class="hint" id="colourHint" hidden>Now click an effect to colour it · click a joined one to unjoin</div>
+        <div class="pop" id="wheelPop" role="dialog" aria-label="Its colours" hidden>
+            <div class="wheel" id="wheel" title="Pick a hue"><button type="button" class="all" id="allColours">All colours</button></div>
+            <div class="palettes" id="palettes"></div>
+            <button type="button" class="unjoin" id="unjoin">Unjoin colour</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+    (function () {
+        // The home page's sphere, on its own: its stars and spikes, the glow under the pointer, spinning with the pointer
+        // and flying in and out — and a player whose music it moves to (its beats found ahead, or heard live)
+        var RADIUS = 300;
+        var DOT_COUNT = 1000;
+        var SPIKE_COUNT = 520;
+        var DOT_COLOR = new THREE.Color(0xe0e0e0);
+        // The sunrise: the flame's own colours, top to bottom (as the home page's)
+        var SUNRISE = [new THREE.Color(0xfd9d0a), new THREE.Color(0xf46f0c), new THREE.Color(0xe75114),
+            new THREE.Color(0xe8271e)];
+        var sunriseColor = new THREE.Color();
+        function sunrise(p) {   // p: 0 at the top → 1 at the bottom
+            p = Math.max(0, Math.min(1, p)) * (SUNRISE.length - 1);
+            var at = Math.min(SUNRISE.length - 2, Math.floor(p));
+            return sunriseColor.copy(SUNRISE[at]).lerp(SUNRISE[at + 1], p - at);
+        }
+        var DOT_SIZE = 3.2;
+        var GLOW_SIZE = 6.5;
+        var BULGE_ANGLE = 0.42;    // radians
+        var BULGE_HEIGHT = 70;
+        var BULGE_EASE = 0.14;
+        var SPIN_GAIN = 0.0002;
+        var SPIN_FRICTION = 0.93;
+        var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        var canvas = document.getElementById("sphere");
+        var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+        var globe = new THREE.Group();
+        scene.add(globe);
+
+        // Stars: each in a random direction (new on every load), up to a little above the surface
+        var dirs = [];
+        var lift = new Float32Array(DOT_COUNT);
+        var bulge = new Float32Array(DOT_COUNT);
+        var dotPositions = new Float32Array(DOT_COUNT * 3);
+        var dotColors = new Float32Array(DOT_COUNT * 3);
+        var dotSizes = new Float32Array(DOT_COUNT);
+        var dotAlphas = new Float32Array(DOT_COUNT);
+        for (var i = 0; i < DOT_COUNT; i++) {
+            var y = Math.random() * 2 - 1, r = Math.sqrt(1 - y * y), a = Math.random() * Math.PI * 2;
+            dirs.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+            lift[i] = Math.random() * 8;
+        }
+        var dotGeometry = new THREE.BufferGeometry();
+        dotGeometry.setAttribute("position", new THREE.BufferAttribute(dotPositions, 3));
+        dotGeometry.setAttribute("aColor", new THREE.BufferAttribute(dotColors, 3));
+        dotGeometry.setAttribute("aSize", new THREE.BufferAttribute(dotSizes, 1));
+        dotGeometry.setAttribute("aAlpha", new THREE.BufferAttribute(dotAlphas, 1));
+        // Round, soft-edged dots whose size and colour can change one by one; the far side dimmer
+        var dotMaterial = new THREE.ShaderMaterial({
+            uniforms: { pixelRatio: { value: renderer.getPixelRatio() }, scale: { value: 420 } },
+            vertexShader: [
+                "attribute vec3 aColor;",
+                "attribute float aSize;",
+                "attribute float aAlpha;",
+                "uniform float pixelRatio;",
+                "uniform float scale;",
+                "varying vec3 vColor;",
+                "varying float vFade;",
+                "void main() {",
+                "    vColor = aColor;",
+                "    vec4 mv = modelViewMatrix * vec4(position, 1.0);",
+                "    vec3 n = normalize(normalMatrix * normalize(position));",
+                "    vFade = aAlpha * (0.35 + 0.65 * smoothstep(-0.6, 0.4, n.z));",
+                "    gl_PointSize = min(aSize * pixelRatio * (scale / -mv.z), 18.0 * pixelRatio);",
+                "    gl_Position = projectionMatrix * mv;",
+                "}"
+            ].join("\n"),
+            fragmentShader: [
+                "varying vec3 vColor;",
+                "varying float vFade;",
+                "void main() {",
+                "    float d = length(gl_PointCoord - 0.5);",
+                "    if (d > 0.5) discard;",
+                "    gl_FragColor = vec4(vColor, smoothstep(0.5, 0.3, d) * vFade);",
+                "}"
+            ].join("\n"),
+            transparent: true,
+            depthWrite: false
+        });
+        globe.add(new THREE.Points(dotGeometry, dotMaterial));
+
+        // Spikes: short lines straight out from the surface that slowly stretch and shrink
+        var spikes = [];
+        var spikePositions = new Float32Array(SPIKE_COUNT * 6);
+        for (var s = 0; s < SPIKE_COUNT; s++) {
+            spikes.push({
+                dir: new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1).normalize(),
+                length: 6 + Math.random() * 26, phase: Math.random() * Math.PI * 2, speed: 0.8 + Math.random() * 1.8, bulge: 0
+            });
+        }
+        var spikeGeometry = new THREE.BufferGeometry();
+        spikeGeometry.setAttribute("position", new THREE.BufferAttribute(spikePositions, 3));
+        var spikeColors = new Float32Array(SPIKE_COUNT * 6).fill(0xe0 / 255);   // (each end its own: Colour, joined, at the tips)
+        spikeGeometry.setAttribute("color", new THREE.BufferAttribute(spikeColors, 3));
+        var spikeMaterial = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.3, depthWrite: false });
+        globe.add(new THREE.LineSegments(spikeGeometry, spikeMaterial));
+
+        // ---------------- The pointer: the glow under it, and spinning ----------------
+        var raycaster = new THREE.Raycaster();
+        var pointerNDC = new THREE.Vector2();
+        var pointerOver = false;
+        var hitDir = new THREE.Vector3();
+        var hasHit = false;
+        var hitSphere = new THREE.Sphere(new THREE.Vector3(), RADIUS);
+        var hitPoint = new THREE.Vector3();
+        function updateHit() {
+            hasHit = false;
+            if (!pointerOver) return;
+            raycaster.setFromCamera(pointerNDC, camera);
+            if (raycaster.ray.intersectSphere(hitSphere, hitPoint)) {
+                hitDir.copy(globe.worldToLocal(hitPoint)).normalize();
+                hasHit = true;
+            }
+        }
+        var cosBulge = Math.cos(BULGE_ANGLE);
+        function bulgeWeight(d) {   // 0 outside the glow, rising smoothly to 1 under the pointer
+            if (!hasHit) return 0;
+            var c = d.dot(hitDir);
+            if (c <= cosBulge) return 0;
+            var t = (c - cosBulge) / (1 - cosBulge);
+            return t * t * (3 - 2 * t);
+        }
+
+        var spinX = 0, spinY = 0, lastX = null, lastY = null;
+        var fingers = {};   // touch pointer id → its latest { x, y }
+        var pinchFrom = null;   // two fingers: their distance, and the zoom, when they came down
+        function pointAt(x, y) {
+            pointerOver = true;
+            pointerNDC.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
+        }
+        function fingerSpan() {
+            var f = Object.keys(fingers).map(function (id) { return fingers[id]; });
+            return Math.hypot(f[0].x - f[1].x, f[0].y - f[1].y);
+        }
+        canvas.addEventListener("pointerdown", function (e) {
+            lastX = e.clientX;
+            lastY = e.clientY;
+            pointAt(e.clientX, e.clientY);
+            if (e.pointerType === "touch") {
+                fingers[e.pointerId] = { x: e.clientX, y: e.clientY };
+                if (Object.keys(fingers).length === 2) pinchFrom = { span: fingerSpan(), zoom: zoom };
+            }
+            canvas.setPointerCapture(e.pointerId);
+            canvas.classList.add("dragging");
+        });
+        // A mouse turns it just by moving over it (as on the home page); a finger by dragging; two fingers fly in and out
+        canvas.addEventListener("pointermove", function (e) {
+            if (e.pointerType === "touch") {
+                if (!fingers[e.pointerId]) return;
+                fingers[e.pointerId] = { x: e.clientX, y: e.clientY };
+                if (pinchFrom && Object.keys(fingers).length === 2) {
+                    setZoom(pinchFrom.zoom * fingerSpan() / pinchFrom.span);
+                    return;
+                }
+            }
+            pointAt(e.clientX, e.clientY);
+            if (lastX !== null) {
+                spinY += (e.clientX - lastX) * SPIN_GAIN;
+                spinX += (e.clientY - lastY) * SPIN_GAIN;
+            }
+            lastX = e.clientX;
+            lastY = e.clientY;
+        });
+        function pointerEnded(e) {
+            canvas.classList.remove("dragging");
+            if (e.pointerType === "touch") {
+                delete fingers[e.pointerId];
+                pinchFrom = null;
+                if (Object.keys(fingers).length === 0) { pointerOver = false; lastX = lastY = null; }
+                else { var f = fingers[Object.keys(fingers)[0]]; lastX = f.x; lastY = f.y; }
+            } else if (e.type !== "pointerup") {
+                pointerOver = false;
+                lastX = lastY = null;
+            }
+        }
+        canvas.addEventListener("pointerup", pointerEnded);
+        canvas.addEventListener("pointercancel", pointerEnded);
+        canvas.addEventListener("pointerleave", pointerEnded);
+
+        // Flying in and out: the scroll (or two fingers), between close up and far off
+        var zoom = 1;   // 1: the sphere fits the window; less is closer
+        function setZoom(z) { zoom = Math.max(0.45, Math.min(2.2, z)); }
+        canvas.addEventListener("wheel", function (e) {
+            e.preventDefault();
+            setZoom(zoom * Math.exp(e.deltaY * 0.0012));
+        }, { passive: false });
+
+        // Fit the sphere (with room for its spikes) inside the window, upright or sideways
+        var restZ = 1000;
+        function resize() {
+            var w = window.innerWidth, h = window.innerHeight;
+            renderer.setSize(w, h);
+            camera.aspect = w / h;
+            var half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+            var needed = RADIUS * 1.45;
+            restZ = Math.max(needed / half, needed / (half * camera.aspect));
+            camera.updateProjectionMatrix();
+        }
+        window.addEventListener("resize", resize);
+        resize();
+        camera.position.z = reducedMotion ? restZ : restZ * 4;   // (flying in from far off)
+
+        // ---------------- The player ----------------
+        var audio = new Audio("Drift_tutorial.mp4");
+        audio.preload = "metadata";
+        var playButton = document.getElementById("play");
+        var seek = document.getElementById("seek");
+        var timeLabel = document.getElementById("time");
+        var note = document.getElementById("note");
+        var seeking = false;
+        function clockText(sec) {
+            if (!isFinite(sec)) return "0:00";
+            var m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+            return m + ":" + (s < 10 ? "0" : "") + s;
+        }
+        function showTime() {
+            timeLabel.textContent = clockText(audio.currentTime) + " / " + clockText(audio.duration);
+            if (!seeking && audio.duration) seek.value = Math.round(audio.currentTime / audio.duration * 1000);
+        }
+        audio.addEventListener("timeupdate", showTime);
+        audio.addEventListener("loadedmetadata", showTime);
+        audio.addEventListener("play", function () { playButton.innerHTML = "&#10074;&#10074;"; playButton.setAttribute("aria-label", "Pause"); });
+        audio.addEventListener("pause", function () { playButton.innerHTML = "&#9654;"; playButton.setAttribute("aria-label", "Play"); });
+        audio.addEventListener("error", function () { note.textContent = "The song couldn't be loaded."; });
+        seek.addEventListener("input", function () {
+            seeking = true;
+            if (audio.duration) timeLabel.textContent = clockText(seek.value / 1000 * audio.duration) + " / " + clockText(audio.duration);
+        });
+        seek.addEventListener("change", function () {
+            if (audio.duration) audio.currentTime = seek.value / 1000 * audio.duration;
+            seeking = false;
+        });
+
+        // The browser's audio, the song played through it: one context, made now (it can decode before any press, but
+        // only plays sound after one); the song's path through it — and an analyser on it, for listening live
+        var Ctx = window.AudioContext || window.webkitAudioContext;
+        var ctx = null, analyser = null, bins = null;
+        try { ctx = new Ctx(); } catch (err) {}
+        function connect() {   // (on the first press)
+            if (analyser || !ctx) return;
+            try {
+                var source = ctx.createMediaElementSource(audio);
+                analyser = ctx.createAnalyser();
+                analyser.fftSize = 1024;
+                analyser.smoothingTimeConstant = 0.6;
+                source.connect(analyser);
+                analyser.connect(ctx.destination);
+                bins = new Uint8Array(analyser.frequencyBinCount);
+            } catch (err) {}
+        }
+        playButton.addEventListener("click", function () {
+            connect();
+            if (ctx && ctx.state === "suspended") ctx.resume();
+            if (audio.paused) audio.play(); else audio.pause();
+        });
+        // Starting once it's ready: playing now if the browser allows it, else on the first click, tap or key anywhere
+        var waitingForTouch = false;
+        function start() {
+            connect();
+            if (ctx && ctx.state === "suspended") ctx.resume();
+            var playing = audio.play();
+            if (playing && playing.catch) playing.catch(function () {
+                waitingForTouch = true;
+                note.textContent = "Tap anywhere to start the music";
+            });
+        }
+        function touched(e) {
+            if (!waitingForTouch || (e.target.closest && e.target.closest(".play"))) return;   // (the Play button does its own)
+            waitingForTouch = false;
+            note.textContent = "";
+            start();
+        }
+        document.addEventListener("pointerdown", touched, true);
+        document.addEventListener("keydown", touched, true);
+        playButton.addEventListener("click", function () { waitingForTouch = false; note.textContent = ""; });
+        // How long after it's played the sound's heard (the speakers', a Bluetooth headset's delay), if the browser says
+        function delay() { return ctx ? (ctx.outputLatency || 0) + (ctx.baseLatency || 0) : 0; }
+
+        // ---------------- The effects, and the timeline ----------------
+        // Each effect, its button and its colour on the timeline. An effect runs while its button's on — and, once it has
+        // ranges on the timeline (from the song's .effects.json, or set in #edit), only inside them
+        var EFFECTS = [
+            { key: "pulse", name: "Pulse", colour: "#ff9a3c" },    // the sphere swelling, the spikes shooting out, on the beat
+            { key: "flare", name: "Flare", colour: "#ffd166" },    // the stars bigger and brighter on the beat, with the loudness
+            { key: "spin", name: "Spin kick", colour: "#7bdff2" }, // each beat a push to the spin, one way then the other
+            { key: "colour", name: "Glow", colour: "#ff6b6b" },    // the stars flashing the sunrise on the beat
+            { key: "skew", name: "Skew", colour: "#b388ff" },      // each beat a ring of stars pushed aside, rippling across it
+            { key: "spike", name: "Spike", colour: "#5ad17a" }     // the spikes long and bright with the bass, all the time
+        ];
+        var reacts = {};   // each effect's button: on or off (remembered here, if the browser lets it)
+        EFFECTS.forEach(function (e) { reacts[e.key] = true; });
+        try { Object.assign(reacts, JSON.parse(localStorage.getItem("pyrosphere_reacts") || "{}")); } catch (err) {}
+        var reactsBox = document.getElementById("reacts"), liveSpot = document.getElementById("live"), buttons = {};
+        EFFECTS.forEach(function (e) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = "react";
+            b.innerHTML = '<span class="swatch" style="background:' + e.colour + '"></span>' + e.name;
+            b.setAttribute("aria-pressed", reacts[e.key] ? "true" : "false");
+            b.addEventListener("click", function () {
+                if (linking) return join(e.key);   // (Colour waiting for one to join)
+                reacts[e.key] = !reacts[e.key];
+                b.setAttribute("aria-pressed", reacts[e.key] ? "true" : "false");
+                try { localStorage.setItem("pyrosphere_reacts", JSON.stringify(reacts)); } catch (err) {}
+            });
+            reactsBox.insertBefore(b, liveSpot);
+            buttons[e.key] = b;
+        });
+
+        // ---------------- Colour: brought by whichever effects it's joined to ----------------
+        // Pick Colour, then an effect: a line joins them, and that effect brings colour with it. Each join has its own
+        // colours (its chip opens the wheel): all of them (the default — every star its own, moving round the wheel), a
+        // hue picked on the wheel (its shades), or a set palette
+        var PALETTES = {
+            sunrise: ["#fd9d0a", "#f46f0c", "#e75114", "#e8271e"],
+            ice: ["#f2fbff", "#b5e2ff", "#74b9ff", "#3f7fff"],
+            neon: ["#ff2bd6", "#7b2bff", "#2bd9ff", "#2bff88"],
+            ocean: ["#48cae4", "#0a9396", "#94d2bd", "#005f73"],
+            candy: ["#ff8fab", "#ffc2d1", "#b8f2e6", "#cdb4db"],
+            forest: ["#2d6a4f", "#52b788", "#95d5b2", "#d8f3dc"],
+            gold: ["#ffe08a", "#ffc53d", "#f2a20c", "#d97b06"]
+        };
+        var paletteColours = {};
+        Object.keys(PALETTES).forEach(function (k) { paletteColours[k] = PALETTES[k].map(function (h) { return new THREE.Color(h); }); });
+        var colours = {};   // an effect's key → { palette: "all" or one of PALETTES } or { hue: 0 → 1 }
+        try { colours = JSON.parse(localStorage.getItem("pyrosphere_colours") || "{}"); } catch (err) {}
+        var paint = new THREE.Color();
+        // The colour an effect brings to star (or spike) n just now — or null, if it isn't joined to Colour
+        function tint(key, n) {
+            var c = colours[key];
+            if (!c) return null;
+            var u = (n * 0.618 + simTime * 0.12) % 1;   // (each its own, moving on)
+            if (c.hue !== undefined) return paint.setHSL((c.hue + (u - 0.5) * 0.12 + 1) % 1, 0.9, 0.5 + 0.12 * Math.sin(u * 6.283));
+            if (c.palette === "all" || !paletteColours[c.palette]) return paint.setHSL(u, 0.85, 0.6);
+            var list = paletteColours[c.palette], at = u * list.length, i0 = Math.floor(at) % list.length;
+            return paint.copy(list[i0]).lerp(list[(i0 + 1) % list.length], at - Math.floor(at));
+        }
+        function swatchOf(c) {   // (what a join's colours look like, as CSS: its chip, its line)
+            if (!c || c.palette === "all") return "conic-gradient(hsl(0,85%,60%),hsl(60,85%,60%),hsl(120,85%,60%),hsl(180,85%,60%),hsl(240,85%,60%),hsl(300,85%,60%),hsl(360,85%,60%))";
+            if (c.hue !== undefined) {
+                var h = Math.round(c.hue * 360);
+                return "linear-gradient(135deg,hsl(" + (h - 20) + ",90%,45%),hsl(" + h + ",90%,58%),hsl(" + (h + 20) + ",90%,45%))";
+            }
+            return "linear-gradient(135deg," + (PALETTES[c.palette] || PALETTES.sunrise).join(",") + ")";
+        }
+        function lineColour(c) {   // (the line can't take a gradient as easily: its middle colour)
+            if (!c || c.palette === "all") return "#ffffff";
+            if (c.hue !== undefined) return "hsl(" + Math.round(c.hue * 360) + ",90%,58%)";
+            return (PALETTES[c.palette] || PALETTES.sunrise)[1];
+        }
+        function keepColours() { try { localStorage.setItem("pyrosphere_colours", JSON.stringify(colours)); } catch (err) {} }
+
+        // The tool: first among the buttons; pressed, it waits for an effect to join (the hint says so)
+        var colourTool = document.createElement("button");
+        colourTool.type = "button";
+        colourTool.className = "react colourtool";
+        colourTool.innerHTML = '<span class="wheel"></span>Colour';
+        colourTool.setAttribute("aria-pressed", "false");
+        colourTool.title = "Join colour to an effect";
+        reactsBox.insertBefore(colourTool, reactsBox.firstChild);
+        var hint = document.getElementById("colourHint"), linking = false;
+        function setLinking(on) {
+            linking = on;
+            colourTool.setAttribute("aria-pressed", on ? "true" : "false");
+            hint.hidden = !on;
+            if (on) {
+                var p = document.getElementById("player").getBoundingClientRect(), r = colourTool.getBoundingClientRect();
+                hint.style.left = (r.left - p.left) + "px";
+                hint.style.top = (r.top - p.top - 8) + "px";
+            }
+        }
+        colourTool.addEventListener("click", function () { setLinking(!linking); });
+        function join(key) {   // (joined: unjoin; else join, all colours to start with)
+            if (colours[key]) delete colours[key]; else colours[key] = { palette: "all" };
+            keepColours();
+            setLinking(false);
+            showJoins();
+        }
+
+        // Each effect's chip (its colours: a click opens the wheel) and the lines from the tool to the joined ones
+        var links = document.getElementById("links");
+        var SVG = "http://www.w3.org/2000/svg";
+        EFFECTS.forEach(function (e) {
+            var chip = document.createElement("span");
+            chip.className = "chip";
+            chip.title = "Its colours";
+            chip.addEventListener("click", function (ev) { ev.stopPropagation(); openWheel(e.key, chip); });
+            buttons[e.key].appendChild(chip);
+            e.chip = chip;
+        });
+        function showJoins() {
+            EFFECTS.forEach(function (e) {
+                e.chip.style.display = colours[e.key] ? "inline-block" : "none";
+                e.chip.style.background = swatchOf(colours[e.key]);
+            });
+            drawLinks();
+        }
+        function drawLinks() {
+            while (links.firstChild) links.removeChild(links.firstChild);
+            var p = document.getElementById("player").getBoundingClientRect(), from = colourTool.getBoundingClientRect();
+            var fx = from.left + from.width / 2 - p.left, fy = from.top + from.height / 2 - p.top;
+            EFFECTS.forEach(function (e) {
+                if (!colours[e.key]) return;
+                var to = buttons[e.key].getBoundingClientRect(), tx = to.left + to.width / 2 - p.left, ty = to.top + to.height / 2 - p.top;
+                var bend = Math.max(14, Math.abs(tx - fx) * 0.25);   // (arching over the buttons between)
+                var path = document.createElementNS(SVG, "path");
+                path.setAttribute("d", "M" + fx + "," + (fy - from.height / 2) + " C" + fx + "," + (fy - from.height / 2 - bend) + " " +
+                    tx + "," + (ty - to.height / 2 - bend) + " " + tx + "," + (ty - to.height / 2));
+                path.setAttribute("stroke", lineColour(colours[e.key]));
+                links.appendChild(path);
+            });
+        }
+        window.addEventListener("resize", drawLinks);
+
+        // The wheel: all colours in the middle; any hue round it; the set palettes under it; and unjoining
+        var wheelPop = document.getElementById("wheelPop"), wheelFor = null;
+        Object.keys(PALETTES).forEach(function (name) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = "pal";
+            b.title = name.charAt(0).toUpperCase() + name.slice(1);
+            b.style.background = swatchOf({ palette: name });
+            b.addEventListener("click", function () { setColours({ palette: name }); });
+            document.getElementById("palettes").appendChild(b);
+        });
+        function setColours(c) {
+            if (!wheelFor) return;
+            colours[wheelFor] = c;
+            keepColours();
+            showJoins();
+            closeWheel();
+        }
+        function openWheel(key, chip) {
+            wheelFor = key;
+            wheelPop.hidden = false;
+            var p = document.getElementById("player").getBoundingClientRect(), r = chip.getBoundingClientRect();
+            wheelPop.style.left = Math.max(8, Math.min(p.width - wheelPop.offsetWidth - 8, r.left - p.left - wheelPop.offsetWidth / 2)) + "px";
+            wheelPop.style.top = (r.top - p.top - wheelPop.offsetHeight - 10) + "px";
+        }
+        function closeWheel() { wheelPop.hidden = true; wheelFor = null; }
+        document.getElementById("wheel").addEventListener("click", function (ev) {
+            var r = this.getBoundingClientRect(), dx = ev.clientX - (r.left + r.width / 2), dy = ev.clientY - (r.top + r.height / 2);
+            setColours({ hue: ((Math.atan2(dx, -dy) / (2 * Math.PI)) + 1) % 1 });   // (round from the top, clockwise)
+        });
+        document.getElementById("allColours").addEventListener("click", function (ev) { ev.stopPropagation(); setColours({ palette: "all" }); });
+        document.getElementById("unjoin").addEventListener("click", function () { var k = wheelFor; closeWheel(); join(k); });
+        document.addEventListener("pointerdown", function (ev) {
+            if (!wheelPop.hidden && !wheelPop.contains(ev.target) && !(ev.target.classList && ev.target.classList.contains("chip"))) closeWheel();
+        }, true);
+        document.addEventListener("keydown", function (ev) {
+            if (ev.key === "Escape") { closeWheel(); setLinking(false); }
+        });
+        showJoins();
+
+
+        // Where each runs: { key: [[from, to], …] } (s; `to` null while a range is still open, in #edit)
+        var ranges = {};
+        var EFFECTS_FILE = "Drift_tutorial.effects.json";
+        fetch(EFFECTS_FILE).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+            if (d && d.ranges) { ranges = d.ranges; drawLanes(); }
+            if (d && d.colours) { colours = d.colours; showJoins(); }
+        }).catch(function () {});
+        function inRange(key, t) {   // (no ranges: all the way through)
+            var list = ranges[key];
+            if (!list || !list.length) return true;
+            return list.some(function (r) { return t >= r[0] && (r[1] === null || t <= r[1]); });
+        }
+        function openRange() {   // (a range started but not yet ended)
+            return Object.keys(ranges).some(function (k) { return ranges[k].some(function (r) { return r[1] === null; }); });
+        }
+        var act = {};   // which effects are running just now (each frame)
+        function whatsOn(t) { EFFECTS.forEach(function (e) { act[e.key] = reacts[e.key] && inRange(e.key, t); }); }
+
+        // The lanes under the timeline: a line for each effect with ranges, its ranges on it (in #edit, a click takes one off)
+        var lanes = document.getElementById("lanes");
+        var editing = location.hash === "#edit";
+        if (editing) document.getElementById("player").classList.add("editing");
+        function drawLanes() {
+            lanes.innerHTML = "";
+            var len = audio.duration;
+            if (!isFinite(len) || !len) return;
+            EFFECTS.forEach(function (e) {
+                var list = ranges[e.key];
+                if (!list || !list.length) return;
+                var lane = document.createElement("div");
+                lane.className = "lane";
+                lane.title = e.name;
+                list.forEach(function (r, n) {
+                    var seg = document.createElement("span"), to = r[1] === null ? Math.max(r[0], audio.currentTime) : r[1];
+                    seg.style.left = (r[0] / len * 100) + "%";
+                    seg.style.width = Math.max(0.3, (to - r[0]) / len * 100) + "%";
+                    seg.style.background = e.colour;
+                    seg.title = e.name + ": " + clockText(r[0]) + " – " + (r[1] === null ? "…" : clockText(r[1]));
+                    if (editing) seg.addEventListener("click", function () {
+                        remember();
+                        list.splice(n, 1);
+                        drawLanes();
+                    });
+                    lane.appendChild(seg);
+                });
+                lanes.appendChild(lane);
+            });
+        }
+        audio.addEventListener("loadedmetadata", drawLanes);
+
+        // #edit: the effect picked, a start flag and an end flag at the playhead, undo, and saving it all beside the song
+        // (through the local server; where there's none, as a file to download instead)
+        var undo = [];
+        function remember() { undo.push(JSON.stringify(ranges)); if (undo.length > 50) undo.shift(); }
+        if (editing) {
+            var which = document.getElementById("editWhich");
+            EFFECTS.forEach(function (e) {
+                var o = document.createElement("option");
+                o.value = e.key;
+                o.textContent = e.name;
+                which.appendChild(o);
+            });
+            document.getElementById("flagStart").addEventListener("click", function () {
+                remember();
+                (ranges[which.value] = ranges[which.value] || []).push([Math.round(audio.currentTime * 100) / 100, null]);
+                drawLanes();
+            });
+            document.getElementById("flagEnd").addEventListener("click", function () {
+                var t = Math.round(audio.currentTime * 100) / 100, list = ranges[which.value] || [];
+                var open = list.filter(function (r) { return r[1] === null && r[0] <= t; }).pop();
+                if (!open) { note.textContent = "No start flag before here for " + which.options[which.selectedIndex].text; return; }
+                remember();
+                open[1] = t;
+                drawLanes();
+            });
+            document.getElementById("flagUndo").addEventListener("click", function () {
+                if (!undo.length) return;
+                ranges = JSON.parse(undo.pop());
+                drawLanes();
+            });
+            document.getElementById("flagSave").addEventListener("click", function () {
+                var body = JSON.stringify({ song: "Drift_tutorial.mp4", ranges: ranges, colours: colours }, null, 2);
+                fetch("/save-effects?file=" + encodeURIComponent(EFFECTS_FILE), { method: "POST", body: body }).then(function (r) {
+                    if (!r.ok) throw new Error();
+                    note.textContent = "Saved, beside the song";
+                }).catch(function () {
+                    var a = document.createElement("a");
+                    a.href = URL.createObjectURL(new Blob([body], { type: "application/json" }));
+                    a.download = EFFECTS_FILE;
+                    a.click();
+                    note.textContent = "Couldn't save here: downloaded instead — put it in the drift folder";
+                });
+            });
+        }
+
+        // Live (the beat heard as it plays) rather than found ahead — off each visit unless chosen, or the song can't be
+        // analysed
+        var liveButton = document.getElementById("live");
+        var live = false;
+        function showLive() { liveButton.setAttribute("aria-pressed", live ? "true" : "false"); }
+        showLive();
+        liveButton.addEventListener("click", function () {
+            live = !live;
+            showLive();
+        });
+
+        // ---------------- The beat, found ahead ----------------
+        // The whole song, analysed once it's loaded (in the browser, before it plays): where every beat is, how strong,
+        // which start a bar, and how loud it is all the way through. Played back against where the song's got to, so it
+        // stays in time — through quiet parts, pausing and seeking alike.
+        // analyseBeats(samples, rate, progress): mono samples (Float32Array) → { bpm, beats: [s], strength: [0 → 1],
+        // bar: [true at each bar's first beat], fps, loud and bass: Float32Arrays (0 → 1, fps a second), start }; `progress`, if
+        // given, told how far it's got (0 → 1) every so often
+        // ANALYSE BEGIN
+        function analyseBeats(data, rate, progress) {
+            // 1. Down to about 22 kHz
+            var step = Math.max(1, Math.round(rate / 22050)), sr = rate / step, n = Math.floor(data.length / step);
+            var x = new Float32Array(n);
+            for (var i = 0; i < n; i++) {
+                var sum = 0;
+                for (var j = 0; j < step; j++) sum += data[i * step + j];
+                x[i] = sum / step;
+            }
+            // 2. Onsets: each moment, how much louder every frequency got than a moment before (spectral flux, log
+            // magnitudes), a 1024-sample window every 256 (~86 a second); and how loud it is
+            var N = 1024, HOP = 256, frames = Math.max(0, Math.floor((n - N) / HOP) + 1), fps = sr / HOP;
+            var win = new Float32Array(N), re = new Float32Array(N), im = new Float32Array(N), prev = new Float32Array(N / 2);
+            for (i = 0; i < N; i++) win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / N);
+            var cosT = new Float32Array(N / 2), sinT = new Float32Array(N / 2), rev = new Uint32Array(N), bits = Math.log2(N);
+            for (i = 0; i < N / 2; i++) { cosT[i] = Math.cos(2 * Math.PI * i / N); sinT[i] = -Math.sin(2 * Math.PI * i / N); }
+            for (i = 0; i < N; i++) { var r = 0; for (var bt = 0; bt < bits; bt++) r |= ((i >> bt) & 1) << (bits - 1 - bt); rev[i] = r; }
+            var flux = new Float32Array(frames), loud = new Float32Array(frames), bass = new Float32Array(frames);
+            var bassTop = Math.max(1, Math.round(160 * N / sr));   // (the bins under 160 Hz)
+            for (var f = 0; f < frames; f++) {
+                var at = f * HOP, energy = 0;
+                for (i = 0; i < N; i++) { var v = x[at + i]; energy += v * v; re[rev[i]] = v * win[i]; im[rev[i]] = 0; }
+                for (var size = 2; size <= N; size *= 2) {   // (the FFT, in place)
+                    var half = size / 2, tstep = N / size;
+                    for (var s0 = 0; s0 < N; s0 += size) for (var k = 0; k < half; k++) {
+                        var c = cosT[k * tstep], sn = sinT[k * tstep], p0 = s0 + k, p1 = p0 + half;
+                        var tr = re[p1] * c - im[p1] * sn, ti = re[p1] * sn + im[p1] * c;
+                        re[p1] = re[p0] - tr; im[p1] = im[p0] - ti; re[p0] += tr; im[p0] += ti;
+                    }
+                }
+                var fl = 0, bp = 0;
+                for (k = 1; k < N / 2; k++) {
+                    if (k <= bassTop) bp += re[k] * re[k] + im[k] * im[k];
+                    var m = Math.log(1 + 100 * Math.sqrt(re[k] * re[k] + im[k] * im[k]));
+                    if (m > prev[k]) fl += m - prev[k];
+                    prev[k] = m;
+                }
+                flux[f] = f > 0 ? fl : 0;
+                loud[f] = Math.sqrt(energy / N);
+                bass[f] = Math.sqrt(bp);
+                if (progress && f % 512 === 0) progress(f / frames);
+            }
+            // 3. The onsets against their own surroundings (half a second either side), the rest dropped; in standard units
+            var onset = new Float32Array(frames), W = Math.round(fps * 0.5), run = 0, lo = 0, hi = 0, mean = 0, sq = 0;
+            for (f = 0; f < frames; f++) {
+                while (hi < Math.min(frames, f + W + 1)) run += flux[hi++];
+                while (lo < f - W) run -= flux[lo++];
+                onset[f] = Math.max(0, flux[f] - run / (hi - lo));
+                mean += onset[f];
+            }
+            mean /= Math.max(1, frames);
+            for (f = 0; f < frames; f++) sq += (onset[f] - mean) * (onset[f] - mean);
+            var sd = Math.sqrt(sq / Math.max(1, frames)) || 1;
+            for (f = 0; f < frames; f++) onset[f] /= sd;
+            // 4. The tempo: the gap the onsets repeat at most (between 60 and 200 a minute), leaning towards ~120
+            var best = 0, bestLag = Math.round(fps * 0.5), acs = {};
+            for (var lag = Math.round(fps * 60 / 200); lag <= Math.round(fps * 60 / 60); lag++) {
+                var ac = 0;
+                for (f = lag; f < frames; f++) ac += onset[f] * onset[f - lag];
+                acs[lag] = ac;
+                var bpm = 60 * fps / lag, lean = Math.exp(-0.5 * Math.pow(Math.log(bpm / 120) / Math.log(2) / 0.9, 2));
+                if (ac * lean > best) { best = ac * lean; bestLag = lag; }
+            }
+            var a1 = acs[bestLag - 1] || 0, a2 = acs[bestLag], a3 = acs[bestLag + 1] || 0, den = a1 - 2 * a2 + a3;
+            var period = bestLag + (den < 0 ? 0.5 * (a1 - a3) / den : 0);   // (between frames)
+            // 5. The beats: the best run of onsets about a period apart (dynamic programming), traced back from the end
+            var score = new Float32Array(frames), from = new Int32Array(frames);
+            for (f = 0; f < frames; f++) {
+                var bestPrev = -1, bestScore = 0;
+                for (var q = Math.max(0, Math.round(f - 2 * period)); q <= f - Math.round(period / 2); q++) {
+                    var penalty = Math.log((f - q) / period), sc = score[q] - 100 * penalty * penalty;
+                    if (bestPrev < 0 || sc > bestScore) { bestScore = sc; bestPrev = q; }
+                }
+                score[f] = onset[f] + (bestPrev >= 0 ? bestScore : 0);
+                from[f] = bestPrev;
+            }
+            var end = frames - 1;
+            for (f = Math.max(0, Math.round(frames - period)); f < frames; f++) if (score[f] > score[end]) end = f;
+            var marks = [];
+            for (f = end; f >= 0; f = from[f]) { marks.unshift(f); if (from[f] < 0) break; }
+            // 6. Each beat's time (the middle of its window), its strength, and the bars: every fourth beat, starting on the
+            // one that's strongest over the song
+            var beats = [], strength = [], bar = [], sorted = marks.map(function (f) { return onset[f]; }).sort(function (u, v) { return u - v; });
+            var top = sorted[Math.floor(sorted.length * 0.9)] || 1, phase = 0, phaseBest = -1;
+            for (var ph = 0; ph < 4; ph++) {
+                var tot = 0;
+                for (var bi = ph; bi < marks.length; bi += 4) tot += onset[marks[bi]];
+                if (tot > phaseBest) { phaseBest = tot; phase = ph; }
+            }
+            marks.forEach(function (f, bi) {
+                beats.push((f * HOP + N / 2) / sr);
+                strength.push(Math.max(0.35, Math.min(1, onset[f] / top)));
+                bar.push(bi % 4 === phase);
+            });
+            var lsorted = Array.prototype.slice.call(loud).sort(function (u, v) { return u - v; }), ltop = lsorted[Math.floor(lsorted.length * 0.95)] || 1;
+            for (f = 0; f < frames; f++) loud[f] = Math.min(1, loud[f] / ltop);
+            var bsorted = Array.prototype.slice.call(bass).sort(function (u, v) { return u - v; }), btop = bsorted[Math.floor(bsorted.length * 0.95)] || 1;
+            for (f = 0; f < frames; f++) bass[f] = Math.min(1, bass[f] / btop);
+            return { bpm: 60 * fps / period, beats: beats, strength: strength, bar: bar, fps: fps, loud: loud, bass: bass, start: N / 2 / sr };
+        }
+        // ANALYSE END
+
+        // Loading it, the sphere's stars coming in as it goes (`loaded`, 0 → 1: the song coming down, to LOAD_DOWN;
+        // decoded, to LOAD_DECODED; its beats found, the rest). The analysis runs off to one side (a worker: a thread of
+        // its own, in one go), so the page carries on while it works. Play waits until the beats are found and the sphere
+        // is whole
+        // (FOR NOW, finding what's slow: when each stage was done, s from the page's start, and frames drawn meanwhile)
+        var timing = { start: performance.now(), frames: 0 };
+        function mark(stage) { timing[stage] = ((performance.now() - timing.start) / 1000).toFixed(1); }
+        var LOAD_DOWN = 0.45, LOAD_DECODED = 0.55;
+        var loaded = 0, decoding = false;
+        var grid = null;   // the song's beats, once found
+        function cantAnalyse(why) {
+            live = true;
+            showLive();
+            loaded = 1;
+            note.textContent = why;
+        }
+        function download(url) {   // (its bytes, telling `loaded` how far it's got where the server says how much there is)
+            return fetch(url).then(function (r) {
+                var total = +r.headers.get("Content-Length") || 0;
+                if (!r.body || !r.body.getReader || !total) return r.arrayBuffer();
+                var reader = r.body.getReader(), parts = [], got = 0;
+                function more() {
+                    return reader.read().then(function (piece) {
+                        if (piece.done) {
+                            var all = new Uint8Array(got), at = 0;
+                            parts.forEach(function (p) { all.set(p, at); at += p.length; });
+                            return all.buffer;
+                        }
+                        parts.push(piece.value);
+                        got += piece.value.length;
+                        loaded = LOAD_DOWN * Math.min(1, got / total);
+                        return more();
+                    });
+                }
+                return more();
+            });
+        }
+        // The analysis on its own thread: the channels put together into one there, how far it's got sent back as it
+        // goes, then the beats. (No worker to be had: here, all at once, the page stopping while it works)
+        function analyseAside(channels, rate, progress, done) {
+            function mix(ch) {
+                var n = ch[0].length, mono = new Float32Array(n);
+                for (var c = 0; c < ch.length; c++) for (var i = 0; i < n; i++) mono[i] += ch[c][i] / ch.length;
+                return mono;
+            }
+            function here() { setTimeout(function () { done(analyseBeats(mix(channels), rate)); }, 30); }
+            try {
+                var src = analyseBeats.toString() + "\nvar mix = " + mix.toString() + ";\nonmessage = function (e) {\n" +
+                    "    var g = analyseBeats(mix(e.data.channels), e.data.rate, function (p) { postMessage({ progress: p }); });\n" +
+                    "    postMessage({ grid: g }, [g.loud.buffer, g.bass.buffer]);\n};\n";
+                var url = URL.createObjectURL(new Blob([src], { type: "text/javascript" }));
+                var worker = new Worker(url);
+                worker.onmessage = function (e) {
+                    if (!e.data.grid) return progress(e.data.progress);
+                    worker.terminate();
+                    URL.revokeObjectURL(url);
+                    done(e.data.grid);
+                };
+                worker.onerror = function (e) { e.preventDefault(); worker.terminate(); here(); };
+                worker.postMessage({ channels: channels, rate: rate }, channels.map(function (c) { return c.buffer; }));
+            } catch (err) {
+                here();
+            }
+        }
+        // The beats worked out already, if they're there beside the song (the same name, .beats.json: made with this page's
+        // own analysis, which some browsers run very slowly): then nothing to find here, just the song coming down. Else
+        // found here, once it's down and decoded
+        var BEATS = audio.src.replace(/\.[^.\/]+$/, ".beats.json");
+        function fromFile(d) {   // (the file's bars, a list of which beats start one, as the grid has them)
+            var bar = d.beats.map(function () { return false; });
+            d.bar.forEach(function (k) { bar[k] = true; });
+            return { bpm: d.bpm, beats: d.beats, strength: d.strength, bar: bar, fps: d.fps, loud: d.loud, bass: d.bass || d.loud, start: d.start };
+        }
+        function found(beats, how) {
+            grid = beats;
+            loaded = 1;
+            console.log("Pyrosphere: " + Math.round(grid.bpm) + " beats a minute, " + how);
+            mark("beats");
+        }
+        note.textContent = "Loading the song…";
+        if (window.fetch) {
+            var already = fetch(BEATS).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+            download(audio.src).then(function (buf) {
+                loaded = Math.max(loaded, LOAD_DOWN);
+                mark("downloaded");
+                return already.then(function (d) {
+                    if (d && d.beats && d.beats.length) return found(fromFile(d), "worked out ahead");
+                    if (!ctx) return cantAnalyse("Listening live");
+                    decoding = true;
+                    return new Promise(function (ok, fail) { ctx.decodeAudioData(buf, ok, fail); }).then(function (song) {
+                        decoding = false;
+                        loaded = LOAD_DECODED;
+                        mark("decoded");
+                        note.textContent = "Finding the beat…";
+                        var channels = [];
+                        for (var ch = 0; ch < song.numberOfChannels; ch++) channels.push(song.getChannelData(ch).slice());   // (copies, to hand over)
+                        analyseAside(channels, song.sampleRate, function (p) {
+                            loaded = Math.max(loaded, LOAD_DECODED + (1 - LOAD_DECODED) * 0.98 * p);
+                        }, function (beats) { found(beats, "found ahead"); });
+                    });
+                });
+            }).catch(function () {
+                cantAnalyse("The song couldn't be analysed ahead: listening live");
+            });
+        } else {
+            cantAnalyse("Listening live");
+        }
+        // Each frame: how far it's loaded (decoding says nothing, so creeping on meanwhile)
+        function load(dt) {
+            if (decoding) loaded += (LOAD_DECODED - 0.01 - loaded) * Math.min(1, dt * 0.8);
+        }
+
+        // ---------------- The beat, as it plays ----------------
+        // `beat` jumps to a beat's strength and fades; `loud`, how loud it is overall, eased. Found ahead: each beat as the
+        // song's heard passing it (where it's got to, less the sound's delay); every bar's first beat stronger. Live: the
+        // bass's power each frame (below 160 Hz) against its average over the last second or so — a rise to BEAT_RISE
+        // times it is a beat (no closer than BEAT_GAP after the last)
+        var BEAT_RISE = 1.5;
+        var BEAT_GAP = 0.24;   // s
+        var bassHistory = [];
+        var lastBeat = -1, nextBeat = 0, lastHeard = -1;
+        var beat = 0, loud = 0, bassLevel = 0, bassPeak = 1e-9, beatSide = 1, spinGlow = 0;
+        // Skew's ripples: each beat, a ring of stars pushed aside and lit, spreading from a point on the sphere's near side
+        // across it (in the sphere's own terms: where from, when, how strong)
+        var SKEW_LIFE = 1.2, SKEW_SPEED = 2.6, SKEW_WIDTH = 0.2, SKEW_PUSH = 40;
+        var ripples = [], nearSide = new THREE.Vector3(), turnBack = new THREE.Quaternion();
+        function onBeat(strength) {
+            beat = Math.max(beat, strength);
+            beatSide = -beatSide;
+            if (act.spin) spinGlow = Math.max(spinGlow, strength);   // (Colour, joined to Spin kick: bands round it)
+            if (act.spin && !reducedMotion) spinY += 0.006 * strength * beatSide;   // (a push one way, then the other)
+            if (act.skew && !reducedMotion) {
+                turnBack.copy(globe.quaternion).invert();
+                nearSide.set((Math.random() - 0.5) * 1.2, (Math.random() - 0.5) * 1.2, 1).normalize().applyQuaternion(turnBack);
+                ripples.push({ from: nearSide.clone(), born: simTime, strength: strength });
+                if (ripples.length > 4) ripples.shift();
+            }
+        }
+        function hear(now, dt) {
+            beat *= Math.exp(-dt * 6);
+            if (audio.paused) { loud *= Math.exp(-dt * 3); bassLevel *= Math.exp(-dt * 3); return; }
+            if (!live && grid) {
+                var heard = audio.currentTime - delay();
+                if (heard < lastHeard - 0.05 || heard > lastHeard + 0.5) {   // (sought: on from the next beat after it)
+                    nextBeat = 0;
+                    while (nextBeat < grid.beats.length && grid.beats[nextBeat] < heard) nextBeat++;
+                }
+                lastHeard = heard;
+                while (nextBeat < grid.beats.length && grid.beats[nextBeat] <= heard) {
+                    if (heard - grid.beats[nextBeat] < 0.12) onBeat(grid.strength[nextBeat] * (grid.bar[nextBeat] ? 1 : 0.8));
+                    nextBeat++;
+                }
+                var lf = Math.max(0, Math.min(grid.loud.length - 1, Math.round((heard - grid.start) * grid.fps)));
+                loud += (grid.loud[lf] * 0.6 - loud) * Math.min(1, dt * 6);
+                bassLevel += (grid.bass[lf] - bassLevel) * Math.min(1, dt * 12);
+                return;
+            }
+            if (!analyser) return;
+            analyser.getByteFrequencyData(bins);
+            var hzPerBin = ctx.sampleRate / analyser.fftSize, bass = 0, all = 0;
+            var range = analyser.maxDecibels - analyser.minDecibels;
+            for (var b = 1; b * hzPerBin < 160; b++) bass += Math.pow(10, (bins[b] / 255 * range + analyser.minDecibels) / 10);
+            for (var k = 0; k < bins.length; k++) all += bins[k];
+            loud += (all / (bins.length * 255) - loud) * Math.min(1, dt * 6);
+            bassPeak = Math.max(bass, bassPeak * Math.exp(-dt * 0.2));   // (the bass against the loudest lately)
+            bassLevel += (Math.sqrt(bass / bassPeak) - bassLevel) * Math.min(1, dt * 12);
+            bassHistory.push(bass);
+            if (bassHistory.length > 50) bassHistory.shift();
+            var avg = bassHistory.reduce(function (x, v) { return x + v; }, 0) / bassHistory.length;
+            if (bassHistory.length > 10 && avg > 0 && bass > avg * BEAT_RISE && now - lastBeat > BEAT_GAP) {
+                lastBeat = now;
+                onBeat(Math.min(1, 0.5 + (bass / avg - BEAT_RISE) * 0.4));
+            }
+        }
+
+        // ---------------- Each frame ----------------
+        var last = performance.now(), simTime = 0;
+        var gm = globe.matrixWorld.elements;
+        var built = 0;   // how much of the sphere's in: just as far as the song's loaded
+        function frame(now) {
+            var dt = Math.min(0.1, (now - last) / 1000);
+            last = now;
+            simTime += dt;
+            load(dt);
+            built = loaded;
+            if (playButton.disabled && (grid || live) && built > 0.99) {   // (the beats found and the sphere whole: ready)
+                playButton.disabled = false;
+                playButton.setAttribute("aria-label", "Play");
+                mark("full");   // (FOR NOW: the timings, in the console)
+                var secs = (performance.now() - timing.start) / 1000;
+                console.log("Pyrosphere: downloaded " + timing.downloaded + " s · decoded " + (timing.decoded || "–") + " s · beats " +
+                    timing.beats + " s · sphere full " + timing.full + " s · " + Math.round(timing.frames / secs) + " frames a second");
+                start();
+            }
+            if (playButton.disabled) timing.frames++;
+            whatsOn(audio.currentTime - delay());
+            hear(simTime, dt);
+            var pulse = act.pulse ? beat : 0, flare = act.flare ? beat : 0, colour = act.colour ? beat : 0;
+            var spiky = act.spike ? bassLevel : 0;
+            spinGlow *= Math.exp(-dt * 3);
+            if (simTime % 0.5 < dt) drawLinks();   // (the lines kept to their buttons, as the player's laid out)
+            ripples = ripples.filter(function (r) { return simTime - r.born < SKEW_LIFE; });
+            if (editing && !audio.paused && openRange()) drawLanes();   // (an open range following the playhead)
+
+            camera.position.z += (restZ * zoom - camera.position.z) * (simTime < 2.5 ? 0.05 : 0.2);   // (the slow fly-in first)
+            spinX *= SPIN_FRICTION;
+            spinY *= SPIN_FRICTION;
+            globe.rotation.y += spinY;
+            globe.rotation.x = Math.max(-1.2, Math.min(1.2, globe.rotation.x + spinX));
+            var swell = 1 + 0.07 * pulse;   // (the whole sphere swelling on the beat)
+            globe.scale.set(swell, swell, swell);
+            globe.updateMatrixWorld();
+            updateHit();
+
+            for (var i = 0; i < DOT_COUNT; i++) {
+                bulge[i] += (bulgeWeight(dirs[i]) - bulge[i]) * BULGE_EASE;
+                var b = bulge[i], radius = RADIUS + lift[i] + b * BULGE_HEIGHT, d = dirs[i];
+                var px = d.x * radius, py = d.y * radius, pz = d.z * radius, pushed = 0;
+                for (var w = 0; w < ripples.length; w++) {   // (Skew: each ripple's ring, pushing the stars on it aside)
+                    var rp = ripples[w], age = simTime - rp.born, dot = d.dot(rp.from);
+                    var off = (Math.acos(Math.max(-1, Math.min(1, dot))) - age * SKEW_SPEED) / SKEW_WIDTH;
+                    if (off > 3 || off < -3) continue;
+                    var weight = Math.exp(-off * off) * (1 - age / SKEW_LIFE) * rp.strength;
+                    var tx = d.x - rp.from.x * dot, ty = d.y - rp.from.y * dot, tz = d.z - rp.from.z * dot, tl = Math.hypot(tx, ty, tz) || 1;
+                    px += tx / tl * SKEW_PUSH * weight;
+                    py += ty / tl * SKEW_PUSH * weight;
+                    pz += tz / tl * SKEW_PUSH * weight;
+                    pushed = Math.max(pushed, weight);
+                }
+                dotPositions[i * 3] = px;
+                dotPositions[i * 3 + 1] = py;
+                dotPositions[i * 3 + 2] = pz;
+                // the glow: under the pointer, on Skew's rings, and (Colour) across the whole sphere on a strong beat — the
+                // sunrise by height
+                var glow = b, gc = null, gw;   // (the strongest of them here, and its colour: null, the sunrise)
+                if (pushed > glow) { glow = pushed; gc = tint("skew", i); }
+                gw = colour * (0.35 + 0.65 * ((i * 0.618) % 1));
+                if (gw > glow) { glow = gw; gc = tint("colour", i); }
+                if (colours.pulse && pulse * 0.8 > glow) { glow = pulse * 0.8; gc = tint("pulse", i); }   // (Colour joined: their own)
+                gw = flare * (0.45 + 0.55 * ((i * 0.37) % 1));
+                if (colours.flare && gw > glow) { glow = gw; gc = tint("flare", i); }
+                gw = spinGlow * Math.max(0, Math.sin(Math.atan2(d.z, d.x) * 3 - beatSide * simTime * 4));
+                if (colours.spin && act.spin && gw > glow) { glow = gw; gc = tint("spin", i); }
+                if (glow > 0.001) {
+                    var c = gc || sunrise((1 - (gm[1] * dirs[i].x + gm[5] * dirs[i].y + gm[9] * dirs[i].z)) / 2);
+                    dotColors[i * 3] = DOT_COLOR.r + (c.r - DOT_COLOR.r) * glow;
+                    dotColors[i * 3 + 1] = DOT_COLOR.g + (c.g - DOT_COLOR.g) * glow;
+                    dotColors[i * 3 + 2] = DOT_COLOR.b + (c.b - DOT_COLOR.b) * glow;
+                } else {
+                    dotColors[i * 3] = DOT_COLOR.r;
+                    dotColors[i * 3 + 1] = DOT_COLOR.g;
+                    dotColors[i * 3 + 2] = DOT_COLOR.b;
+                }
+                // (Flare: bigger and brighter on the beat, more the louder it is. Each star coming in, in its turn, as the
+                // song loads — they're in no order round the sphere, so it fills in all over)
+                var shown = Math.max(0, Math.min(1, (built * DOT_COUNT - i) / 25));
+                dotSizes[i] = (DOT_SIZE + (GLOW_SIZE - DOT_SIZE) * Math.max(b, pushed)) * (1 + flare * (0.6 + loud) + (act.flare ? loud * 0.4 : 0))
+                    * (0.4 + 0.6 * shown);
+                dotAlphas[i] = Math.min(1, 0.85 + 0.15 * flare + (act.flare ? loud * 0.3 : 0)) * shown;
+            }
+            dotGeometry.attributes.position.needsUpdate = true;
+            dotGeometry.attributes.aColor.needsUpdate = true;
+            dotGeometry.attributes.aSize.needsUpdate = true;
+            dotGeometry.attributes.aAlpha.needsUpdate = true;
+
+            spikeMaterial.opacity = Math.min(1, 0.3 + 0.35 * flare + 0.5 * spiky);
+            for (var s = 0; s < SPIKE_COUNT; s++) {
+                var sp = spikes[s];
+                sp.bulge += (bulgeWeight(sp.dir) - sp.bulge) * BULGE_EASE;
+                var base = RADIUS + sp.bulge * BULGE_HEIGHT;
+                var breathe = reducedMotion ? 1 : 0.55 + 0.45 * Math.sin(simTime * sp.speed + sp.phase);
+                var grown = Math.max(0, Math.min(1, (built * SPIKE_COUNT - s) / 20));   // (growing out in its turn as it loads)
+                // (Pulse: the spikes shooting out too; Spike: long with the bass, each its own way)
+                var tip = base + (sp.length * breathe * (1 + 1.2 * pulse) * (1 + 2.5 * spiky) + spiky * 40 * (0.5 + 0.5 * Math.sin(sp.phase * 3))) * grown;
+                spikePositions[s * 6] = sp.dir.x * base;
+                spikePositions[s * 6 + 1] = sp.dir.y * base;
+                spikePositions[s * 6 + 2] = sp.dir.z * base;
+                spikePositions[s * 6 + 3] = sp.dir.x * tip;
+                spikePositions[s * 6 + 4] = sp.dir.y * tip;
+                spikePositions[s * 6 + 5] = sp.dir.z * tip;
+                // (their colours: grey, unless Colour's joined to Spike — with the bass — or Pulse — on the beat)
+                var sk = colours.spike ? spiky : 0, pk = colours.pulse ? pulse : 0, sc = sk >= pk ? tint("spike", s) : tint("pulse", s);
+                var amount = Math.max(sk, pk), grey = 0xe0 / 255;
+                for (var e2 = 0; e2 < 2; e2++) {   // (the base half as much as the tip)
+                    var mixIn = amount * (e2 ? 1 : 0.5), at6 = s * 6 + e2 * 3;
+                    spikeColors[at6] = grey + ((sc ? sc.r : grey) - grey) * mixIn;
+                    spikeColors[at6 + 1] = grey + ((sc ? sc.g : grey) - grey) * mixIn;
+                    spikeColors[at6 + 2] = grey + ((sc ? sc.b : grey) - grey) * mixIn;
+                }
+            }
+            spikeGeometry.attributes.position.needsUpdate = true;
+            spikeGeometry.attributes.color.needsUpdate = true;
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    })();
+    </script>
+</body>
+</html>

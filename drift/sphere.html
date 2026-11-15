@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sphere — Pyrothief Projects</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* Clear: in the tutorial's frame, the picture under it shows through till its stars have built the sphere */
+        html, body { height: 100%; overflow: hidden; background: transparent; }
+        html.alone, html.alone body { background: #0a0a0a; }
+        #sphere { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+        #sphere.dragging { cursor: grabbing; }
+    </style>
+</head>
+<body>
+    <canvas id="sphere" aria-label="A sphere of stars: hover or drag to spin it"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+    (function () {
+        // The sphere: Pyrosphere's (the home page's) stars and spikes, the glow under the pointer, spinning with it — and
+        // Pyrosphere's effects (Pulse, Flare, Spin kick, Glow, Skew, Spike, and Colour joined to them), to the beat. With
+        // none on, it's the plain sphere. In the tutorial (drift.html, in its frame, as Disconnect starts) it waits, clear,
+        // till the tutorial's picture bursts: the tutorial leaves its stars where they are on the screen (sphereFrom: each
+        // [across, down, colour, alpha, radius]), and the sphere's own stars start there, just as they are, fly apart and
+        // settle into their places — the picture's stars building the sphere; then everything's on, full blast, to the
+        // tutorial's song (its beats, as the tutorial hears them: show.music). On its own: there, whole, plain
+        var RADIUS = 300;
+        var DOT_COUNT = 1000;
+        var SPIKE_COUNT = 520;
+        var DOT_COLOR = new THREE.Color(0xe0e0e0);
+        var SUNRISE = [new THREE.Color(0xfd9d0a), new THREE.Color(0xf46f0c), new THREE.Color(0xe75114),
+            new THREE.Color(0xe8271e)];   // (the flame's own colours, top to bottom)
+        var sunriseColor = new THREE.Color();
+        function sunrise(p) {   // p: 0 at the top → 1 at the bottom
+            p = Math.max(0, Math.min(1, p)) * (SUNRISE.length - 1);
+            var at = Math.min(SUNRISE.length - 2, Math.floor(p));
+            return sunriseColor.copy(SUNRISE[at]).lerp(SUNRISE[at + 1], p - at);
+        }
+        var DOT_SIZE = 3.2;
+        var GLOW_SIZE = 6.5;
+        var BULGE_ANGLE = 0.42;    // radians
+        var BULGE_HEIGHT = 70;
+        var BULGE_EASE = 0.14;
+        var SPIN_GAIN = 0.0002;
+        var SPIN_FRICTION = 0.93;
+        var BUILD_TIME = 1.6;      // s from the burst to the sphere settled (as Disconnect's X_BURST)
+        var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var alone = window.parent === window;
+        if (alone) document.documentElement.classList.add("alone");
+
+        // The effects: which are on — in the tutorial, all of them, full blast, Colour joined to each on all colours (a
+        // party); on its own, none (the plain sphere)
+        var act = {}, colours = {};
+        ["pulse", "flare", "spin", "colour", "skew", "spike"].forEach(function (key) {
+            act[key] = !alone;
+            if (!alone) colours[key] = { palette: "all" };
+        });
+        // Colour's colours: all of them (every star its own, moving round the wheel), a hue's shades, or a set palette
+        var PALETTES = {
+            sunrise: ["#fd9d0a", "#f46f0c", "#e75114", "#e8271e"],
+            ice: ["#f2fbff", "#b5e2ff", "#74b9ff", "#3f7fff"],
+            neon: ["#ff2bd6", "#7b2bff", "#2bd9ff", "#2bff88"],
+            ocean: ["#48cae4", "#0a9396", "#94d2bd", "#005f73"],
+            candy: ["#ff8fab", "#ffc2d1", "#b8f2e6", "#cdb4db"],
+            forest: ["#2d6a4f", "#52b788", "#95d5b2", "#d8f3dc"],
+            gold: ["#ffe08a", "#ffc53d", "#f2a20c", "#d97b06"]
+        };
+        var paletteColours = {};
+        Object.keys(PALETTES).forEach(function (k) { paletteColours[k] = PALETTES[k].map(function (h) { return new THREE.Color(h); }); });
+        var paint = new THREE.Color();
+        function tint(key, n) {   // (the colour an effect brings to star or spike n just now — or null, if Colour isn't joined)
+            var c = colours[key];
+            if (!c) return null;
+            var u = (n * 0.618 + simTime * 0.12) % 1;   // (each its own, moving on)
+            if (c.hue !== undefined) return paint.setHSL((c.hue + (u - 0.5) * 0.12 + 1) % 1, 0.9, 0.5 + 0.12 * Math.sin(u * 6.283));
+            if (c.palette === "all" || !paletteColours[c.palette]) return paint.setHSL(u, 0.85, 0.6);
+            var list = paletteColours[c.palette], at = u * list.length, i0 = Math.floor(at) % list.length;
+            return paint.copy(list[i0]).lerp(list[(i0 + 1) % list.length], at - Math.floor(at));
+        }
+
+        var canvas = document.getElementById("sphere");
+        var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+        var globe = new THREE.Group();
+        scene.add(globe);
+
+        // Stars: each in a random direction (new on every load), up to a little above the surface
+        var dirs = [];
+        var lift = new Float32Array(DOT_COUNT);
+        var bulge = new Float32Array(DOT_COUNT);
+        var dotPositions = new Float32Array(DOT_COUNT * 3);
+        var dotColors = new Float32Array(DOT_COUNT * 3);
+        var dotSizes = new Float32Array(DOT_COUNT);
+        var dotAlphas = new Float32Array(DOT_COUNT);
+        for (var i = 0; i < DOT_COUNT; i++) {
+            var y = Math.random() * 2 - 1, r = Math.sqrt(1 - y * y), a = Math.random() * Math.PI * 2;
+            dirs.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+            lift[i] = Math.random() * 8;
+        }
+        var dotGeometry = new THREE.BufferGeometry();
+        dotGeometry.setAttribute("position", new THREE.BufferAttribute(dotPositions, 3));
+        dotGeometry.setAttribute("aColor", new THREE.BufferAttribute(dotColors, 3));
+        dotGeometry.setAttribute("aSize", new THREE.BufferAttribute(dotSizes, 1));
+        dotGeometry.setAttribute("aAlpha", new THREE.BufferAttribute(dotAlphas, 1));
+        // Round, soft-edged dots whose size and colour can change one by one; the far side dimmer
+        var dotMaterial = new THREE.ShaderMaterial({
+            uniforms: { pixelRatio: { value: renderer.getPixelRatio() }, scale: { value: 420 } },
+            vertexShader: [
+                "attribute vec3 aColor;",
+                "attribute float aSize;",
+                "attribute float aAlpha;",
+                "uniform float pixelRatio;",
+                "uniform float scale;",
+                "varying vec3 vColor;",
+                "varying float vFade;",
+                "void main() {",
+                "    vColor = aColor;",
+                "    vec4 mv = modelViewMatrix * vec4(position, 1.0);",
+                "    vec3 n = normalize(normalMatrix * normalize(position));",
+                "    vFade = aAlpha * (0.35 + 0.65 * smoothstep(-0.6, 0.4, n.z));",
+                "    gl_PointSize = min(aSize * pixelRatio * (scale / -mv.z), 18.0 * pixelRatio);",
+                "    gl_Position = projectionMatrix * mv;",
+                "}"
+            ].join("\n"),
+            fragmentShader: [
+                "varying vec3 vColor;",
+                "varying float vFade;",
+                "void main() {",
+                "    float d = length(gl_PointCoord - 0.5);",
+                "    if (d > 0.5) discard;",
+                "    gl_FragColor = vec4(vColor, smoothstep(0.5, 0.3, d) * vFade);",
+                "}"
+            ].join("\n"),
+            transparent: true,
+            depthWrite: false
+        });
+        globe.add(new THREE.Points(dotGeometry, dotMaterial));
+
+        // Spikes: short lines straight out from the surface that slowly stretch and shrink
+        var spikes = [];
+        var spikePositions = new Float32Array(SPIKE_COUNT * 6);
+        for (var s = 0; s < SPIKE_COUNT; s++) {
+            spikes.push({
+                dir: new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1).normalize(),
+                length: 6 + Math.random() * 26, phase: Math.random() * Math.PI * 2, speed: 0.8 + Math.random() * 1.8, bulge: 0
+            });
+        }
+        var spikeGeometry = new THREE.BufferGeometry();
+        spikeGeometry.setAttribute("position", new THREE.BufferAttribute(spikePositions, 3));
+        var spikeColors = new Float32Array(SPIKE_COUNT * 6).fill(0xe0 / 255);   // (each end its own: Colour, joined, at the tips)
+        spikeGeometry.setAttribute("color", new THREE.BufferAttribute(spikeColors, 3));
+        var spikeMaterial = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0, depthWrite: false });
+        globe.add(new THREE.LineSegments(spikeGeometry, spikeMaterial));
+
+        // ---------------- The pointer: the glow under it, and spinning (a mouse just over it; a finger dragging) ----------------
+        var raycaster = new THREE.Raycaster();
+        var pointerNDC = new THREE.Vector2();
+        var pointerOver = false;
+        var hitDir = new THREE.Vector3();
+        var hasHit = false;
+        var hitSphere = new THREE.Sphere(new THREE.Vector3(), RADIUS);
+        var hitPoint = new THREE.Vector3();
+        function updateHit() {
+            hasHit = false;
+            if (!pointerOver) return;
+            raycaster.setFromCamera(pointerNDC, camera);
+            if (raycaster.ray.intersectSphere(hitSphere, hitPoint)) {
+                hitDir.copy(globe.worldToLocal(hitPoint)).normalize();
+                hasHit = true;
+            }
+        }
+        var cosBulge = Math.cos(BULGE_ANGLE);
+        function bulgeWeight(d) {   // 0 outside the glow, rising smoothly to 1 under the pointer
+            if (!hasHit) return 0;
+            var c = d.dot(hitDir);
+            if (c <= cosBulge) return 0;
+            var t = (c - cosBulge) / (1 - cosBulge);
+            return t * t * (3 - 2 * t);
+        }
+        var spinX = 0, spinY = 0, lastX = null, lastY = null;
+        function pointAt(x, y) {
+            pointerOver = true;
+            pointerNDC.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
+        }
+        canvas.addEventListener("pointerdown", function (e) {
+            lastX = e.clientX;
+            lastY = e.clientY;
+            pointAt(e.clientX, e.clientY);
+            canvas.setPointerCapture(e.pointerId);
+            canvas.classList.add("dragging");
+        });
+        canvas.addEventListener("pointermove", function (e) {
+            pointAt(e.clientX, e.clientY);
+            if (lastX !== null) {
+                spinY += (e.clientX - lastX) * SPIN_GAIN;
+                spinX += (e.clientY - lastY) * SPIN_GAIN;
+            }
+            lastX = e.clientX;
+            lastY = e.clientY;
+        });
+        function pointerEnded(e) {
+            canvas.classList.remove("dragging");
+            if (e.pointerType === "touch" || e.type !== "pointerup") { pointerOver = false; lastX = lastY = null; }
+        }
+        canvas.addEventListener("pointerup", pointerEnded);
+        canvas.addEventListener("pointercancel", pointerEnded);
+        canvas.addEventListener("pointerleave", pointerEnded);
+
+        // Fit the sphere (with room for its spikes) inside the window, upright or sideways
+        var restZ = 1000;
+        function resize() {
+            var w = window.innerWidth, h = window.innerHeight;
+            renderer.setSize(w, h);
+            camera.aspect = w / h;
+            var half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+            var needed = RADIUS * 1.45;
+            restZ = Math.max(needed / half, needed / (half * camera.aspect));
+            camera.position.z = restZ;
+            camera.updateProjectionMatrix();
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        // ---------------- The beat: the tutorial's song, as it hears it ----------------
+        // `beat` jumps to a beat's strength and fades; `loud` and `bassLevel`, eased — each beat the tutorial hears (show.music:
+        // how many so far, the last one's strength), and how loud and how much bass just now. None (on its own, or the song
+        // not playing): calm
+        var beat = 0, loud = 0, bassLevel = 0, beatSide = 1, spinGlow = 0, heardBeats = -1;
+        // Skew's ripples: each beat, a ring of stars pushed aside and lit, spreading from a point on the sphere's near side
+        // across it (in the sphere's own terms: where from, when, how strong)
+        var SKEW_LIFE = 1.2, SKEW_SPEED = 2.6, SKEW_WIDTH = 0.2, SKEW_PUSH = 40;
+        var ripples = [], nearSide = new THREE.Vector3(), turnBack = new THREE.Quaternion();
+        function onBeat(strength) {
+            beat = Math.max(beat, strength);
+            beatSide = -beatSide;
+            if (act.spin) spinGlow = Math.max(spinGlow, strength);   // (Colour, joined to Spin kick: bands round it)
+            if (act.spin && !reducedMotion) spinY += 0.006 * strength * beatSide;   // (a push one way, then the other)
+            if (act.skew && !reducedMotion) {
+                turnBack.copy(globe.quaternion).invert();
+                nearSide.set((Math.random() - 0.5) * 1.2, (Math.random() - 0.5) * 1.2, 1).normalize().applyQuaternion(turnBack);
+                ripples.push({ from: nearSide.clone(), born: simTime, strength: strength });
+                if (ripples.length > 4) ripples.shift();
+            }
+        }
+        function hear(dt) {
+            beat *= Math.exp(-dt * 6);
+            var music = null;
+            try { music = !alone && window.parent.show && window.parent.show.music ? window.parent.show.music() : null; } catch (err) {}
+            if (!music || !music.playing) {
+                if (music) heardBeats = music.beats;
+                loud *= Math.exp(-dt * 3);
+                bassLevel *= Math.exp(-dt * 3);
+                return;
+            }
+            if (heardBeats < 0) heardBeats = music.beats;   // (from now on)
+            if (music.beats > heardBeats) {
+                heardBeats = music.beats;
+                onBeat(music.strength);
+            }
+            loud += (music.loud - loud) * Math.min(1, dt * 6);
+            bassLevel += (music.bass - bassLevel) * Math.min(1, dt * 12);
+        }
+
+        // ---------------- Built: from the picture's stars, or (on its own) just there ----------------
+        // Each star's start (in the globe, on the plane through its middle, facing you: just where the picture's star was
+        // on the screen), and its look there (colour, size, brightness)
+        var fromPos = new Float32Array(DOT_COUNT * 3), fromColor = new Float32Array(DOT_COUNT * 3);
+        var fromSize = new Float32Array(DOT_COUNT), fromAlpha = new Float32Array(DOT_COUNT);
+        var builtAt = null, fromPicture = false;   // (s, simTime: when it began building, if it has)
+        var START_FADE = 0.35 + 0.65 * 0.648;   // (the shader's far-side dimming, edge on: undone at the start)
+        function buildFrom(points) {
+            fromPicture = !!(points && points.length);
+            builtAt = simTime;
+            if (!fromPicture) return;
+            globe.updateMatrixWorld();
+            var inverse = new THREE.Matrix4().copy(globe.matrixWorld).invert(), v = new THREE.Vector3();
+            var w = window.innerWidth, h = window.innerHeight;
+            for (var i = 0; i < DOT_COUNT; i++) {
+                var p = points[Math.floor(i * points.length / DOT_COUNT)];   // (each of the picture's stars, two or three of these)
+                v.set(p[0] / w * 2 - 1, -(p[1] / h) * 2 + 1, 0.5).unproject(camera).sub(camera.position).normalize();
+                v.multiplyScalar(-camera.position.z / v.z).add(camera.position).applyMatrix4(inverse);
+                fromPos[i * 3] = v.x;
+                fromPos[i * 3 + 1] = v.y;
+                fromPos[i * 3 + 2] = v.z;
+                var c = p[2] || [224, 224, 224];
+                fromColor[i * 3] = c[0] / 255;
+                fromColor[i * 3 + 1] = c[1] / 255;
+                fromColor[i * 3 + 2] = c[2] / 255;
+                fromSize[i] = 2.2 * (p[4] || 2.4) * camera.position.z / 420;   // (as wide on the screen as the picture's)
+                fromAlpha[i] = Math.min(1, (p[3] === undefined ? 1 : p[3]) / START_FADE);
+            }
+        }
+        function waiting() {   // (the tutorial's word, once its picture bursts: its stars, or true for the sphere whole)
+            if (builtAt !== null) return;
+            if (alone) return buildFrom(null);
+            var word = null;
+            try { word = window.parent.sphereFrom; } catch (err) {}
+            if (word) buildFrom(word === true ? null : word);
+        }
+        function ease(t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+
+        // ---------------- Each frame ----------------
+        var last = performance.now(), simTime = 0;
+        var gm = globe.matrixWorld.elements;
+        function frame(now) {
+            var dt = Math.min(0.1, (now - last) / 1000);
+            last = now;
+            simTime += dt;
+            waiting();
+            hear(dt);
+            var pulse = act.pulse ? beat : 0, flare = act.flare ? beat : 0, colour = act.colour ? beat : 0;
+            var spiky = act.spike ? bassLevel : 0;
+            spinGlow *= Math.exp(-dt * 3);
+            ripples = ripples.filter(function (r) { return simTime - r.born < SKEW_LIFE; });
+            // How far it's built: 0 → 1 over BUILD_TIME — flying apart, thrown wide (as far again as a third), then settling
+            var k = builtAt === null ? 0 : reducedMotion ? 1 : (simTime - builtAt) / BUILD_TIME;
+            var e = fromPicture ? ease(k / 0.45) : ease(k / 0.3);
+            var thrown = fromPicture ? Math.sin(Math.min(1, k / 0.8) * Math.PI) * 0.35 : 0;
+
+            spinX *= SPIN_FRICTION;
+            spinY *= SPIN_FRICTION;
+            globe.rotation.y += spinY;
+            globe.rotation.x = Math.max(-1.2, Math.min(1.2, globe.rotation.x + spinX));
+            var swell = 1 + 0.07 * pulse;   // (Pulse: the whole sphere swelling on the beat)
+            globe.scale.set(swell, swell, swell);
+            globe.updateMatrixWorld();
+            updateHit();
+
+            for (var i = 0; i < DOT_COUNT; i++) {
+                bulge[i] += (bulgeWeight(dirs[i]) - bulge[i]) * BULGE_EASE;
+                var b = bulge[i], radius = (RADIUS + lift[i] + b * BULGE_HEIGHT) * (1 + thrown), d = dirs[i];
+                var px = d.x * radius, py = d.y * radius, pz = d.z * radius, pushed = 0;
+                for (var w = 0; w < ripples.length; w++) {   // (Skew: each ripple's ring, pushing the stars on it aside)
+                    var rp = ripples[w], age = simTime - rp.born, dot = d.dot(rp.from);
+                    var off = (Math.acos(Math.max(-1, Math.min(1, dot))) - age * SKEW_SPEED) / SKEW_WIDTH;
+                    if (off > 3 || off < -3) continue;
+                    var weight = Math.exp(-off * off) * (1 - age / SKEW_LIFE) * rp.strength;
+                    var tx = d.x - rp.from.x * dot, ty = d.y - rp.from.y * dot, tz = d.z - rp.from.z * dot, tl = Math.hypot(tx, ty, tz) || 1;
+                    px += tx / tl * SKEW_PUSH * weight;
+                    py += ty / tl * SKEW_PUSH * weight;
+                    pz += tz / tl * SKEW_PUSH * weight;
+                    pushed = Math.max(pushed, weight);
+                }
+                // the glow: under the pointer, on Skew's rings, and (Glow) across the whole sphere on a strong beat — the
+                // sunrise by height, or Colour's, where it's joined
+                var glow = b, gc = null, gw;   // (the strongest of them here, and its colour: null, the sunrise)
+                if (pushed > glow) { glow = pushed; gc = tint("skew", i); }
+                gw = colour * (0.35 + 0.65 * ((i * 0.618) % 1));
+                if (gw > glow) { glow = gw; gc = tint("colour", i); }
+                if (colours.pulse && pulse * 0.8 > glow) { glow = pulse * 0.8; gc = tint("pulse", i); }
+                gw = flare * (0.45 + 0.55 * ((i * 0.37) % 1));
+                if (colours.flare && gw > glow) { glow = gw; gc = tint("flare", i); }
+                gw = spinGlow * Math.max(0, Math.sin(Math.atan2(d.z, d.x) * 3 - beatSide * simTime * 4));
+                if (colours.spin && act.spin && gw > glow) { glow = gw; gc = tint("spin", i); }
+                var cr = DOT_COLOR.r, cg = DOT_COLOR.g, cb = DOT_COLOR.b;
+                if (glow > 0.001) {
+                    var c = gc || sunrise((1 - (gm[1] * d.x + gm[5] * d.y + gm[9] * d.z)) / 2);
+                    cr += (c.r - cr) * glow;
+                    cg += (c.g - cg) * glow;
+                    cb += (c.b - cb) * glow;
+                }
+                // (Flare: bigger and brighter on the beat, more the louder it is)
+                var size = (DOT_SIZE + (GLOW_SIZE - DOT_SIZE) * Math.max(b, pushed)) * (1 + flare * (0.6 + loud) + (act.flare ? loud * 0.4 : 0));
+                var alpha = Math.min(1, 0.85 + 0.15 * flare + (act.flare ? loud * 0.3 : 0));
+                if (fromPicture && e < 1) {   // (from where the picture's star was, as it looked)
+                    px = fromPos[i * 3] + (px - fromPos[i * 3]) * e;
+                    py = fromPos[i * 3 + 1] + (py - fromPos[i * 3 + 1]) * e;
+                    pz = fromPos[i * 3 + 2] + (pz - fromPos[i * 3 + 2]) * e;
+                    cr = fromColor[i * 3] + (cr - fromColor[i * 3]) * e;
+                    cg = fromColor[i * 3 + 1] + (cg - fromColor[i * 3 + 1]) * e;
+                    cb = fromColor[i * 3 + 2] + (cb - fromColor[i * 3 + 2]) * e;
+                    size = fromSize[i] + (size - fromSize[i]) * e;
+                    alpha = fromAlpha[i] + (alpha - fromAlpha[i]) * e;
+                } else if (!fromPicture) alpha *= e;   // (whole: fading in, or nothing yet)
+                dotPositions[i * 3] = px;
+                dotPositions[i * 3 + 1] = py;
+                dotPositions[i * 3 + 2] = pz;
+                dotColors[i * 3] = cr;
+                dotColors[i * 3 + 1] = cg;
+                dotColors[i * 3 + 2] = cb;
+                dotSizes[i] = size;
+                dotAlphas[i] = alpha;
+            }
+            dotGeometry.attributes.position.needsUpdate = true;
+            dotGeometry.attributes.aColor.needsUpdate = true;
+            dotGeometry.attributes.aSize.needsUpdate = true;
+            dotGeometry.attributes.aAlpha.needsUpdate = true;
+
+            // The spikes, growing out once the stars are nearly home (Pulse: shooting out too; Spike: long with the bass,
+            // each its own way)
+            var grown = fromPicture ? ease((k - 0.5) / 0.5) : e;
+            spikeMaterial.opacity = Math.min(1, 0.3 + 0.35 * flare + 0.5 * spiky) * grown;
+            for (var s = 0; s < SPIKE_COUNT; s++) {
+                var sp = spikes[s];
+                sp.bulge += (bulgeWeight(sp.dir) - sp.bulge) * BULGE_EASE;
+                var base = (RADIUS + sp.bulge * BULGE_HEIGHT) * (1 + thrown);
+                var breathe = reducedMotion ? 1 : 0.55 + 0.45 * Math.sin(simTime * sp.speed + sp.phase);
+                var tip = base + (sp.length * breathe * (1 + 1.2 * pulse) * (1 + 2.5 * spiky) + spiky * 40 * (0.5 + 0.5 * Math.sin(sp.phase * 3))) * grown;
+                spikePositions[s * 6] = sp.dir.x * base;
+                spikePositions[s * 6 + 1] = sp.dir.y * base;
+                spikePositions[s * 6 + 2] = sp.dir.z * base;
+                spikePositions[s * 6 + 3] = sp.dir.x * tip;
+                spikePositions[s * 6 + 4] = sp.dir.y * tip;
+                spikePositions[s * 6 + 5] = sp.dir.z * tip;
+                // (their colours: grey, unless Colour's joined to Spike — with the bass — or Pulse — on the beat)
+                var sk = colours.spike ? spiky : 0, pk = colours.pulse ? pulse : 0, sc = sk >= pk ? tint("spike", s) : tint("pulse", s);
+                var amount = Math.max(sk, pk), grey = 0xe0 / 255;
+                for (var e2 = 0; e2 < 2; e2++) {   // (the base half as much as the tip)
+                    var mixIn = amount * (e2 ? 1 : 0.5), at6 = s * 6 + e2 * 3;
+                    spikeColors[at6] = grey + ((sc ? sc.r : grey) - grey) * mixIn;
+                    spikeColors[at6 + 1] = grey + ((sc ? sc.g : grey) - grey) * mixIn;
+                    spikeColors[at6 + 2] = grey + ((sc ? sc.b : grey) - grey) * mixIn;
+                }
+            }
+            spikeGeometry.attributes.position.needsUpdate = true;
+            spikeGeometry.attributes.color.needsUpdate = true;
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,436 @@
+/* Drift Remote's tutorial (drift.html): the page, the HUD and the menu */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    background: #0a0a0a;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.15em;
+    color: #f5f5f5;
+    overflow: hidden;
+}
+/* The icon's dots */
+#dots {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+/* The grid of icons (Icons) scrolls: this layer takes the scrolling, over the canvas the icons are drawn on */
+.scroller {
+    position: fixed;
+    inset: 0;
+    overflow-y: auto;
+    display: none;
+}
+.scroller.on { display: block; }
+/* The badge (Beta) */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245, 245, 245, 0.75);
+    border: 1px solid rgba(245, 245, 245, 0.18);
+    border-radius: 999px;
+    padding: 0.3rem 0.65rem;
+}
+.pill i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--status, #ff6b35);
+    box-shadow: 0 0 8px var(--status, #ff6b35);
+}
+/* The HUD, as on the home page: the name and tagline above the icon, the badge and platforms below, and leader
+   lines drawing out from the icon to short labels that type themselves in (the frame places it all). On a phone
+   the labels stack in a list under it */
+.hud {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.hud.shown { opacity: 1; }
+.hud-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+.hud-lines path {
+    fill: none;
+    stroke: rgba(244, 111, 12, 0.85);
+    stroke-width: 1.2;
+}
+.hud-lines circle { fill: #fd9d0a; }
+.hud-head, .hud-foot {
+    position: absolute;
+    text-align: center;
+    white-space: nowrap;
+}
+.hud-head { transform: translate(-50%, -100%); }
+/* The badge, then the platforms, then the link, on one line */
+.hud-foot {
+    transform: translate(-50%, 0);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+}
+.hud-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #ffa500, #ff6b35);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hud-tagline {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: #ffb27a;
+    margin-top: 0.35rem;
+    text-shadow: 0 0 10px #0a0a0a;
+    /* Its line keeps its height when empty, so the name above doesn't drop as it types itself away */
+    line-height: 1.3;
+    min-height: 1.3em;
+}
+.hud-tech {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.56rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(245, 245, 245, 0.45);
+}
+/* The TestFlight link, on the badge line — the one part of the HUD that takes a click */
+.hud-link {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.56rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    /* The site's orange, glowing (breathing a little), no underline */
+    color: #ff8a3d;
+    text-decoration: none;
+    text-shadow: 0 0 6px rgba(255, 107, 53, 0.85), 0 0 14px rgba(255, 107, 53, 0.45);
+    animation: betaGlow 2.4s ease-in-out infinite;
+    pointer-events: auto;
+    transition: color 0.2s;
+}
+@keyframes betaGlow {
+    50% { text-shadow: 0 0 9px rgba(255, 107, 53, 1), 0 0 22px rgba(255, 107, 53, 0.6); }
+}
+.hud-link:hover { color: #ffa500; }
+.hud:not(.shown) .hud-link { pointer-events: none; }   /* not while the HUD is away (Devices, Icons) */
+.hud-label {
+    position: absolute;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.66rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: rgba(245, 245, 245, 0.92);
+    white-space: nowrap;
+    text-shadow: 0 0 10px #0a0a0a, 0 0 3px #0a0a0a;
+}
+/* A phone: the labels as a list, each with a short sunrise tick */
+.hud-label.listed { white-space: normal; max-width: calc(100vw - 48px); }
+.hud-label.listed::before {
+    content: "";
+    display: inline-block;
+    width: calc(14px * var(--tick, 1));   /* drawn back with the arms (the frame sets --tick) */
+    height: 1px;
+    margin-right: 0.6rem;
+    vertical-align: middle;
+    background: linear-gradient(90deg, #fd9d0a, #e8271e);
+}
+@media (max-width: 600px) {
+    .hud-name { font-size: 1.1rem; }
+    .hud-tagline { font-size: 0.62rem; }
+}
+/* The tutorial, top left: Play (every part, in order), then the parts by name (a click plays just that one) */
+.tutorial {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    z-index: 1;
+}
+.tutorial button {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(245, 245, 245, 0.7);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 107, 53, 0.3);
+    border-radius: 4px;
+    padding: 0.4rem 0.65rem;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+.tutorial button:hover { color: #f5f5f5; border-color: rgba(255, 107, 53, 0.7); }
+.tutorial .play { font-weight: 600; color: #ff8a3d; }
+.tutorial .playrow { display: flex; gap: 0.35rem; }
+.tutorial .music[aria-pressed="true"] { color: #ffb070; border-color: rgba(255, 107, 53, 0.7); background: rgba(255, 107, 53, 0.14); }
+/* The part playing */
+.tutorial button.on {
+    color: #0a0a0a;
+    background: linear-gradient(135deg, #ffa500, #ff6b35);
+    border-color: transparent;
+}
+.tutorial .parts { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+.tutorial { transition: opacity 0.3s ease; }
+/* Out of the way while a part plays; back when it's done */
+.tutorial.away { opacity: 0; pointer-events: none; }
+.tutorial .parts .gap { height: 0.8rem; }   /* between the tutorial's parts and the staging ones */
+.tutorial .parts .sub { margin-left: 1.1rem; }   /* a part within the one above it */
+.tutorial .parts .sub2 { margin-left: 2.2rem; }  /* and within one of those */
+/* A menu's grip: drag it to move the menu (this one, the show's player) */
+.grip { align-self: stretch; height: 12px; cursor: grab; touch-action: none; position: relative; }
+.grip::before {
+    content: ""; position: absolute; left: 50%; top: 4px; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px;
+    background: rgba(255, 255, 255, 0.18);
+}
+.grip:hover::before { background: rgba(255, 138, 61, 0.7); }
+/* (scrolling, if the menu runs off the screen) */
+.tutorial { max-height: calc(100vh - 2rem); overflow-y: auto; scrollbar-width: thin; padding-right: 4px; }
+/* #edit's Dialog menu (on the right, moved by its title bar, folded up to it): each card numbered, each line under it
+   to pick, its moment in the run, its pause; the run's total */
+.dialogmenu {
+    position: fixed; top: 1rem; right: 1rem; z-index: 2;
+    width: min(340px, calc(100vw - 2rem)); height: min(560px, calc(100vh - 2rem)); min-width: 220px; min-height: 44px;
+    max-width: calc(100vw - 1rem); max-height: calc(100vh - 1rem);
+    display: flex; flex-direction: column; overflow: hidden; resize: both;
+    background: rgba(20, 14, 10, 0.55); border: 1px solid rgba(255, 107, 53, 0.18); border-radius: 14px;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: opacity 0.3s ease;
+}
+.dialogmenu[hidden] { display: none; }
+.dialogmenu.folded { height: auto !important; min-height: 0; resize: none; }
+.dialogmenu.folded .mini { display: none; }
+.dialogmenu .head {
+    flex: none; display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: grab; touch-action: none;
+    font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: #ffb070;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.dialogmenu.folded .head { border-bottom: 0; }
+.dialogmenu .head .sum { flex: 1; color: #9a8a80; font-variant-numeric: tabular-nums; }
+.dialogmenu .head button, .player .shrink {
+    font: inherit; font-size: 0.7rem; width: 24px; height: 24px; padding: 0; border-radius: 6px; cursor: pointer;
+    border: 1px solid rgba(255, 107, 53, 0.4); background: rgba(255, 107, 53, 0.08); color: #ffb070;
+}
+.dialogmenu .mini { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 4px 10px 12px; }
+.dialogmenu .mini {
+    display: flex; flex-direction: column; align-items: stretch; gap: 0.2rem;
+    font-family: 'Orbitron', sans-serif; font-size: 0.55rem; letter-spacing: 0.08em; color: rgba(245, 245, 245, 0.7);
+}
+.mini .line { display: flex; align-items: center; gap: 0.4rem; padding: 0 0.3rem 0 0.6rem; min-height: 1.3rem; border-radius: 4px; }
+.mini .line.none { color: #6a5a50; }
+.mini .line.picked { background: rgba(255, 107, 53, 0.16); }
+/* Following along as it plays: its card, and the line showing */
+.dialogmenu .mini .card.on { color: #f5f5f5; }
+.mini .line.now { box-shadow: inset 2px 0 0 #ff8a3d; color: #f5f5f5; }
+.mini .num { flex: none; width: 1em; color: #ff8a3d; }
+.mini .words { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.mini .words:hover { color: #f5f5f5; }
+.mini input, .player .dialog-edit input {
+    flex: none; width: 3.8em; font: inherit; text-align: right; padding: 0.15rem 0.25rem;
+    color: #ffb070; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 107, 53, 0.3); border-radius: 4px;
+}
+/* (typed in: no up/down arrows) */
+.mini input, .player .dialog-edit input { -moz-appearance: textfield; appearance: textfield; }
+.mini input::-webkit-inner-spin-button, .mini input::-webkit-outer-spin-button,
+.player .dialog-edit input::-webkit-inner-spin-button, .player .dialog-edit input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.mini .unit, .mini .stays { flex: none; color: #9a8a80; }
+.mini .total { margin-top: 0.4rem; color: #ffb070; font-variant-numeric: tabular-nums; }
+.mini .total.over { color: #ff6b6b; }
+
+/* ▶ Play watched as it is: the menu out of the way (the show's player made small, to pause it) */
+.watching .tutorial { opacity: 0; pointer-events: none; }
+/* The visitors' link (drift.html#watch): no menus, no editor; the player only while it plays; one button to start it,
+   and to watch again at the end */
+.visiting .tutorial, .visiting .dialogmenu, .visiting:not(.watching) .player { display: none; }
+.begin {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 4;
+    font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 0.9rem 1.6rem; border: 0; border-radius: 999px; cursor: pointer;
+    color: #0a0a0a; background: linear-gradient(135deg, #ffa500, #ff6b35);
+    box-shadow: 0 0 24px rgba(255, 107, 53, 0.45);
+}
+.begin:hover { filter: brightness(1.1); }
+.begin[hidden] { display: none; }
+
+/* Splash: the home page over the dots (under the HUD and the menus), only while Splash shows it */
+.splash {
+    position: fixed; inset: 0; width: 100%; height: 100%; border: 0;
+    opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.4s ease;
+}
+.splash.on { opacity: 1; visibility: visible; }
+
+/* The dialog: each scene's lines, typed in at their places in the picture (white Orbitron, as the HUD's labels) */
+.dialog-layer { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+.dialog {
+    position: absolute; transform: translate(-50%, -50%);
+    width: max-content; text-align: center;
+    font-family: 'Orbitron', sans-serif; font-size: 0.66rem; letter-spacing: 0.13em; line-height: 1.6;
+    text-transform: uppercase; color: #fff;
+    text-shadow: 0 0 10px #0a0a0a, 0 0 3px #0a0a0a;
+}
+.dialog .yet { visibility: hidden; }   /* the letters still to type: there, so the line doesn't shift as it types */
+/* #edit: the picked line, held in its scene — its box to drag, its handle (right) for how wide it is; over the player */
+.dialog-layer.posing { z-index: 3; }
+.dialog.posed {
+    pointer-events: auto; cursor: move; touch-action: none; user-select: none; -webkit-user-select: none;
+    outline: 1px dashed rgba(255, 138, 61, 0.9); outline-offset: 6px;
+}
+.dialog.posed .grip {
+    position: absolute; right: -12px; top: 50%; width: 7px; height: 22px; transform: translateY(-50%);
+    border-radius: 3px; background: #ff8a3d; cursor: ew-resize;
+}
+
+/* The show's player along the bottom: play, where the song's got to, the time; the timeline's lanes; the effects */
+.player {
+    position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 2;
+    width: min(680px, calc(100% - 32px));
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+    padding: 12px 16px;
+    font-family: 'Orbitron', system-ui, sans-serif; letter-spacing: 0.08em; color: #f5f5f5;
+    background: rgba(20, 14, 10, 0.55);
+    border: 1px solid rgba(255, 107, 53, 0.18);
+    border-radius: 14px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: opacity 0.3s ease;
+}
+.player .songplay {
+    flex: none; width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid rgba(255, 107, 53, 0.5); background: transparent; color: #ff6b35;
+    font-size: 1rem; cursor: pointer;
+}
+.player .songplay:hover { background: rgba(255, 107, 53, 0.12); }
+.player .track { flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.player .line { display: flex; align-items: center; gap: 10px; }
+.player .seekwrap { flex: 1; min-width: 0; position: relative; display: flex; align-items: center; }
+.player .seek { flex: 1; accent-color: #ff6b35; min-width: 0; }
+/* A picked dialog line's segment, on the slider's bar */
+.player .seekwrap .span {
+    position: absolute; top: 50%; height: 8px; margin-top: -4px; border-radius: 3px; pointer-events: none;
+    background: rgba(255, 255, 255, 0.85); box-shadow: 0 0 6px rgba(255, 138, 61, 0.9);
+}
+.player .seekwrap .span[hidden] { display: none; }
+/* The player's grip (along its top) and its make-small button (top right); made small: just play and a thin slider */
+.player .grip { position: absolute; top: 0; left: 40px; right: 40px; }
+.player .shrink { position: absolute; top: 6px; right: 8px; width: 20px; height: 20px; font-size: 0.6rem; }
+.player.small { width: min(420px, calc(100% - 32px)); padding: 10px 40px 8px 12px; gap: 8px; }
+.player.small > :not(.songplay):not(.track):not(.grip):not(.shrink), .player.small .lanes, .player.small .lane, .player.small .time { display: none !important; }
+.player.small .songplay { width: 26px; height: 26px; font-size: 0.7rem; }
+.player.small .seek { height: 4px; }
+.player .time { font-size: 0.62rem; color: #9a8a80; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* The lanes: the scenes as tags on a line of their own; a line for each effect with flags, its ranges on it */
+.player .lanes { display: flex; flex-direction: column; gap: 3px; }
+.player .lanes:empty { display: none; }
+.player .lane { position: relative; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.05); }
+.player .lane span { position: absolute; top: 0; bottom: 0; border-radius: 3px; opacity: 0.85; }
+.player .lane.scenes { height: 14px; background: none; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.player .lane.scenes .tag {
+    bottom: 0; top: auto; height: 14px; padding-left: 4px; border-left: 1px solid #ff8a3d; border-radius: 0;
+    font-size: 0.48rem; line-height: 14px; color: #ffb070; white-space: nowrap; opacity: 0.9;
+}
+.player.editing .lane { height: 9px; cursor: pointer; }
+.player.editing .lane.scenes { height: 14px; }
+.player.editing .lane span:hover { opacity: 1; outline: 1px solid #fff; }
+.player .reacts { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+.player .react {
+    font: inherit; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.18); background: transparent; color: #9a8a80;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.player .react[aria-pressed="true"] { color: #ffb070; border-color: rgba(255, 107, 53, 0.6); background: rgba(255, 107, 53, 0.12); }
+.player .react .swatch { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+/* #edit: the scene to place, the effect to flag, undo, save */
+.player .editor { flex: 1 1 100%; display: none; flex-wrap: wrap; align-items: center; gap: 8px; }
+.player.editing .editor { display: flex; }
+.player .editor select, .player .editor button {
+    font: inherit; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255, 107, 53, 0.4);
+    background: rgba(255, 107, 53, 0.08); color: #ffb070; cursor: pointer;
+}
+.player .editor .save { margin-left: auto; }
+.player .editor button[aria-pressed="true"] { color: #0a0a0a; background: linear-gradient(135deg, #ffa500, #ff6b35); border-color: transparent; }
+/* #edit's Dialog: the list, smaller, and each pause's footprint on a line under the timeline (the cards alternating) */
+.player .lane.dialog[hidden], .player .dialog-edit[hidden] { display: none; }
+/* The picked line's words, pause and place; Reset place; Done (plays on from there) */
+.player .dialog-edit { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.6rem; }
+.player .dialog-edit .head { flex: 1 1 100%; color: #ffb070; letter-spacing: 0.1em; text-transform: uppercase; }
+.player .dialog-edit textarea {
+    flex: 1 1 100%; min-height: 3.2em; resize: vertical; font: inherit; letter-spacing: 0.04em; padding: 6px 8px;
+    color: #f5f5f5; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 107, 53, 0.3); border-radius: 8px;
+}
+.player .dialog-edit .pause, .player .dialog-edit .place { color: #9a8a80; }
+.player .dialog-edit .place { flex: 1; min-width: 0; }
+.player .dialog-edit button {
+    font: inherit; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    border: 1px solid rgba(255, 107, 53, 0.4); background: rgba(255, 107, 53, 0.08); color: #ffb070;
+}
+.player .dialog-edit .done { color: #0a0a0a; background: linear-gradient(135deg, #ffa500, #ff6b35); border-color: transparent; }
+.dialogmenu .mini .card {
+    align-self: flex-start; margin-top: 0.3rem; padding: 0; border: 0; background: none; cursor: pointer;
+    font: inherit; letter-spacing: 0.1em; text-transform: uppercase; color: #ffb070;
+}
+.dialogmenu .mini .when { flex: none; width: 4.2em; color: #9a8a80; font-variant-numeric: tabular-nums; }
+.player .lane.dialog { height: 9px; }
+.player .lane.dialog span { cursor: pointer; }
+.player .lane.dialog .even { background: #f5f5f5; }
+.player .lane.dialog .odd { background: #ff8a3d; }
+.player .lane.dialog .moving { opacity: 0.4; }   /* (a line on screen, the scene not held) */
+.player .dialog-edit .holds { color: #9a8a80; cursor: pointer; }
+.player .dialog-edit .holds input { width: auto; accent-color: #ff6b35; vertical-align: -2px; }
+.player .note { flex: 1 1 100%; font-size: 0.6rem; color: #6a5a50; }
+.player .note:empty { display: none; }
+/* Colour: the tool, its hint, the lines to the effects it's joined to, their chips, the wheel */
+.player .react .wheel {
+    display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 0;
+    background: conic-gradient(hsl(0,85%,60%),hsl(60,85%,60%),hsl(120,85%,60%),hsl(180,85%,60%),hsl(240,85%,60%),hsl(300,85%,60%),hsl(360,85%,60%));
+}
+.player .react .chip { display: none; width: 11px; height: 11px; border-radius: 50%; margin-left: 7px; vertical-align: -1px;
+    border: 1px solid rgba(255, 255, 255, 0.6); cursor: pointer; }
+.player .react .chip:hover { transform: scale(1.25); }
+.player .links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.player .links path { fill: none; stroke-width: 1.5; stroke-dasharray: 3 3; opacity: 0.8; }
+.player .hint {
+    position: absolute; transform: translateY(-100%); white-space: nowrap; pointer-events: none; z-index: 2;
+    font-size: 0.6rem; letter-spacing: 0.06em; padding: 6px 10px; border-radius: 8px;
+    background: rgba(20, 14, 10, 0.92); border: 1px solid rgba(255, 255, 255, 0.2); color: #f5f5f5;
+}
+.player .hint[hidden], .player .pop[hidden] { display: none; }
+.player .pop {
+    position: absolute; z-index: 3; width: 196px; padding: 12px; border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    background: rgba(20, 14, 10, 0.95); border: 1px solid rgba(255, 107, 53, 0.3);
+}
+.player .pop .wheel {
+    position: relative; width: 132px; height: 132px; border-radius: 50%; cursor: crosshair;
+    background: conic-gradient(hsl(0,90%,55%),hsl(60,90%,55%),hsl(120,90%,55%),hsl(180,90%,55%),hsl(240,90%,55%),hsl(300,90%,55%),hsl(360,90%,55%));
+}
+.player .pop .all {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%;
+    font: inherit; font-size: 0.5rem; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+    border: 2px solid #0a0a0a; background: #141010; color: #f5f5f5;
+}
+.player .pop .palettes { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.player .pop .pal { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.4); cursor: pointer; }
+.player .pop .unjoin { font: inherit; font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer;
+    background: transparent; border: none; color: #9a8a80; }
+.player .pop .unjoin:hover { color: #ff6b35; }

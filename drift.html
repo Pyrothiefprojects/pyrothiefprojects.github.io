@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drift Remote — Pyrothief Projects</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="drift/style.css">
+</head>
+<body>
+    <canvas id="dots" aria-hidden="true"></canvas>
+    <iframe class="splash" id="splash" src="about:blank" title="The home page, as Splash plays it; Pyrosphere, as Disconnect ends" tabindex="-1" aria-hidden="true"></iframe>
+    <div class="scroller" id="scroller"><div id="spacer"></div></div>
+    <div class="dialog-layer" id="dialog" aria-live="polite"></div>
+    <div class="hud" id="hud" aria-live="polite">
+        <svg class="hud-lines" id="hudLines" aria-hidden="true"></svg>
+        <div class="hud-head" id="hudHead">
+            <h1 class="hud-name" id="hudName"></h1>
+            <div class="hud-tagline" id="hudTagline"></div>
+        </div>
+        <div class="hud-foot" id="hudFoot">
+            <span class="pill"><i></i><span id="hudStatusText"></span></span>
+            <div class="hud-tech" id="hudTech"></div>
+            <a class="hud-link" id="hudLink" target="_blank" rel="noopener"></a>
+        </div>
+    </div>
+    <nav class="tutorial" id="tutorial" aria-label="Tutorial">
+        <div class="grip" id="menuGrip" title="Drag to move"></div>
+        <div class="playrow">
+            <button type="button" class="play" id="play">▶ Play</button>
+            <button type="button" class="music" id="withMusic" aria-pressed="false" title="Play with the song">&#9834; Music</button>
+        </div>
+        <div class="parts" id="parts"></div>
+    </nav>
+    <!-- The visitors' link (drift.html#watch): one tap to start the whole run -->
+    <button type="button" class="begin" id="begin" hidden>&#9654; Play</button>
+
+    <!-- #edit's Dialog: each line, to pick (its scene held at its moment, the song there), time and play alone -->
+    <aside class="dialogmenu" id="dialogMenu" aria-label="The dialog" hidden>
+        <div class="head" id="dialogHead" title="Drag to move">
+            <span class="title">Dialog</span>
+            <span class="sum" id="dialogSum"></span>
+            <button type="button" id="dialogExpand" aria-expanded="true" title="Fold it up">&#8211;</button>
+        </div>
+        <div class="mini" id="dialogMini" aria-label="Each line's moment in the run, and its pause"></div>
+    </aside>
+
+    <!-- The show: the song, its timeline (the scenes placed on it, the effects' flags), the effects and Colour -->
+    <div class="player" id="player">
+        <div class="grip" id="playerGrip" title="Drag to move"></div>
+        <button type="button" class="shrink" id="playerShrink" aria-pressed="false" title="Make it small: just play and the slider">&#8211;</button>
+        <button type="button" class="songplay" id="songPlay" aria-label="Play">&#9654;</button>
+        <div class="track">
+            <div class="line">
+                <div class="seekwrap">
+                    <input type="range" class="seek" id="songSeek" min="0" max="1000" value="0" aria-label="Where the song's got to">
+                    <span class="span" id="songSpan" aria-hidden="true" hidden></span>
+                </div>
+                <span class="time" id="songTime">0:00 / 0:00</span>
+            </div>
+            <div class="lanes" id="lanes" aria-label="The scenes, and where each effect runs"></div>
+            <div class="lane dialog" id="dialogLane" aria-label="Each dialog pause, where it falls in ▶ Play's run" hidden></div>
+        </div>
+        <div class="reacts" id="showReacts" role="group" aria-label="What the stars do to the music"></div>
+        <div class="editor" role="group" aria-label="Placing scenes and effects">
+            <select id="sceneWhich" aria-label="Which scene"></select>
+            <button type="button" id="scenePlace">&#9673; Place scene</button>
+            <select id="editWhich" aria-label="Which effect"></select>
+            <button type="button" id="flagStart">&#9656; Start flag</button>
+            <button type="button" id="flagEnd">&#9666; End flag</button>
+            <button type="button" id="flagUndo">Undo</button>
+            <button type="button" class="save" id="flagSave">Save</button>
+        </div>
+        <div class="dialog-edit" id="dialogEdit" aria-label="The picked line: its words, pause and place" hidden></div>
+        <div class="note" id="showNote"></div>
+        <svg class="links" id="links" aria-hidden="true"></svg>
+        <div class="hint" id="colourHint" hidden>Now click an effect to colour it · click a joined one to unjoin</div>
+        <div class="pop" id="wheelPop" role="dialog" aria-label="Its colours" hidden>
+            <div class="wheel" id="wheel" title="Pick a hue"><button type="button" class="all" id="allColours">All colours</button></div>
+            <div class="palettes" id="palettes"></div>
+            <button type="button" class="unjoin" id="unjoin">Unjoin colour</button>
+        </div>
+    </div>
+
+    <!-- In this order: each uses what the ones before it set up -->
+    <script src="drift/icons.js"></script>
+    <script src="drift/hud.js"></script>
+    <script src="drift/tutorial.js"></script>
+    <script src="drift/scenes.js"></script>
+    <script src="drift/show.js"></script>
+    <script src="drift/dialog.js"></script>
+    <script src="drift/main.js"></script>
+</body>
+</html>

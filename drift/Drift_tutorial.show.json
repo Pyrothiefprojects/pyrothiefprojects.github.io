@@ -1,0 +1,186 @@
+{
+  "song": "Drift_tutorial.mp4",
+  "on": {
+    "pulse": false,
+    "flare": false,
+    "spin": false,
+    "colour": false,
+    "skew": false,
+    "spike": false
+  },
+  "scenes": [],
+  "ranges": {},
+  "colours": {},
+  "dialog": {
+    "Splash": [
+      {
+        "pause": 4
+      }
+    ],
+    "Intro": [
+      {
+        "pause": 4.5
+      },
+      {
+        "text": "Welcome to Drift Remote!",
+        "pause": 1.5
+      }
+    ],
+    "Home": [
+      {
+        "text": "You are here.",
+        "pause": 1
+      }
+    ],
+    "Settings": [
+      {
+        "text": "These are settings you can use to change the look, feel and behavior of your remote.",
+        "pause": 5
+      }
+    ],
+    "Connect": [
+      {
+        "text": "This is where you can connect to other devices",
+        "pause": 3.5
+      }
+    ],
+    "Walkthrough": [
+      {
+        "text": "",
+        "pause": 0
+      }
+    ],
+    "Device list": [
+      {
+        "text": "Click the Connection Icon",
+        "pause": 2,
+        "dx": -1.3,
+        "dy": 3.8,
+        "wide": 69.9
+      },
+      {
+        "text": "This is a list of devices",
+        "pause": 2
+      }
+    ],
+    "Device row": [
+      {
+        "text": "Presently Drift Remote can connect with the following devices",
+        "pause": 4.5,
+        "moving": true
+      },
+      {
+        "text": "iPad"
+      },
+      {
+        "text": "MacBook"
+      },
+      {
+        "text": "Mac"
+      },
+      {
+        "text": "HomePod"
+      },
+      {
+        "pause": 2.5
+      }
+    ],
+    "Selection": [
+      {
+        "text": "Select a device",
+        "pause": 1.5
+      },
+      {
+        "text": "You now control that device",
+        "pause": 0.5
+      },
+      {
+        "text": "You can use many devices at once",
+        "pause": 1.5
+      },
+      {
+        "text": "Switch  seamlessly",
+        "pause": 0
+      },
+      {
+        "text": "Select your device from the list",
+        "pause": 0
+      },
+      {
+        "text": "You are connected!",
+        "pause": 2
+      }
+    ],
+    "Trackpad": [
+      {
+        "text": "Control the target's trackpad",
+        "pause": 0
+      }
+    ],
+    "Keyboard": [
+      {
+        "text": "the keyboard",
+        "pause": 0
+      }
+    ],
+    "Media": [
+      {
+        "text": "the media",
+        "pause": 0
+      }
+    ],
+    "Screen sharing": [
+      {
+        "text": "Share the screen of your target with your remote",
+        "pause": 3.5
+      },
+      {
+        "text": "Make sure screen sharing is toggled on",
+        "pause": 3
+      },
+      {
+        "text": "On a MacBook: System Settings \u203a General \u203a Sharing \u203a Screen Sharing.",
+        "pause": 5
+      },
+      {
+        "text": "Select the screen sharing icon",
+        "pause": 1.5
+      },
+      {
+        "text": "You're now sharing your screen to your remote!",
+        "pause": 3,
+        "moving": true
+      }
+    ],
+    "Shared trackpad": [
+      {
+        "text": "",
+        "pause": 0
+      }
+    ],
+    "Shared keyboard": [
+      {
+        "text": "",
+        "pause": 0
+      }
+    ],
+    "Shared media": [
+      {
+        "text": "The remote's display is also a trackpad, control it alongside other features.",
+        "pause": 3.5
+      }
+    ],
+    "Landscape": [
+      {
+        "text": "Rotate your remote for a landscaped experience",
+        "pause": 0
+      }
+    ],
+    "Disconnect": [
+      {
+        "text": "Disconnect from devices anytime.",
+        "pause": 1
+      }
+    ]
+  }
+}

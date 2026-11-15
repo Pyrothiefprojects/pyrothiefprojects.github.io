@@ -129,14 +129,17 @@
             transform: translateY(-50%);
             transition: height 0.2s;
         }
-        .projects-menu button:hover, .projects-menu button.on {
+        /* (lit: the #drift tour's pointer over it, as a hover) */
+        .projects-menu button:hover, .projects-menu button.on, .projects-menu button.lit {
             background: linear-gradient(135deg, #ffa500, #ff6b35);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             text-shadow: none;
         }
-        .projects-menu button:hover::before, .projects-menu button.on::before { height: 70%; }
+        /* Hovered, brighter still */
+        .projects-menu button:hover, .projects-menu button.lit { filter: brightness(1.35) drop-shadow(0 0 6px rgba(255, 140, 60, 0.55)); }
+        .projects-menu button:hover::before, .projects-menu button.on::before, .projects-menu button.lit::before { height: 70%; }
         @keyframes rowIn {
             from { opacity: 0; transform: translateX(-14px); }
             to { opacity: 1; transform: none; }
@@ -1437,6 +1440,15 @@
         // One step of everything, at the page's time t
         function simulate(t) {
             tourStep(t);
+            if (partyOn) partyStep(t);
+            // #drift&splash: the HUD settled in the middle (its menu put away — by the tour, half a second after its last
+            // label, or on a phone by the pick itself — and 0.8 s gliding there), the tutorial (drift.html, this page in its
+            // frame) told, so its Splash ends here, where its Intro starts
+            if (tourHash.splash && tour.picked && !splashTold && !menuOpen &&
+                t - tourWait >= tour.pickAt + hudInTime(PROJECTS[tourTarget]) + 1.3) {
+                splashTold = true;
+                if (window.parent !== window) window.parent.postMessage({ drift: "splash-done" }, "*");
+            }
 
             // In or out: scrolling sets the depth directly; otherwise it eases to the end it's heading for
             if (!scrolling) depth += ((inside ? 1 : 0) - depth) * (reducedMotion ? 1 : 0.06);
@@ -1537,6 +1549,7 @@
                     dotAlphas[i] = starsBright;
                 }
             }
+            if (partyOn) partyStars(t);   // (the tutorial's Splash: to its song, full blast)
             var toGlobe = globeInverse.copy(globe.matrixWorld).invert();
 
             // Skew, inside: each dot near the pointer on screen is pushed straight away from it, more the nearer it is,
@@ -1715,7 +1728,7 @@
             dotGeometry.attributes.aSize.needsUpdate = true;
             dotGeometry.attributes.aAlpha.needsUpdate = true;
 
-            spikeMaterial.opacity = 0.3 * starsBright;
+            spikeMaterial.opacity = (partyOn ? Math.min(1, 0.3 + 0.35 * party.beat + 0.5 * party.bass) : 0.3) * starsBright;
 
             for (var s = 0; s < SPIKE_COUNT; s++) {
                 var sp = spikes[s];
@@ -1723,6 +1736,11 @@
                 var base = RADIUS + sp.bulge * BULGE_HEIGHT;
                 var breathe = reducedMotion ? 1 : 0.55 + 0.45 * Math.sin(t * sp.speed + sp.phase);
                 var tip = base + sp.length * breathe;
+                if (partyOn) {   // (Pulse: swelling, the spikes shooting out; Spike: long with the bass, each its own way)
+                    base *= 1 + 0.07 * party.beat;
+                    tip = base + sp.length * breathe * (1 + 1.2 * party.beat) * (1 + 2.5 * party.bass) +
+                        party.bass * 40 * (0.5 + 0.5 * Math.sin(sp.phase * 3));
+                }
                 spikePositions[s * 6] = sp.dir.x * base;
                 spikePositions[s * 6 + 1] = sp.dir.y * base;
                 spikePositions[s * 6 + 2] = sp.dir.z * base;
@@ -1732,6 +1750,82 @@
             }
             spikeGeometry.attributes.position.needsUpdate = true;
 
+        }
+
+        // ---------------- The tutorial's party (#drift&splash, in the Drift Remote tutorial's frame, only) ----------------
+        // In the tutorial's Splash, the sphere moves to the tutorial's song with all of Pyrosphere's effects, full blast:
+        // Pulse (it swells, its spikes shoot out), Flare (bigger and brighter, more the louder it is), Spin kick (a push one
+        // way, then the other), Glow (the stars flashing on the beat), Skew (rings rippling across it), Spike (long with the
+        // bass) — every glow in all colours, moving round the wheel. The beat's the tutorial's (its show.music: the beats
+        // it's heard, the last one's strength, how loud, how much bass). Anywhere else, none of it: the home page as it is
+        var partyOn = false;
+        var party = { beat: 0, loud: 0, bass: 0, side: 1, spinGlow: 0, heard: -1, last: -1, ripples: [] };
+        var PARTY_SKEW_LIFE = 1.2, PARTY_SKEW_SPEED = 2.6, PARTY_SKEW_WIDTH = 0.2, PARTY_SKEW_PUSH = 40;
+        var partyPaint = new THREE.Color(), partyNear = new THREE.Vector3(), partyTurn = new THREE.Quaternion();
+        function partyStep(t) {   // (each frame: the beat, as the tutorial hears it)
+            var dt = party.last < 0 ? 0 : Math.max(0, Math.min(0.1, t - party.last));
+            party.last = t;
+            party.beat *= Math.exp(-dt * 6);
+            party.spinGlow *= Math.exp(-dt * 3);
+            party.ripples = party.ripples.filter(function (r) { return t - r.born < PARTY_SKEW_LIFE; });
+            var music = null;
+            try { music = window.parent.show && window.parent.show.music ? window.parent.show.music() : null; } catch (err) {}
+            if (!music || !music.playing) {
+                if (music) party.heard = music.beats;
+                party.loud *= Math.exp(-dt * 3);
+                party.bass *= Math.exp(-dt * 3);
+                return;
+            }
+            if (party.heard < 0) party.heard = music.beats;   // (from now on)
+            if (music.beats > party.heard) {
+                party.heard = music.beats;
+                var strength = music.strength;
+                party.beat = Math.max(party.beat, strength);
+                party.side = -party.side;
+                party.spinGlow = Math.max(party.spinGlow, strength);
+                if (!reducedMotion) {
+                    spinY += 0.006 * strength * party.side;
+                    partyTurn.copy(globe.quaternion).invert();
+                    partyNear.set((Math.random() - 0.5) * 1.2, (Math.random() - 0.5) * 1.2, 1).normalize().applyQuaternion(partyTurn);
+                    party.ripples.push({ from: partyNear.clone(), born: t, strength: strength });
+                    if (party.ripples.length > 4) party.ripples.shift();
+                }
+            }
+            party.loud += (music.loud - party.loud) * Math.min(1, dt * 6);
+            party.bass += (music.bass - party.bass) * Math.min(1, dt * 12);
+        }
+        function partyStars(t) {   // (after the sphere's own step: its stars swelled, pushed, lit and grown, the flame's left be)
+            var swell = 1 + 0.07 * party.beat;
+            for (var i = 0; i < DOT_COUNT; i++) {
+                var d = dirs[i], px = dotPositions[i * 3] * swell, py = dotPositions[i * 3 + 1] * swell, pz = dotPositions[i * 3 + 2] * swell;
+                var pushed = 0;
+                for (var w = 0; w < party.ripples.length; w++) {   // (Skew: each ripple's ring, pushing the stars on it aside)
+                    var rp = party.ripples[w], age = t - rp.born, dot = d.dot(rp.from);
+                    var off = (Math.acos(Math.max(-1, Math.min(1, dot))) - age * PARTY_SKEW_SPEED) / PARTY_SKEW_WIDTH;
+                    if (off > 3 || off < -3) continue;
+                    var weight = Math.exp(-off * off) * (1 - age / PARTY_SKEW_LIFE) * rp.strength;
+                    var tx = d.x - rp.from.x * dot, ty = d.y - rp.from.y * dot, tz = d.z - rp.from.z * dot, tl = Math.hypot(tx, ty, tz) || 1;
+                    px += tx / tl * PARTY_SKEW_PUSH * weight;
+                    py += ty / tl * PARTY_SKEW_PUSH * weight;
+                    pz += tz / tl * PARTY_SKEW_PUSH * weight;
+                    pushed = Math.max(pushed, weight);
+                }
+                dotPositions[i * 3] = px;
+                dotPositions[i * 3 + 1] = py;
+                dotPositions[i * 3 + 2] = pz;
+                // the strongest glow here — Skew's ring, Glow's flash, Pulse, Flare, Spin kick's bands — in all colours
+                var glow = Math.max(pushed, party.beat * (0.35 + 0.65 * ((i * 0.618) % 1)), party.beat * 0.8,
+                    party.beat * (0.45 + 0.55 * ((i * 0.37) % 1)),
+                    party.spinGlow * Math.max(0, Math.sin(Math.atan2(d.z, d.x) * 3 - party.side * t * 4)));
+                if (glow > 0.001) {
+                    var c = partyPaint.setHSL((i * 0.618 + t * 0.12) % 1, 0.85, 0.6);
+                    dotColors[i * 3] += (c.r - dotColors[i * 3]) * glow;
+                    dotColors[i * 3 + 1] += (c.g - dotColors[i * 3 + 1]) * glow;
+                    dotColors[i * 3 + 2] += (c.b - dotColors[i * 3 + 2]) * glow;
+                }
+                dotSizes[i] *= (1 + party.beat * (0.6 + party.loud) + party.loud * 0.4) * (1 + 0.3 * pushed);
+                dotAlphas[i] = Math.min(1, dotAlphas[i] * (1 + 0.15 * party.beat + party.loud * 0.3));
+            }
         }
 
         // ---------------- The tour: a link like pyrothief.ca/#drift plays the way there by itself ----------------
@@ -1750,6 +1844,9 @@
         var tourSlug = null;
         Object.keys(tourHash).forEach(function (key) { if (TOUR_SLUGS[key]) tourSlug = key; });
         var tourTarget = tourSlug ? TOUR_SLUGS[tourSlug] : null;
+        var tourWait = Math.max(0, parseFloat(tourHash.wait) || 0);   // (&wait=2: s on the sphere first — the tutorial's Splash)
+        var splashTold = false;    // (#drift&splash: the tutorial told the HUD's settled in the middle)
+        partyOn = !!tourHash.splash && window.parent !== window;   // (the tutorial's Splash: the sphere to its song, full blast)
         var tourActive = !!tourTarget;
         var tour = { clicked: false, arrivedAt: -1, picked: false, pickAt: -1, fromX: 0, fromY: 0 };
         var ghost = document.getElementById("ghost");
@@ -1757,11 +1854,19 @@
             a = Math.max(0, Math.min(1, a));
             return a * a * (3 - 2 * a);
         }
-        // The ghost to a point on screen; it points there too, as a pointer would (the flame gathers, Skew pushes the dots aside)
+        // The ghost to a point on screen; it points there too, as a pointer would (the flame gathers, Skew pushes the dots aside,
+        // a project's row under it lights as if hovered)
         function ghostTo(x, y, alpha) {
             ghost.style.transform = "translate(" + x + "px, " + y + "px)";
             ghost.style.opacity = alpha;
             pointAt(x, y);
+            lightRow(x, y);
+        }
+        function lightRow(x, y) {
+            projectRows.forEach(function (row) {
+                var r = row.getBoundingClientRect();
+                row.classList.toggle("lit", !projectsMenu.hidden && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+            });
         }
         function ghostClick() {
             ghost.classList.remove("click");
@@ -1770,6 +1875,7 @@
         }
         function tourStep(t) {
             if (!tourActive) return;
+            t -= tourWait;
             var w = window.innerWidth;
             var h = window.innerHeight;
             if (t < 1.4) { ghost.style.opacity = 0; return; }   // the intro plays first
@@ -1814,15 +1920,23 @@
                 }
                 return;
             }
-            // There: the ghost fades away and the tour hands over
+            // There: the ghost fades away and the tour hands over (#drift&splash — the tutorial's Splash: half a second after
+            // the HUD's all in — its last label typed — the menu put away too, so the project comes to the middle, where the
+            // tutorial's Intro starts)
+            if (tourHash.splash && menuOpen && t >= tour.pickAt + hudInTime(PROJECTS[tourTarget]) + 0.5) closeMenu();
             var left = 1 - Math.min(1, (t - tour.pickAt - 0.6) / 0.8);
             ghost.style.opacity = left;
-            if (left <= 0) endTour();
+            if (left <= 0 && !(tourHash.splash && menuOpen)) endTour();
+        }
+        // How long a project's HUD takes to come in, from its pick to its last label typed (as layoutHud draws it)
+        function hudInTime(p) {
+            return Math.max.apply(null, [0].concat((p.callouts || []).map(function (c, n) { return 0.45 + n * 0.12 + c.length / 40; })));
         }
         function endTour() {
             if (!tourActive) return;
             tourActive = false;
             ghost.style.opacity = 0;
+            lightRow(-1, -1);
             pointerGone();
             // The link back to plain, so a reload starts at home
             history.replaceState(null, "", location.pathname + location.search);
