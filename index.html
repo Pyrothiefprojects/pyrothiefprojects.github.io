@@ -1930,7 +1930,7 @@
         var tourTarget = tourSlug ? TOUR_SLUGS[tourSlug] : null;
         var tourWait = Math.max(0, parseFloat(tourHash.wait) || 0);   // (&wait=2: s on the sphere first — the tutorial's Splash)
         var splashTold = false;    // (#drift&splash: the tutorial told the HUD's settled in the middle)
-        partyOn = (!!tourHash.splash || !!tourHash.backdrop) && window.parent !== window;   // (the tutorial's: to its song)
+        partyOn = (!!tourHash.splash || !!tourHash.backdrop || !!tourHash.arrive) && window.parent !== window;   // (the tutorial's: to its song)
         // (#drift&splash&hold: the tutorial's link for visitors — on the sphere till they click it, then the tutorial says go,
         // and the tour plays from then, as if the page had just opened; `wait` with it: s on the sphere first, as &wait)
         var tourHeld = !!tourHash.hold;
@@ -2069,6 +2069,8 @@
         }
         window.becomeBackdrop = function () { becomeBackdrop(false); };
         if (tourHash.backdrop) becomeBackdrop(true);
+        // (#arrive: the tutorial's visitors' end — this home screen, there at rest, no flying in, faded in over its sphere)
+        if (tourHash.arrive) backdropSnap = true;
         window.addEventListener("pointerdown", interruptTour, true);
         window.addEventListener("wheel", interruptTour, true);
         window.addEventListener("keydown", interruptTour, true);

@@ -387,8 +387,9 @@ var PARTS = [
         dialog: [
             { at: 0.3, where: "trackpad", pause: 2, until: X_GHOSTS_FROM, text: "Disconnect from devices anytime from the connect screen" }
         ],
-        begin: function () { walkDone(); rcScreen = "off"; offFrom = clock; sphere(); },
+        begin: function () { walkDone(); rcScreen = "off"; offFrom = clock; sphere(); if (visiting) preloadHome(); },
         step: function (t) {
+            if (visiting && t >= X_BURST_FROM + X_BURST + 0.2) goHome();   // (the visitors' end: the home screen, over it)
             if (t < X_BURST_FROM || sphereFrom) return;
             catchStars = true;
             splashFrame.classList.remove("on");   // (the stars behind fading, as these build the sphere)
@@ -528,6 +529,27 @@ window.addEventListener("message", function (e) {
 var sphereFrom = null;      // (read by sphere.html, from its frame)
 var catchStars = false;     // (the burst's moment: the next frame's stars to be caught)
 var sphereFrame = document.getElementById("sphereFrame");
+// The visitors' link, at the end: pyrothief.ca's own home screen — loaded unseen as Disconnect starts (#arrive: at rest,
+// no flying in), faded in over the sphere once it's built; then the address is the home page's (a reload, or a link
+// from there, is the site itself), and it's theirs to use, the song playing out
+var homeFrame = document.getElementById("homeFrame"), wentHome = false;
+function preloadHome() {
+    wentHome = false;
+    homeFrame.classList.remove("on");
+    homeFrame.src = "index.html?home=" + Date.now() + "#arrive";
+}
+function goHome() {
+    if (wentHome) return;
+    wentHome = true;
+    homeFrame.classList.add("on");
+    setTimeout(function () {   // (faded in: the rest let go, the address the home page's)
+        [sphereFrame, splashFrame].forEach(function (frame) { frame.classList.remove("on"); frame.src = "about:blank"; });
+        frameIs = null;
+        try { history.replaceState(null, "", location.pathname.replace(/drift\.html$/, "")); } catch (err) {}
+        try { document.title = homeFrame.contentDocument.title; } catch (err) {}
+        homeFrame.focus();
+    }, 1000);
+}
 function sphere() {
     sphereFrom = null;
     catchStars = false;
