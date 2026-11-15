@@ -1506,7 +1506,7 @@
             lockup.style.transform = "translate(" + (under.x + (16 - under.x) * slid) + "px, " +
                 (under.y + ph * (1 - scaleNow) / 2) + "px) scale(" + scaleNow + ")";
             // The codex's dots sit under PROJECTS while a project is up — not while the menu is open there
-            var dotsShown = CODEX.indexOf(activeProject) >= 0 && !menuOpen;
+            var dotsShown = (CODEX.indexOf(activeProject) >= 0 && !menuOpen) || backdropDots;   // (the tutorial's backdrop: kept till they fade)
             if (pager.hidden === dotsShown) pager.hidden = !dotsShown;
             if (dotsShown) {
                 var projectsBox = lockup.getBoundingClientRect();
@@ -2062,14 +2062,15 @@
         // the page — no header, menu, card, HUD or project's icon: the tutorial's own picture drawn over it. The pointer it
         // hands down (userPoint, with the party's, above) pushes the stars aside around it, as here inside (Skew)
         var backdrop = false, backdropSnap = false;
+        var backdropDots = false;   // (the dots under PROJECTS, showing as Splash ended: kept on, till the tutorial fades them)
         function becomeBackdrop(now) {   // (now: from the start, straight in; else from Splash's end, already in)
             if (backdrop) return;
             backdrop = true;
             document.documentElement.classList.add("backdrop");
             if (tourActive) endTour();
-            var dotsShowing = !pager.hidden;
+            backdropDots = !now && !pager.hidden;   // (the dots under PROJECTS kept, till the tutorial fades them: backdropFade)
             closeCard();
-            if (dotsShowing) pager.hidden = false;   // (the dots under PROJECTS kept, till the tutorial fades them: backdropFade)
+            if (backdropDots) pager.hidden = false;
             if (now) document.documentElement.classList.add("backdrop-faded");   // (from the start: no header to carry over)
             if (menuOpen) closeMenu();
             Object.keys(iconShapes).forEach(function (key) { iconShapes[key].form = 0; });   // (its icon gone at once: the tutorial's over it)
@@ -2082,7 +2083,7 @@
         window.backdropFade = function () {
             if (!backdrop || document.documentElement.classList.contains("backdrop-faded")) return;
             document.documentElement.classList.add("backdrop-faded");
-            setTimeout(function () { pager.hidden = true; }, 1200);
+            setTimeout(function () { backdropDots = false; pager.hidden = true; }, 1200);
         };
         if (tourHash.splash || tourHash.backdrop) document.documentElement.classList.add("in-tutorial");
         if (tourHash.backdrop) becomeBackdrop(true);
