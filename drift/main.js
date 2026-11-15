@@ -2,8 +2,24 @@
 
 // ---------------- The frame ----------------
 var last = performance.now();
+// (light mode, once frames prove slow: most of 180 slower than 40 a second — not just a few hitches, loading or at a
+// handover)
+var perf = { frames: 0, slow: 0 };
+function keepUp(ms) {
+    if (lightMode || ms > 1000) return;   // (a long gap: the tab put away, not a slow frame)
+    perf.frames++;
+    if (ms > 25) perf.slow++;
+    if (perf.frames < 180) return;
+    if (perf.slow / perf.frames > 0.6) {
+        lightMode = true;
+        document.documentElement.classList.add("light-mode");
+        resize();
+    }
+    perf.frames = perf.slow = 0;
+}
 var hudDrop = 0;          // px down, so the whole HUD (not just the icon) is centred on the screen
 function tick(now) {
+    keepUp(now - last);
     var dt = Math.min(0.1, (now - last) / 1000);
     last = now;
     var w = window.innerWidth, h = window.innerHeight;

@@ -81,8 +81,14 @@
         }
 
         var canvas = document.getElementById("sphere");
-        var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        // Light mode — a device that can't keep up (2 processor cores or fewer, or ?light in the address, or the
+        // tutorial's address when this is in its frame): drawn at 1×, no antialiasing, no live blur. Any other device turns
+        // light if its frames prove slow (keepUp, in the loop below). A fast one never notices
+        function parentSearch() { try { return window.parent !== window ? window.parent.location.search : ""; } catch (err) { return ""; } }
+        var lightMode = (navigator.hardwareConcurrency || 8) <= 2 || /[?&]light\b/.test(location.search + parentSearch());
+        if (lightMode) document.documentElement.classList.add("light-mode");
+        var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: !lightMode, alpha: true });
+        renderer.setPixelRatio(lightMode ? 1 : Math.min(window.devicePixelRatio, 2));
         var scene = new THREE.Scene();
         var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
         var globe = new THREE.Group();
@@ -332,7 +338,25 @@
         // ---------------- Each frame ----------------
         var last = performance.now(), simTime = 0;
         var gm = globe.matrixWorld.elements;
+        // (light mode, once frames prove slow: most of 180 slower than 40 a second — not just a few hitches, loading or
+        // at a handover)
+        var perfFrames = 0, perfSlow = 0;
+        function keepUp(ms) {
+            if (lightMode || ms > 1000) return;   // (a long gap: the tab put away, not a slow frame)
+            perfFrames++;
+            if (ms > 25) perfSlow++;
+            if (perfFrames < 180) return;
+            if (perfSlow / perfFrames > 0.6) {
+                lightMode = true;
+                document.documentElement.classList.add("light-mode");
+                renderer.setPixelRatio(1);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                dotMaterial.uniforms.pixelRatio.value = 1;
+            }
+            perfFrames = perfSlow = 0;
+        }
         function frame(now) {
+            keepUp(now - last);
             var dt = Math.min(0.1, (now - last) / 1000);
             last = now;
             simTime += dt;
