@@ -258,18 +258,10 @@ body {
 
 /* ▶ Play watched as it is: the menu out of the way (the show's player made small, to pause it) */
 .watching .tutorial { opacity: 0; pointer-events: none; }
-/* The visitors' link (drift.html#watch): no menus, no editor; the player only while it plays; one button to start it,
-   and to watch again at the end */
-.visiting .tutorial, .visiting .dialogmenu, .visiting:not(.watching) .player { display: none; }
-.begin {
-    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 4;
-    font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
-    padding: 0.9rem 1.6rem; border: 0; border-radius: 999px; cursor: pointer;
-    color: #0a0a0a; background: linear-gradient(135deg, #ffa500, #ff6b35);
-    box-shadow: 0 0 24px rgba(255, 107, 53, 0.45);
-}
-.begin:hover { filter: brightness(1.1); }
-.begin[hidden] { display: none; }
+/* The visitors' link (drift.html#watch): no menus, no editor, no player — the sphere, to click to begin (and again at
+   the end) */
+.visiting .tutorial, .visiting .dialogmenu, .visiting .player { display: none; }
+.visiting:not(.watching) { cursor: pointer; }
 
 /* Splash: the home page over the dots (under the HUD and the menus), only while Splash shows it */
 .splash {

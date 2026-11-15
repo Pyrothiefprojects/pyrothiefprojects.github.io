@@ -479,10 +479,17 @@ function walkDone() {
 // The home page, over the tutorial's own (Splash): loaded afresh each time, so its tour plays from the start; gone with
 // anything else
 var splashFrame = document.getElementById("splash");
-function splash(on) {   // (its tour waiting as long as Splash's first pause, on the sphere, before the flame's clicked)
+var splashHeld = false;   // (the visitors' link: the home page already up, its tour held till Splash starts it)
+function splash(on, held) {   // (its tour waiting as long as Splash's first pause, on the sphere, before the flame's clicked)
     var wait = PARTS[0].dialog[0].pause;
+    if (splashHeld) {   // (held: kept, not loaded again — Splash's start tells its tour to go)
+        if (!on) return;
+        splashHeld = false;
+        splashFrame.contentWindow.postMessage({ drift: "go", wait: wait }, "*");
+        return;
+    }
     splashFrame.classList.toggle("on", on);
-    if (on) splashFrame.src = "index.html?splash=" + Date.now() + "#drift&splash" + (wait ? "&wait=" + wait : "");
+    if (on) splashFrame.src = "index.html?splash=" + Date.now() + "#drift&splash" + (held ? "&hold" : wait ? "&wait=" + wait : "");
     else if (splashFrame.getAttribute("src") !== "about:blank") splashFrame.src = "about:blank";
 }
 var splashArrived = false;   // (the home page has said its HUD's settled in the middle: Splash done)
@@ -569,25 +576,25 @@ function watching(on) {
     document.body.classList.toggle("watching", on);
     show.along(on && musicButton.getAttribute("aria-pressed") === "true");
     show.watch(on);
-    if (visiting && !on) {   // (done: on the sphere, to watch again)
-        beginButton.textContent = "↻ Watch again";
-        beginButton.hidden = false;
-    }
 }
-// The link for visitors (drift.html#watch): just a ▶ Play to start it — a tap, so the browser lets the song play — then the
-// whole run with Music, as ▶ Play has it; no menus, no editor; on the sphere at the end, to watch again
+// The link for visitors (drift.html#watch): the home page's sphere, as Splash starts, its tour held — a click on it (so the
+// browser lets the song play) begins the whole run with Music, as ▶ Play has it, the tour going on from that moment in
+// the same frame. No menus, no editor, no player; nothing stops it (Space pauses). At the end it's on the sphere: a click,
+// and it's from the start again
 var visiting = location.hash === "#watch";
-var beginButton = document.getElementById("begin");
-if (visiting) document.body.classList.add("visiting");
-beginButton.hidden = !visiting;
-beginButton.addEventListener("click", function () {
-    beginButton.hidden = true;
-    musicButton.setAttribute("aria-pressed", "true");
-    watching(true);
-    playPart(nextPart(-1), true);
-});
+if (visiting) {
+    document.body.classList.add("visiting");
+    splash(true, true);
+    splashHeld = true;
+    document.addEventListener("pointerdown", function () {
+        if (document.body.classList.contains("watching")) return;
+        musicButton.setAttribute("aria-pressed", "true");
+        watching(true);
+        playPart(nextPart(-1), true);
+    });
+}
 function stopWatching(e) {
-    if (visiting) return;   // (the visitors' link: nothing stops it but its player's pause)
+    if (visiting) return;   // (the visitors' link: nothing stops it)
     if (!document.body.classList.contains("watching") || (e.type === "keydown" && e.key !== "Escape")) return;
     if (e.type === "pointerdown" && e.target.closest && e.target.closest("#player")) return;   // (its player: to pause it)
     playing = -1;

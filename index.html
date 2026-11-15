@@ -1847,6 +1847,14 @@
         var tourWait = Math.max(0, parseFloat(tourHash.wait) || 0);   // (&wait=2: s on the sphere first — the tutorial's Splash)
         var splashTold = false;    // (#drift&splash: the tutorial told the HUD's settled in the middle)
         partyOn = !!tourHash.splash && window.parent !== window;   // (the tutorial's Splash: the sphere to its song, full blast)
+        // (#drift&splash&hold: the tutorial's link for visitors — on the sphere till they click it, then the tutorial says go,
+        // and the tour plays from then, as if the page had just opened; `wait` with it: s on the sphere first, as &wait)
+        var tourHeld = !!tourHash.hold;
+        window.addEventListener("message", function (e) {
+            if (!tourHeld || e.source !== window.parent || !e.data || e.data.drift !== "go") return;
+            tourHeld = false;
+            tourWait = simTime + Math.max(0, +e.data.wait || 0);
+        });
         var tourActive = !!tourTarget;
         var tour = { clicked: false, arrivedAt: -1, picked: false, pickAt: -1, fromX: 0, fromY: 0 };
         var ghost = document.getElementById("ghost");
@@ -1875,6 +1883,7 @@
         }
         function tourStep(t) {
             if (!tourActive) return;
+            if (tourHeld) { ghost.style.opacity = 0; return; }   // (the tutorial's visitors: till they click)
             t -= tourWait;
             var w = window.innerWidth;
             var h = window.innerHeight;
