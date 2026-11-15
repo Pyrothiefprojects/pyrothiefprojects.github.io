@@ -87,7 +87,7 @@ var M_UNLINK_FROM = M_BACK_FROM + M_BACK + 0.3, M_UNLINK = 1.0;   // (Media's en
 // Keyboard: the same — handed over to the keys, each typed ([its label, when]), popping up over K_PRESS and
 // flashing green over K_FLASH, then the pointer made again
 var K_OUT_FROM = 0.4, K_OUT = 0.9;
-var K_KEYS = [["h", 1.6], ["i", 1.95], ["space", 2.4], ["m", 2.8], ["o", 3.1], ["m", 3.4]];
+var K_KEYS = [["h", 1.6], ["i", 1.95], ["space", 2.4], ["a", 2.8], ["l", 3.1], ["l", 3.4]];
 var K_PRESS = 0.25, K_FLASH = 0.45;
 var K_BACK_FROM = 3.9, K_BACK = 0.9;
 // Shared keyboard: as Keyboard, then the cycler clicked
@@ -290,7 +290,7 @@ var PARTS = [
         begin: function () { walkDone(); rcScreen = "trackpad"; trackFrom = clock; }
     },
     {
-        // Keyboard types: the pointer handed over to the keys, "hi mom" typed on them, each popping up and flashing
+        // Keyboard types: the pointer handed over to the keys, "hi all" typed on them, each popping up and flashing
         // green, and a line coming up on the Mac's screen as if it were typed there; then the pointer made again
         name: "Keyboard", length: K_BACK_FROM + K_BACK + 0.3, sub: 2,
         dialog: [

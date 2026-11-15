@@ -515,7 +515,7 @@ function drawKeysPanel(L, G, pen) {
         pen.box(kr[0] + kr[2] / 2 - kr[2] * s / 2, kr[1] + 21 - 21 * s, kr[2] * s, 42 * s, 8, 0.4 + 0.55 * Math.max(p, gr), undefined, gr);
         pen.label(name, kr[0] + kr[2] / 2, kr[1] + 21, (kr[4] === "special" ? 12 : 16) * s, gr);
     });
-    drawHandOff(L, ["h", "i", "space", "m", "o"].map(function (name) {   // (the keys "hi mom" takes)
+    drawHandOff(L, ["h", "i", "space", "a", "l"].map(function (name) {   // (the keys "hi all" takes)
         var kr = rects[name], pts = roundedPath(kr[0], kr[1], kr[2], kr[3], 8), len = pathLength(pts), spots = [];
         for (var d = 0; d < len; d += 4.5 / G.k) { var q = along(pts, d); spots.push([G.X(q[0]), G.Y(q[1])]); }
         return spots;
@@ -980,7 +980,7 @@ function mediaPose(L) {
     if (leave > 0) at = [mid[0] + (rest[0] - mid[0]) * leave, mid[1] + (rest[1] - mid[1]) * leave];
     return { merge: 1, dx: at[0] - rest[0], dy: at[1] - rest[1], tip: at, touching: u > 0 && u < 1, G: G, area: area };
 }
-// ---- Keyboard, typing: the pointer handed over to the keys, "hi mom" typed on them, lines coming up on the
+// ---- Keyboard, typing: the pointer handed over to the keys, "hi all" typed on them, lines coming up on the
 // Mac's screen as if it were being typed there (not the words themselves); then the pointer made again
 function keysT() { return keysFrom === null ? -1 : reducedMotion ? 1e9 : clock - keysFrom; }
 function keyPress(label) {   // 0 → 1 → 0, as it's typed (each time)
