@@ -672,9 +672,14 @@ function ice(p) { return rgb(iceRGB(p)); }
 
 var canvas = document.getElementById("dots");
 var g = canvas.getContext("2d");
+// Light mode (as the home page's): a device that can't keep up — 2 processor cores or fewer, or ?light in the address:
+// the stars drawn at 1×, not the screen's 2× (a quarter of the pixels), no live blur. Any other device turns light if its
+// frames prove slow (main.js's keepUp). A fast one never notices
+var lightMode = (navigator.hardwareConcurrency || 8) <= 2 || /[?&]light\b/.test(location.search);
+if (lightMode) document.documentElement.classList.add("light-mode");
 var ratio = 1;
 function resize() {
-    ratio = Math.min(window.devicePixelRatio || 1, 2);
+    ratio = Math.min(window.devicePixelRatio || 1, lightMode ? 1 : 2);
     canvas.width = Math.round(window.innerWidth * ratio);
     canvas.height = Math.round(window.innerHeight * ratio);
 }
