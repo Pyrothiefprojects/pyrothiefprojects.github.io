@@ -106,7 +106,10 @@ function tick(now) {
         var headTop = hudHead.getBoundingClientRect().top;
         var bottom = hudFoot.getBoundingClientRect().bottom;
         hudLabels.forEach(function (el) { bottom = Math.max(bottom, el.getBoundingClientRect().bottom); });
-        hudDrop += (h / 2 - (headTop + bottom) / 2) * (reducedMotion ? 1 : 0.2);
+        // (centred — but, with the home page's header and its dots up in Splash's frame, its name kept 16 px below them,
+        // as the home page keeps its own: in a short window, landscape on a phone, the two HUDs then meet as Splash ends)
+        var toCentre = h / 2 - (headTop + bottom) / 2, clear = headerClearance();
+        hudDrop += (clear ? Math.max(toCentre, clear - headTop) : toCentre) * (reducedMotion ? 1 : 0.2);
     }
     requestAnimationFrame(tick);
 }

@@ -508,6 +508,7 @@ function splash(on, held) {   // (its tour waiting as long as Splash's first pau
     splashFrame.classList.toggle("behind", !held);
     splashFrame.src = "index.html?splash=" + Date.now() + "#drift&splash" + (held ? "&hold" : wait ? "&wait=" + wait : "");
     frameIs = "tour";
+    headerFaded = false;
 }
 // The stars behind everything else: the home page inside its sphere and nothing more of it (index.html#backdrop) — or, as
 // Splash ends, its own page, there already, told to become that (so the stars go on just as they were). Dimmed, behind
@@ -515,12 +516,25 @@ function splash(on, held) {   // (its tour waiting as long as Splash's first pau
 function backdrop() {
     if (splashHeld) return;
     if (frameIs === "tour") { try { splashFrame.contentWindow.becomeBackdrop(); } catch (err) {} }
-    else if (frameIs !== "backdrop") splashFrame.src = "index.html?backdrop=" + Date.now() + "#backdrop";
+    else if (frameIs !== "backdrop") { splashFrame.src = "index.html?backdrop=" + Date.now() + "#backdrop"; headerFaded = true; }
     frameIs = "backdrop";
     splashFrame.classList.add("on", "behind");
 }
+var headerFaded = false;   // (the home page's header and dots, carried on from Splash, gone)
 function backdropFade() {   // (the home page's header and dots, carried on from Splash, faded out: Intro's draw-back)
     if (frameIs === "backdrop") try { splashFrame.contentWindow.backdropFade(); } catch (err) {}
+    headerFaded = true;
+}
+// While the home page's header (PROJECTS) and the tab dots under it are up in the frame — Splash, and Intro till they
+// fade — how far down the HUD's name must sit to clear them (px; 16 below, as the home page keeps its own), or 0
+function headerClearance() {
+    if (frameIs !== "tour" && (frameIs !== "backdrop" || headerFaded)) return 0;
+    try {
+        var d = splashFrame.contentDocument, row = d.getElementById("lockup").getBoundingClientRect().bottom;
+        var dots = d.getElementById("cardPager");
+        if (dots && !dots.hidden) row = Math.max(row, dots.getBoundingClientRect().bottom);
+        return row + 16;
+    } catch (err) { return 0; }
 }
 function handDown(e) {   // (your pointer, to the spheres in the frames: Splash's, the stars behind, Disconnect's)
     [splashFrame, sphereFrame].forEach(function (frame) {
