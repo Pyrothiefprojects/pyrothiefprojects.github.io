@@ -470,7 +470,6 @@
         <button type="button" data-project="games">DTG</button>
         <div class="menu-gap" aria-hidden="true"></div>
         <button type="button" data-project="privacy">Privacy</button>
-        <button type="button" data-project="license">License</button>
     </nav>
     <article class="card" id="card" aria-live="polite" hidden>
         <p class="card-tagline" id="cardTagline"></p>
@@ -758,30 +757,45 @@
             // rather than raised as an icon on its own (Nova's) is. Its old text is in the dev log
             games: { hudHidden: true, callouts: [] }
         };
-        // Not projects, but in the menu with them: the privacy policy and the license, each with a link to the full text
+        // Not projects, but in the menu with them: the privacy policy (the license's row is gone, 2026-11-18 — its card
+        // text is kept below, the same as its page, License/license.html, which stays)
         // The privacy policy as it is on its page (Privacy/privacy.html), whole, with its section headings
         PROJECTS.privacy = {
             name: "Privacy",
             tagline: "Drift Remote's privacy policy.",
             text: [
                 { h: "Overview" },
-                "Drift Remote does not collect, store, or transmit any personal data. This policy describes what the " +
-                    "app does and does not do with information on your device.",
-                { h: "Data Collection" },
-                "Drift Remote does not collect any data. No analytics, no crash reporting, no advertising identifiers, " +
-                    "and no third-party SDKs are included in the app.",
-                { h: "Local Storage" },
-                "The app stores preferences locally on your device using iOS standard storage (UserDefaults). This " +
-                    "includes settings such as haptics preferences and display options. This data never leaves your " +
-                    "device and is not accessible to Pyrothief Projects or any third party.",
-                { h: "Bluetooth" },
-                "Drift Remote uses Bluetooth Low Energy (BLE) to communicate directly with nearby Apple devices. Device " +
-                    "names and identifiers are used only to establish and maintain the connection and are never " +
-                    "transmitted off your device or stored beyond the current session.",
+                "This covers Drift Remote for iPhone, iPad and Mac.",
+                { h: "We Don’t Collect Your Data" },
+                "Drift Remote has no accounts, no ads, no analytics and no tracking, and Pyrothief Projects has no servers " +
+                    "your data goes to. We don’t sell or share your data.",
+                { h: "On Your Devices" },
+                "Your settings, the devices you’ve connected to and allowed, saved Mac sign-ins (kept in the Keychain on " +
+                    "that device only), the device’s own security key, and a log for troubleshooting.",
+                { h: "In Your iCloud" },
+                "A list of your devices, stored encrypted, so they can recognise each other. When you use Tunnel Cast, " +
+                    "your Mac’s name and addresses and your iPhone’s or iPad’s address are kept there too, so they can " +
+                    "find each other. It’s all kept in your iCloud under Apple’s privacy policy, and we can’t see it.",
+                { h: "Between Your Devices" },
+                "Your screen, typing and pointer go straight between your own devices, over Bluetooth, your Wi-Fi or an " +
+                    "encrypted connection. They never pass through us, and nothing is saved.",
+                { h: "Address Lookups" },
+                "For Tunnel Cast only, your devices ask public servers run by Google and Cloudflare for their own " +
+                    "internet address. Those servers see your IP address, as any website would.",
+                { h: "Feedback" },
+                "Send Feedback opens your mail app with an email to us and a diagnostic report, with names and " +
+                    "addresses hidden. It’s only sent if you send it, it’s used only to help you, and we’ll delete it " +
+                    "whenever you ask.",
+                { h: "Removing Your Data" },
+                "Reset in Settings (iPhone and iPad) or in the Mac app removes what Drift Remote keeps. To remove a single " +
+                    "device, use the Trusted Device List in Settings. If you’re deleting the app, use Reset first: iOS " +
+                    "can keep saved passwords after an app is deleted.",
+                { h: "Changes" },
+                "If this policy changes, this page and its date will be updated.",
                 { h: "Contact" },
                 "If you have questions about this policy, you can reach Pyrothief Projects at support@pyrothief.ca (link below)."
             ],
-            tech: "Last updated November 2026",
+            tech: "Last updated November 18, 2026",
             link: { label: "support@pyrothief.ca", href: "mailto:support@pyrothief.ca" }
         };
         // The license, whole (as it was on the old Nova page)
@@ -952,7 +966,7 @@
         });
 
         // The Projects menu: opens under the header, rows sliding in one after another. Nova, Drift Remote, DTG, a gap, then
-        // Privacy and License
+        // Privacy
         var projectsCorner = lockup;   // the header opens the menu
         var projectsMenu = document.getElementById("projectsMenu");
         var projectRows = Array.prototype.slice.call(projectsMenu.querySelectorAll("[data-project]"));
@@ -1941,7 +1955,7 @@
         // stops it and hands over
         var TOUR_SLUGS = {
             nova: "nova", drift: "drift", "drift-remote": "drift", dtg: "games", "dtg-manager": "games",
-            privacy: "privacy", license: "license"
+            privacy: "privacy"
         };
         var tourHash = {};
         location.hash.replace(/^#/, "").split("&").forEach(function (part) {
